@@ -1,4 +1,4 @@
-// search-results.js
+// search-results.js (일부)
 
 document.addEventListener('DOMContentLoaded', async () => {
     // URL에서 검색어 가져오기
@@ -7,9 +7,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const searchResultsContainer = document.querySelector('.search-results-container');
     
-    if (!queryText) {
-        searchResultsContainer.textContent = "검색어를 찾을 수 없습니다.";
-        return;
+    // 검색창 기능 추가
+    const searchInput = document.querySelector('.search-input');
+    const searchButton = document.querySelector('.search-button');
+    if (queryText) {
+        searchInput.value = queryText; // 검색창에 검색어 미리 채워넣기
+    }
+    searchButton.addEventListener('click', () => {
+        const newQuery = searchInput.value;
+        if (newQuery) {
+            window.location.href = `search-results.html?query=${encodeURIComponent(newQuery)}`;
+        }
+    });
+
+    // 검색 결과를 표시하는 함수
+    function displayResults(books) {
+        searchResultsContainer.innerHTML = '';
+        if (books && books.length > 0) {
+            books.forEach(book => {
+                const bookItem = document.createElement('div');
+                bookItem.classList.add('search-result-item');
+
+                const bookImage = document.createElement('img');
+                bookImage.src = book.image || 'https://via.placeholder.com/180x250';
+                bookImage.alt = book.title;
+
+                const bookTitle = document.createElement('h3');
+                bookTitle.textContent = book.title;
+
+                const bookAuthor = document.createElement('p');
+                bookAuthor.textContent = `저자: ${book.author}`;
+                
+                bookItem.appendChild(bookImage);
+                bookItem.appendChild(bookTitle);
+                bookItem.appendChild(bookAuthor);
+                searchResultsContainer.appendChild(bookItem);
+            });
+        } else {
+            searchResultsContainer.textContent = '검색 결과가 없습니다.';
+        }
     }
 
     const serverUrl = 'https://bufs-book-review.onrender.com';
@@ -23,24 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if (books && books.length > 0) {
-            books.forEach(book => {
-                const bookItem = document.createElement('div');
-                bookItem.classList.add('search-result-item');
-                
-                const bookTitle = document.createElement('h3');
-                bookTitle.textContent = book.title;
-
-                const bookAuthor = document.createElement('p');
-                bookAuthor.textContent = `저자: ${book.author}`;
-                
-                bookItem.appendChild(bookTitle);
-                bookItem.appendChild(bookAuthor);
-                searchResultsContainer.appendChild(bookItem);
-            });
-        } else {
-            searchResultsContainer.textContent = '검색 결과가 없습니다.';
-        }
+        displayResults(books);
 
     } catch (error) {
         console.error('검색 실패:', error);
