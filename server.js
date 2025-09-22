@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -7,14 +5,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // 네이버 API 설정
-const clientId = process.env.NAVER_CLIENT_ID; // Render 환경 변수
-const clientSecret = process.env.NAVER_CLIENT_SECRET; // Render 환경 변수
+const clientId = process.env.NAVER_CLIENT_ID;
+const clientSecret = process.env.NAVER_CLIENT_SECRET;
 const apiHost = 'https://openapi.naver.com/v1/search/book.json';
 
 // 모든 도메인에서 요청 허용
 app.use(cors());
 
-// 프론트엔드에서 책 정보를 요청하는 API 엔드포인트
 app.get('/api/search', async (req, res) => {
     const query = req.query.query;
     if (!query) {
@@ -34,7 +31,7 @@ app.get('/api/search', async (req, res) => {
         });
 
         const books = response.data.items.map(book => ({
-            title: book.title.replace(/<[^>]*>?/g, ''), // HTML 태그 제거
+            title: book.title.replace(/<[^>]*>?/g, ''),
             author: book.author || '저자 없음',
             publisher: book.publisher || '출판사 없음',
             isbn: book.isbn || Date.now().toString(),
