@@ -200,7 +200,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     background-color: rgba(255, 255, 255, 0.2); /* 배경을 조금 더 투명하게 만듦 */
     backdrop-filter: blur(5px);
     border-radius: 10px;
-    color: white; /* 글자색을 흰색으로 변경 */
+    color: rgb(0, 0, 0); /* 글자색 변경 */
 }
 /* 검색 결과 컨테이너 중앙 정렬 */
 .search-results-container {
@@ -222,4 +222,10 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 }
 .search-results-title, .search-results-container h3, .search-results-container p {
     color: white; /* 검색 결과 제목과 글자색을 흰색으로 변경 */
+}
+/* search-results-item에 이미지 크기 조절 */
+.search-result-item img {
+    width: 100%; /* 부모 요소의 너비에 맞춰 크기 조절 */
+    height: auto; /* 이미지의 가로세로 비율 유지 */
+    border-radius: 5px;
 }
