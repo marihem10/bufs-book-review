@@ -5,14 +5,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchButton = document.querySelector('.search-button');
     const topBooksList = document.querySelector('.top-books-list');
     
-    // 검색 버튼 클릭 이벤트 리스너
+    // Render에 배포된 서버의 URL로 변경해야 합니다.
+    const serverUrl = 'https://bufs-book-review.onrender.com';
+
     searchButton.addEventListener('click', async () => {
-        const query = searchInput.value;
-        if (query) {
-            // 검색어를 URL의 쿼리 문자열로 인코딩하여 새 페이지로 이동
-            window.location.href = `search-results.html?query=${encodeURIComponent(query)}`;
-        } else {
+        const queryText = searchInput.value;
+        if (!queryText) {
             alert('검색어를 입력해주세요!');
+            return;
+        }
+
+        try {
+            // Render 서버에 요청
+            const response = await fetch(`${serverUrl}/api/search?query=${encodeURIComponent(queryText)}`);
+            const books = await response.json();
+
+            if (books.error) {
+                alert(books.error);
+                return;
+            }
+            
+            // 검색 결과를 화면에 표시하는 함수를 호출합니다.
+            displaySearchResults(books);
+
+        } catch (error) {
+            console.error('검색 실패:', error);
+            alert('검색 중 오류가 발생했습니다. 서버가 실행 중인지 확인하세요.');
         }
     });
 

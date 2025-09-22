@@ -3,16 +3,15 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const xml2js = require('xml2js');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// 국립중앙도서관 API 설정
-// 여러분의 API 인증키를 입력하세요
-const authKey = 'fa443f95d8a2012baf3e4fbbc0e62a90c28c22ae9d0d4e61746a530c30a44e22';
-const host = 'http://api.nl.go.kr/NLC_BOOK_V1.0/search';
+// 네이버 API 설정
+const clientId = process.env.NAVER_CLIENT_ID; // Render 환경 변수
+const clientSecret = process.env.NAVER_CLIENT_SECRET; // Render 환경 변수
+const apiHost = 'https://openapi.naver.com/v1/search/book.json';
 
-// 모든 도메인에서 요청을 허용하도록 CORS 설정
+// 모든 도메인에서 요청 허용
 app.use(cors());
 
 // 프론트엔드에서 책 정보를 요청하는 API 엔드포인트
@@ -23,30 +22,26 @@ app.get('/api/search', async (req, res) => {
     }
 
     try {
-        const response = await axios.get(host, {
+        const response = await axios.get(apiHost, {
             params: {
-                key: authKey,
-                kwd: query,
-                pageSize: 10
+                query: query,
+                display: 10
+            },
+            headers: {
+                'X-Naver-Client-Id': clientId,
+                'X-Naver-Client-Secret': clientSecret
             }
         });
 
-        // XML 응답을 JSON으로 변환
-        xml2js.parseString(response.data, (err, result) => {
-            if (err || !result.channel || !result.channel.item) {
-                console.error('API 응답 오류:', err);
-                return res.status(404).json({ error: '책 정보를 찾을 수 없습니다.' });
-            }
+        const books = response.data.items.map(book => ({
+            title: book.title.replace(/<[^>]*>?/g, ''), // HTML 태그 제거
+            author: book.author || '저자 없음',
+            publisher: book.publisher || '출판사 없음',
+            isbn: book.isbn || Date.now().toString(),
+            image: book.image || ''
+        }));
 
-            const books = result.channel.item.map(apiBook => ({
-                title: apiBook.title_info[0] || '제목 없음',
-                author: apiBook.author_info[0] || '저자 없음',
-                publisher: apiBook.pub_info[0] || '출판사 없음',
-                isbn: apiBook.isbn[0] || Date.now().toString()
-            }));
-
-            res.json(books);
-        });
+        res.json(books);
 
     } catch (error) {
         console.error('API 호출 실패:', error);
@@ -55,5 +50,5 @@ app.get('/api/search', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
