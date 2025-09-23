@@ -203,6 +203,12 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     color: rgb(0, 0, 0); /* 글자색 변경 */
 }
 
+/* 검색 결과 페이지의 메인 콘텐츠 */
+.main-content-search-page {
+    /* 기존 스타일 유지 */
+    text-align: center; /* 검색 결과 제목을 중앙으로 정렬 */
+}
+
 
 /* 검색 결과 컨테이너 중앙 정렬 */
 .search-results-container {
@@ -229,12 +235,12 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     color: #333; /* 아이템 글자색은 어둡게 유지 */
 }
 .search-results-container h3, .search-results-container p {
-    color: white; /* 검색 결과 제목과 글자색을 흰색으로 변경 */
+    color: rgb(0, 0, 0); /* 검색 결과 제목과 글자색을 흰색으로 변경 */
 }
 
 /* 개별 검색 결과 아이템 */ /* 수정 */
 .search-result-item {
-    width: 180px; /* 책 아이템의 너비를 180px로 줄임 */
+    width: 300px; /* 책 아이템의 너비를 180px로 줄임 */
     background-color: rgba(255, 255, 255, 0.7);
     border: 1px solid #ddd;
     border-radius: 8px;
