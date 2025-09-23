@@ -238,17 +238,6 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     color: rgb(0, 0, 0); /* 검색 결과 제목과 글자색을 흰색으로 변경 */
 }
 
-/* 개별 검색 결과 아이템 */ /* 수정 */
-.search-result-item {
-    width: 300px; /* 책 아이템의 너비를 180px로 줄임 */
-    background-color: rgba(255, 255, 255, 0.7);
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    color: #333;
-}
 
 /* search-results-item에 이미지 크기 조절 */
 .search-result-item img {
