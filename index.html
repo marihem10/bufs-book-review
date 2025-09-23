@@ -11,6 +11,25 @@
     <script defer src="script.js"></script>
 </head>
 <body>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+  
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
+            authDomain: "authentication-c2cb0.firebaseapp.com",
+            projectId: "authentication-c2cb0",
+            storageBucket: "authentication-c2cb0.firebasestorage.app",
+            messagingSenderId: "253032870308",
+            appId: "1:253032870308:web:9629c3430156b6ddaf9131",
+            measurementId: "G-G0T7ZML631"
+            };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+    
     <header>
         <div class="header-container">
             <a href="index.html" class="logo-link">
@@ -18,7 +37,7 @@
                 <span class="logo-text">부산외대 북리뷰</span>
             </a>
             <nav class="nav-bar">
-                <a href="#" class="nav-item">LOGIN</a>
+                <a href="login.html" class="nav-item">LOGIN</a>
             </nav>
         </div>
     </header>

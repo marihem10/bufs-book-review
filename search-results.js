@@ -1,4 +1,4 @@
-// search-results.js
+// search-results.js (일부)
 
 document.addEventListener('DOMContentLoaded', async () => {
     // URL에서 검색어 가져오기
@@ -6,25 +6,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const queryText = urlParams.get('query');
 
     const searchResultsContainer = document.querySelector('.search-results-container');
+    
+    // 검색창 기능 추가
     const searchInput = document.querySelector('.search-input');
     const searchButton = document.querySelector('.search-button');
-
-    // 검색창에 검색어 미리 채워넣기
+    
     if (queryText) {
-        searchInput.value = queryText;
+        searchInput.value = queryText; // 검색창에 검색어 미리 채워넣기
     }
-
-    // 검색 기능 (클릭 및 엔터 키)
-    const handleSearch = () => {
+    searchButton.addEventListener('click', () => {
         const newQuery = searchInput.value;
         if (newQuery) {
             window.location.href = `search-results.html?query=${encodeURIComponent(newQuery)}`;
         }
-    };
-    searchButton.addEventListener('click', handleSearch);
+    });
+
+    // 검색창에서 엔터 키를 눌렀을 때 검색 기능 실행
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            handleSearch();
+            const queryText = searchInput.value;
+            if (queryText) {
+                // 검색어를 URL에 포함하여 새 페이지로 이동
+                window.location.href = `search-results.html?query=${encodeURIComponent(queryText)}`;
+            } else {
+                alert('검색어를 입력해주세요!');
+            }
         }
     });
 
@@ -45,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const bookAuthor = document.createElement('p');
                 bookAuthor.textContent = `저자: ${book.author}`;
-
+                
                 bookItem.appendChild(bookImage);
                 bookItem.appendChild(bookTitle);
                 bookItem.appendChild(bookAuthor);

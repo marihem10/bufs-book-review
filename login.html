@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>검색 결과</title>
+    <title>로그인</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet"> <!-- 폰트 이름, 폰트 두께 -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <script type="module">
@@ -28,31 +28,19 @@
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
     </script>
-    
-    <header>
-        <div class="header-container">
-            <a href="index.html" class="logo-link">
-                <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
-                <span class="logo-text">부산외대 북리뷰</span>
-            </a>
-            <nav class="nav-bar">
-                <a href="#" class="nav-item">LOGIN</a>
-            </nav>
+    <main class="main-content">
+        <h1 class="main-title">LOGIN</h1>
+        <div class="login-container">
+            <input type="email" id="email" placeholder="아이디 (이메일)" required>
+            <input type="password" id="password" placeholder="비밀번호" required>
+            <button id="loginBtn">로그인</button>
+            <p>
+                계정이 없으신가요? 
+                <a href="#" id="signupBtn">회원가입</a>
+            </p>
         </div>
-    </header>
-
-    <main class="main-content-search-page">
-    <h1 class="main-title">검색 결과</h1>
-        <div class="search-container">
-            <input type="text" placeholder="검색어 입력" class="search-input">
-            <button class="search-button">🔍</button>
-        </div>
-        <section class="search-results-section">
-            <div class="search-results-container">
-                </div>
-        </section>
     </main>
-
-    <script src="search-results.js"></script>
+    
+    <script src="login.js"></script>
 </body>
 </html>
