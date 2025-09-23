@@ -2,10 +2,23 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 이전에 있던 변수들을 그대로 둡니다.
     const searchInput = document.querySelector('.search-input');
     const searchButton = document.querySelector('.search-button');
     const topBooksList = document.querySelector('.top-books-list');
+    const serverUrl = 'https://bufs-book-review.onrender.com';
+
+    // 검색창에서 엔터 키를 눌렀을 때 검색 기능 실행
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const queryText = searchInput.value;
+            if (queryText) {
+                // 검색어를 URL에 포함하여 새 페이지로 이동
+                window.location.href = `search-results.html?query=${encodeURIComponent(queryText)}`;
+            } else {
+                alert('검색어를 입력해주세요!');
+            }
+        }
+    });
 
     // 검색 버튼 클릭 이벤트 리스너
     searchButton.addEventListener('click', () => {
