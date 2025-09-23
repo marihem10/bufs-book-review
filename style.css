@@ -196,18 +196,26 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    text-align: left;
+    text-align: center; /* 글자를 중앙으로 정렬 */
     background-color: rgba(255, 255, 255, 0.2); /* 배경을 조금 더 투명하게 만듦 */
     backdrop-filter: blur(5px);
     border-radius: 10px;
     color: rgb(0, 0, 0); /* 글자색 변경 */
 }
+
+
 /* 검색 결과 컨테이너 중앙 정렬 */
 .search-results-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center; /* 가로 중앙 정렬 */
-    gap: 20px;
+    align-items: center;
+    justify-content: center; /* 중앙 정렬 */
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 5px 15px;
+    background-color: #fff;
+    width: 500px;
+    max-width: 90%;
+    margin: 30px auto; /* 상하 여백을 30px로 늘림 */
 }
 /* 개별 검색 결과 아이템 */
 .search-result-item {
@@ -220,9 +228,22 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     text-align: center;
     color: #333; /* 아이템 글자색은 어둡게 유지 */
 }
-.search-results-title, .search-results-container h3, .search-results-container p {
+.search-results-container h3, .search-results-container p {
     color: white; /* 검색 결과 제목과 글자색을 흰색으로 변경 */
 }
+
+/* 개별 검색 결과 아이템 */ /* 수정 */
+.search-result-item {
+    width: 180px; /* 책 아이템의 너비를 180px로 줄임 */
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: #333;
+}
+
 /* search-results-item에 이미지 크기 조절 */
 .search-result-item img {
     width: 100%; /* 부모 요소의 너비에 맞춰 크기 조절 */

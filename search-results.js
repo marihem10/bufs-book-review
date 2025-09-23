@@ -20,6 +20,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // 검색창에서 엔터 키를 눌렀을 때 검색 기능 실행
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const queryText = searchInput.value;
+            if (queryText) {
+                // 검색어를 URL에 포함하여 새 페이지로 이동
+                window.location.href = `search-results.html?query=${encodeURIComponent(queryText)}`;
+            } else {
+                alert('검색어를 입력해주세요!');
+            }
+        }
+    });
+
     // 검색 결과를 표시하는 함수
     function displayResults(books) {
         searchResultsContainer.innerHTML = '';
