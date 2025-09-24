@@ -2,22 +2,27 @@
 
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
-// DOMContentLoaded 외부에 auth 변수를 선언합니다.
-let auth;
+// login.html에서 앱 초기화가 완료될 때까지 기다렸다가 실행합니다.
+// 전역 변수 window.firebaseApp을 사용하기 때문에 별도의 로직이 필요합니다.
+function initializeAuth() {
+    // window.firebaseApp이 존재할 때만 getAuth를 호출
+    if (window.firebaseApp) {
+        return getAuth(window.firebaseApp);
+    }
+    // 존재하지 않으면 100ms 후 다시 시도 (실행 순서 보장)
+    return new Promise(resolve => setTimeout(() => resolve(initializeAuth()), 100));
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. login.html에서 저장한 전역 변수(window.firebaseApp)를 사용합니다.
-    const firebaseApp = window.firebaseApp; 
-    
-    // 2. Auth 인스턴스를 초기화할 때 app 인스턴스를 넣어줍니다.
-    auth = getAuth(firebaseApp); 
+document.addEventListener('DOMContentLoaded', async () => {
+    // Auth 인스턴스를 안정적으로 초기화
+    const auth = await initializeAuth(); 
     
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const loginBtn = document.getElementById('loginBtn');
     const signupBtn = document.getElementById('signupBtn');
-
-    // 3. 회원가입 버튼 클릭 이벤트
+    
+    // 1. 회원가입 버튼 클릭 이벤트
     signupBtn.addEventListener('click', async (e) => {
         e.preventDefault(); 
         const email = emailInput.value;
@@ -43,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. 로그인 버튼 클릭 이벤트
+    // 2. 로그인 버튼 클릭 이벤트
     loginBtn.addEventListener('click', async () => {
         const email = emailInput.value;
         const password = passwordInput.value;
