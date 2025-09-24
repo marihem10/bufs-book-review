@@ -240,3 +240,66 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     height: auto; /* 이미지의 가로세로 비율 유지 */
     border-radius: 5px;
 }
+
+/*로그인 및 회원가입*/
+
+/* 인증 통합 UI 스타일 */
+.auth-wrapper {
+    max-width: 400px;
+    margin: 50px auto;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    color: #333;
+}
+
+/* 탭 버튼 스타일 */
+.tab-buttons {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+}
+.tab-buttons button {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+.tab-buttons button.active {
+    color: #4A90E2;
+    border-bottom: 3px solid #4A90E2;
+}
+
+/* 폼 스타일 */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+.auth-form.hidden {
+    display: none;
+}
+.auth-form input {
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.auth-form button {
+    padding: 12px;
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.auth-form button:hover {
+    background-color: #357ABD;
+}

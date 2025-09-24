@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인</title>
+    <title>로그인 / 회원가입</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,20 +32,30 @@
         // getAnalytics는 지금 로그인 기능에 필수가 아니므로 제거합니다.
         // const analytics = getAnalytics(app); 
     </script>
-
+    
     <main class="main-content">
-        <h1 class="main-title">LOGIN</h1>
-        <div class="login-container">
-            <input type="email" id="email" placeholder="아이디 (이메일)" required>
-            <input type="password" id="password" placeholder="비밀번호" required>
-            <button id="loginBtn">로그인</button>
-            <p>
-                계정이 없으신가요? 
-                <a href="#" id="signupBtn">회원가입</a>
-            </p>
+        <h1 class="main-title">인증</h1>
+
+        <div class="auth-wrapper">
+            <div class="tab-buttons">
+                <button id="tabLogin" class="active">로그인</button>
+                <button id="tabSignup">회원가입</button>
+            </div>
+
+            <div id="formLogin" class="auth-form active">
+                <input type="email" id="loginEmail" placeholder="아이디 (이메일)" required>
+                <input type="password" id="loginPassword" placeholder="비밀번호" required>
+                <button id="loginBtn">로그인</button>
+            </div>
+
+            <div id="formSignup" class="auth-form hidden">
+                <input type="email" id="signupEmail" placeholder="아이디 (이메일)" required>
+                <input type="password" id="signupPassword" placeholder="비밀번호 (6자리 이상)" required>
+                <button id="signupBtn">계정 생성</button>
+            </div>
         </div>
     </main>
     
-    <script src="login.js" type="module"></script>
+    <script src="auth.js" type="module"></script>
 </body>
 </html>
