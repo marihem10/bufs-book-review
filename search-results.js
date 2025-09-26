@@ -80,3 +80,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchResultsContainer.textContent = "검색 중 오류가 발생했습니다. 서버 연결을 확인하세요.";
     }
 });
+
+// 검색창에서 엔터 키를 눌렀을 때 검색 기능 실행
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        handleSearch();
+    }
+});
+
+// 검색 버튼 클릭 이벤트 리스너
+searchButton.addEventListener('click', handleSearch);
