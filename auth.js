@@ -53,6 +53,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const signupPassword = document.getElementById('signupPassword');
     const signupBtn = document.getElementById('signupBtn');
 
+    const submitSignupBtn = document.getElementById('signupBtn'); // ID가 'signupBtn'인 폼 제출 버튼
+    submitSignupBtn.addEventListener('click', async (e) => {
+        // [핵심 수정]: 폼 제출 버튼의 기본 동작(페이지 새로고침)을 막습니다.
+        e.preventDefault(); 
+        
+        // 현재 활성화된 폼의 비밀번호 입력창 값을 사용해야 합니다.
+        // 여기서는 signupPassword.value를 사용합니다.
     const password = signupPassword.value;
         
         if (password.length < 6) {
@@ -83,4 +90,5 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('회원가입에 실패했습니다: ' + error.message);
             }
         }
+    })
     });
