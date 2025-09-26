@@ -40,15 +40,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         bookDetailContainer.innerHTML = `
             <div class="detail-content">
-                <img src="${book.image}" alt="${book.title}" class="detail-image">
+                <img src="${book.image}" alt="${book.title}" class="detail-image"> 
+                
                 <div class="detail-text">
-                    <h1>${book.title}</h1>
+                    <h1>${book.title}</h1> 
                     <p><strong>저자:</strong> ${book.author}</p>
                     <p><strong>출판사:</strong> ${book.publisher}</p>
-                    </div>
+                    <p><strong>ISBN:</strong> ${book.isbn}</p>
+                </div>
             </div>
         `;
-    }
+    } 
 
     // 4. [ToDo]: 리뷰 작성 기능 및 평점 로직을 여기에 구현해야 합니다.
     // (예: submitReviewBtn 클릭 이벤트, Firebase에 리뷰 저장 로직 등)
