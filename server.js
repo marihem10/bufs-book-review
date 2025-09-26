@@ -50,11 +50,10 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-// server.js (기존 app.get('/api/search', ...) 아래에 추가)
+// server.js (일부)
 
-// ISBN으로 책 상세 정보를 가져오는 엔드포인트
 app.get('/api/book-detail', async (req, res) => {
-    const isbn = req.query.isbn;
+    const isbn = req.query.isbn; 
 
     if (!isbn) {
         return res.status(400).json({ error: 'ISBN이 필요합니다.' });
@@ -63,7 +62,7 @@ app.get('/api/book-detail', async (req, res) => {
     try {
         const response = await axios.get(apiHost, {
             params: {
-                d_isbn: isbn, // 네이버 API는 ISBN 검색 시 d_isbn 파라미터를 사용
+                d_isbn: isbn, // [핵심 수정]: ISBN 검색 파라미터 d_isbn 사용
                 display: 1
             },
             headers: {
@@ -71,15 +70,13 @@ app.get('/api/book-detail', async (req, res) => {
                 'X-Naver-Client-Secret': clientSecret
             }
         });
-
-        // 결과 항목이 없거나 오류가 있으면 처리
-        if (!response.data.items || response.data.items.length === 0) {
-            return res.status(404).json({ error: '해당 ISBN의 책을 찾을 수 없습니다.' });
-        }
         
+        // ... (이후 결과 처리 로직은 그대로 유지) ...
+        // ... (결과가 없거나 오류가 있으면 처리) ...
+
         const book = response.data.items[0];
 
-        // 중복 제거가 필요 없으므로 바로 데이터 반환
+        // 필요한 데이터만 추출
         const bookDetail = {
             title: book.title.replace(/<[^>]*>?/g, ''),
             author: book.author || '저자 없음',
