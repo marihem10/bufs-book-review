@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">책 상세 정보</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <header class="header-container">
+        </header>
+
+    <main class="main-content-detail-page">
+        <div class="book-info-section">
+            <div id="bookDetail">
+                <p>로딩 중...</p>
+            </div>
+        </div>
+
+        <div class="review-section">
+            <h2>리뷰 작성하기</h2>
+            <div id="reviewForm">
+                <div class="rating-stars">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+                <textarea id="reviewText" placeholder="여기에 감상평을 작성해주세요." required></textarea>
+                <button id="submitReviewBtn">리뷰 등록</button>
+            </div>
+            
+            <h2>사용자 리뷰</h2>
+            <div id="userReviews">
+                </div>
+        </div>
+    </main>
+    
+    <script src="book-detail.js" type="module"></script>
+</body>
+</html>

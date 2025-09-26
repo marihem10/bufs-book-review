@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const bookItem = document.createElement('div');
                 bookItem.classList.add('search-result-item');
 
+                // [핵심 수정]: 클릭 이벤트를 추가하여 상세 페이지로 이동
+                bookItem.addEventListener('click', () => {
+                    // ISBN을 URL 쿼리 파라미터로 전달
+                    window.location.href = `book-detail.html?isbn=${book.isbn}`;
+                });
+
                 const bookImage = document.createElement('img');
                 bookImage.src = book.image || 'https://via.placeholder.com/180x250';
                 bookImage.alt = book.title;
