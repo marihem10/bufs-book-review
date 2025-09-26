@@ -8,21 +8,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-        // 여러분의 Firebase 설정 정보
         const firebaseConfig = {
-             apiKey: "YOUR_API_KEY", // 실제 키로 변경
-             authDomain: "YOUR_AUTH_DOMAIN", // 실제 도메인으로 변경
-             projectId: "YOUR_PROJECT_ID", // 실제 프로젝트 ID로 변경
-             // ... 나머지 설정 ...
+            apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
+            authDomain: "authentication-c2cb0.firebaseapp.com",
+            projectId: "authentication-c2cb0",
+            storageBucket: "authentication-c2cb0.firebasestorage.app",
+            messagingSenderId: "253032870308",
+            appId: "1:253032870308:web:9629c3430156b6ddaf9131",
+            measurementId: "G-G0T7ZML631"
         };
+
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        window.auth = getAuth(app); 
+        window.firebaseApp = app; 
     </script>
-</head>
-<body>
+
     <header class="header-container">
         <a href="index.html" class="logo-link">
             <div class="logo-container">
