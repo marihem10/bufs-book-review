@@ -1,7 +1,4 @@
-// script.js (index.html 파일용 - 로그인 기능 제외)
-
-// Firebase Auth 관련 import는 모두 삭제합니다.
-// import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+// script.js (index.html 파일용 - 로그인 관련 코드 모두 삭제)
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -36,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 인기 도서 목록 표시 (기존 로직 유지)
     // ----------------------------------------------------
     
+    // 이 데이터는 Firebase나 다른 DB에서 가져올 수 있으나, 현재는 예시 데이터를 사용합니다.
     const topBooks = [
         { rank: 1, title: '책이름1', reviews: 120, displayTitle: '책이름1' },
         { rank: 2, title: '책이름2', reviews: 110, displayTitle: '책이름2' },

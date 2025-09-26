@@ -303,3 +303,111 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .auth-form button:hover {
     background-color: #357ABD;
 }
+
+/* 책 상세 페이지 (book-detail.html) 스타일 */
+
+/* 메인 콘텐츠 영역: 배경과 글자색 설정 */
+.main-content-detail-page {
+    /* 이전에 index.html에서 설정한 .main-content와 디자인을 공유합니다. */
+    text-align: center;
+    padding-top: 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    padding-bottom: 50px;
+    color: white; /* 글자색을 흰색으로 통일 */
+}
+
+/* 상세 정보 및 리뷰를 감싸는 컨테이너 */
+.detail-wrapper {
+    margin: 50px auto;
+    width: 90%;
+    max-width: 1000px;
+    background-color: rgba(255, 255, 255, 0.1); /* 반투명 배경 */
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: left;
+}
+
+/* 책 상세 정보 영역 (이미지, 텍스트) */
+.book-info-section {
+    display: flex;
+    gap: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.detail-image {
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.detail-text h1 {
+    font-size: 32px;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.detail-text p {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+/* 리뷰 작성 및 목록 영역 */
+.review-section {
+    padding-top: 30px;
+}
+.review-section h2 {
+    font-size: 24px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    padding-bottom: 5px;
+}
+
+/* 리뷰 폼 스타일 */
+#reviewForm {
+    background-color: rgba(255, 255, 255, 0.9); /* 리뷰 폼 배경은 밝게 */
+    padding: 20px;
+    border-radius: 10px;
+    color: #333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#reviewText {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+#submitReviewBtn {
+    padding: 10px 20px;
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* 별점 스타일 */
+.rating-stars {
+    font-size: 24px;
+    color: gold;
+    cursor: pointer;
+}
+.star {
+    opacity: 0.3; /* 기본적으로 별을 흐리게 만듭니다. */
+    transition: opacity 0.2s;
+}
+/* 별점이 선택되었거나 마우스를 올렸을 때 */
+.star.selected, .star:hover {
+    opacity: 1;
+}
