@@ -62,8 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
             querySnapshot.forEach((doc) => {
                 const book = doc.data();
                 const listItem = document.createElement('li');
+
+                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
+
                 // 책 제목과 리뷰 수를 표시 (예시)
-                listItem.textContent = `${book.title} (${book.reviews} 리뷰)`; 
+                listItem.textContent = `${book.title} (${averageRating}점, ${book.reviews} 리뷰)`; 
                 topBooksList.appendChild(listItem);
             });
         } catch (e) {

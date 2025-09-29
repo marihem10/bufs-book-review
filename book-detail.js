@@ -86,6 +86,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (book) {
         document.getElementById('pageTitle').textContent = book.title;
 
+        // 평균 별점을 계산 (toFixed(1)로 소수점 첫째 자리까지 표시)
+        const rating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
+        
+        // 별 아이콘 표시: Math.round()를 사용하여 반올림된 별 개수만큼 채웁니다.
+        const fullStars = '★'.repeat(Math.round(book.averageRating || 0));
+        const emptyStars = '☆'.repeat(5 - Math.round(book.averageRating || 0));
+        const starsHtml = fullStars + emptyStars;
+
         bookDetailContainer.innerHTML = `
             <div class="detail-image-wrapper"> 
                 <img src="${book.image}" alt="${book.title}" class="detail-image"> 
@@ -96,6 +104,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>저자:</strong> ${book.author}</p>
                 <p><strong>출판사:</strong> ${book.publisher}</p>
                 <p><strong>ISBN:</strong> ${book.isbn}</p>
+
+                 <hr style="border-top: 1px solid rgba(255, 255, 255, 0.3); margin: 15px 0;">
+                
+                <p><strong>평균 별점:</strong> <span class="average-rating-stars">${starsHtml}</span> (${rating}/5.0)</p>
+                <p><strong>총 리뷰 수:</strong> ${book.reviews || 0}개</p>
             </div>
         `;
     } 
@@ -162,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             alert('리뷰가 성공적으로 등록되었습니다.');
-            
+
             reviewTextarea.value = '';
             selectedRating = 0; // 초기화
             fetchAndDisplayReviews(isbn); // 리뷰 목록 새로고침
