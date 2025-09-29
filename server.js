@@ -7,10 +7,18 @@ if (!firebaseServiceAccountJson) {
     // 환경 변수가 없으면 서버 실행을 중지하여 배포 오류 방지
     process.exit(1); 
 }
-const serviceAccount = JSON.parse(firebaseServiceAccountJson);
+let serviceAccount;
+try {
+    serviceAccount = JSON.parse(firebaseServiceAccountJson);
+} catch (e) {
+    console.error("Firebase Service Account JSON 파싱 오류:", e);
+    process.exit(1);
+}
+
 initializeApp({
   credential: cert(serviceAccount)
 });
+
 const db = getFirestore(); // Firestore 인스턴스 초기화
 
 const express = require('express');
