@@ -2,10 +2,9 @@
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
-// DOM이 완전히 로드된 후 로직을 실행합니다.
 document.addEventListener('DOMContentLoaded', () => {
     
-    // window.auth가 HTML에서 초기화되어 있다고 가정
+    // window.auth가 HTML에서 초기화되어 있다고 가정합니다.
     const auth = window.auth; 
 
     if (!auth) {
@@ -14,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 인증 상태 감지 리스너
     onAuthStateChanged(auth, (user) => {
-        // [핵심] 버튼 요소를 찾습니다.
-        const loginLink = document.querySelector('.nav-bar .main-nav-item') || document.querySelector('.user-controls .nav-item-detail');
+        // [핵심]: 버튼 요소를 찾습니다.
+        const loginLink = document.querySelector('.nav-bar .main-nav-item');
         
         if (!loginLink) return; 
         

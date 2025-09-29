@@ -12,7 +12,8 @@ function initializeFirebaseInstances() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const { auth, db } = await initializeFirebaseInstances();
+    const db = window.db; 
+    const auth = window.auth;
 
     const reviewListContainer = document.getElementById('reviewList');
     const userStatusElement = document.getElementById('userStatus');
