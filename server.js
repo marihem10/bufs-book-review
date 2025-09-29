@@ -1,8 +1,13 @@
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
-// [중요]: 서비스 계정 키 파일 경로를 지정합니다.
-// Render 환경에서는 이 파일을 GitHub에 올려야 접근 가능합니다.
-const serviceAccount = require('./serviceAccountKey.json'); 
+
+const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+if (!firebaseServiceAccountJson) {
+    console.error("FIREBASE_SERVICE_ACCOUNT_JSON 환경 변수가 설정되지 않았습니다.");
+    // 환경 변수가 없으면 서버 실행을 중지하여 배포 오류 방지
+    process.exit(1); 
+}
+const serviceAccount = JSON.parse(firebaseServiceAccountJson);
 initializeApp({
   credential: cert(serviceAccount)
 });
