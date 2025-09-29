@@ -11,8 +11,9 @@
 </head>
 <body>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"; // Firestore 추가
   
         const firebaseConfig = {
             apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
@@ -27,6 +28,10 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
+
+        window.firebaseApp = app; 
+        window.auth = getAuth(app); 
+        window.db = getFirestore(app);
     </script>
     
     <header>

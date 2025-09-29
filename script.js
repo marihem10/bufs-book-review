@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 인기 도서 목록 표시 (Firebase 연동)
     // ----------------------------------------------------
     async function fetchPopularBooks() {
+        const db = window.db; // HTML에서 초기화된 전역 db 사용
+
         if (!db) {
             topBooksList.innerHTML = '<p>데이터베이스 연결 오류</p>';
             return;
