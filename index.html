@@ -10,30 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet"> <!-- 폰트 이름, 폰트 두께 -->
 </head>
 <body>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"; 
+    <script src="firebase-init.js" type="module"></script> 
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
-            authDomain: "authentication-c2cb0.firebaseapp.com",
-            projectId: "authentication-c2cb0",
-            storageBucket: "authentication-c2cb0.firebasestorage.app",
-            messagingSenderId: "253032870308",
-            appId: "1:253032870308:web:9629c3430156b6ddaf9131",
-            measurementId: "G-G0T7ZML631"
-            };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-
-        window.firebaseApp = app; 
-        window.db = getFirestore(app);
-        window.auth = getAuth(app); // Auth 인스턴스도 전역에 저장
-    </script>
-    
     <header>
         <div class="header-container">
             <a href="index.html" class="logo-link">
