@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">책 상세 정보</title>
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
+            authDomain: "authentication-c2cb0.firebaseapp.com",
+            projectId: "authentication-c2cb0",
+            storageBucket: "authentication-c2cb0.firebasestorage.app",
+            messagingSenderId: "253032870308",
+            appId: "1:253032870308:web:9629c3430156b6ddaf9131",
+            measurementId: "G-G0T7ZML631"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        window.firebaseApp = app; 
+    </script>
+
+        <div class="top-nav-bar">
+            <button id="backButton" class="nav-button">← 뒤로가기</button>
+        <div class="user-controls">
+            <a href="auth.html" class="nav-item-detail">LOGIN</a>
+        </div>
+    </div>
+
+    <main class="main-content-detail-page">
+        <div class="detail-wrapper"> 
+            
+            <div id="bookDetail" class="book-info-section">
+                <h2>로딩 중...</h2>
+            </div>
+
+            <div class="review-section">
+                <h2>리뷰 작성하기</h2>
+                <div id="reviewForm">
+                    <div class="rating-stars">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <textarea id="reviewText" placeholder="여기에 감상평을 작성해주세요." required></textarea>
+                    <button id="submitReviewBtn">리뷰 등록</button>
+                </div>
+                
+                <h2>사용자 리뷰</h2>
+                <div id="userReviews">
+                    </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="book-detail.js" type="module"></script>
+    <script src="index-auth.js" type="module"></script> 
+</body>

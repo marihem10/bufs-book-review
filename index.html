@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산외대 북리뷰</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet"> <!-- 폰트 이름, 폰트 두께 -->
+    <script src="script.js" type="module"></script>
+    <script src="index-auth.js" type="module"></script>
+</head>
+<body>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"; 
+
+  
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
+            authDomain: "authentication-c2cb0.firebaseapp.com",
+            projectId: "authentication-c2cb0",
+            storageBucket: "authentication-c2cb0.firebasestorage.app",
+            messagingSenderId: "253032870308",
+            appId: "1:253032870308:web:9629c3430156b6ddaf9131",
+            measurementId: "G-G0T7ZML631"
+            };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+
+        window.firebaseApp = app; 
+        window.db = getFirestore(app);
+        window.auth = getAuth(app); // Auth 인스턴스도 전역에 저장
+    </script>
+    
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
+                <span class="logo-text">부산외대 북리뷰</span>
+            </a>
+            <nav class="nav-bar">
+                <a href="auth.html" class="main-nav-item">LOGIN</a> 
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+    <div class="left-section">
+        <h1 class="main-title">지식을 나누는 우리들의 서재</h1>
+        <div class="search-container">
+            <input type="text" placeholder="검색어 입력" class="search-input">
+            <button class="search-button">🔍</button>
+        </div>
+    </div>
+
+    <div class="right-section">
+        <div class="top-books-container">
+            <h2 class="top-books-title">인기 도서</h2>
+            <ol class="top-books-list">
+                </ol>
+        </div>
+    </div>
+</main>
+    <script src="index-auth.js" type="module"></script>
+    <script src="script.js" type="module"></script>
+</body>
+</html>

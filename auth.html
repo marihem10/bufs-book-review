@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>로그인 / 회원가입</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <script type="module">
+        // Firebase Auth를 위한 모듈을 추가로 가져옵니다.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"; // <-- 이 부분을 추가해야 합니다.
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
+            authDomain: "authentication-c2cb0.firebaseapp.com",
+            projectId: "authentication-c2cb0",
+            storageBucket: "authentication-c2cb0.firebasestorage.app",
+            messagingSenderId: "253032870308",
+            appId: "1:253032870308:web:9629c3430156b6ddaf9131",
+            measurementId: "G-G0T7ZML631"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        
+        // window.firebaseApp에 앱 인스턴스를 저장하여 login.js에서 사용합니다.
+        window.firebaseApp = app; 
+
+        // getAnalytics는 지금 로그인 기능에 필수가 아니므로 제거합니다.
+        // const analytics = getAnalytics(app); 
+    </script>
+    
+    <main class="main-content">
+        <h1 class="main-title">로그인</h1>
+
+        <div class="auth-wrapper">
+            <div class="tab-buttons">
+                <button id="tabLogin" class="active">로그인</button>
+                <button id="tabSignup">회원가입</button>
+            </div>
+
+            <div id="formLogin" class="auth-form active">
+                <input type="email" id="loginEmail" placeholder="아이디 (이메일)" required>
+                <input type="password" id="loginPassword" placeholder="비밀번호" required>
+                <button id="loginBtn">로그인</button>
+            </div>
+
+            <div id="formSignup" class="auth-form hidden">
+                <input type="email" id="signupEmail" placeholder="아이디 (이메일)" required>
+                <input type="password" id="signupPassword" placeholder="비밀번호 (6자리 이상)" required>
+                <button id="signupBtn">계정 생성</button>
+            </div>
+        </div>
+    </main>
+    
+    <script src="auth.js" type="module"></script>
+</body>
+</html>

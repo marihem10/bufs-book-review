@@ -1,0 +1,10 @@
+# Git이 무시해야 할 파일 목록
+
+# Firebase 서비스 계정 키 (보안 파일)
+serviceAccountKey.json
+
+# Node.js 모듈 폴더 (매우 크고 불필요한 파일)
+node_modules/
+
+# 로그 파일 등 임시 파일
+*.log

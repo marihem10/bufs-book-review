@@ -1,0 +1,16 @@
+{
+  "name": "book-review-server",
+  "version": "1.0.0",
+  "description": "Book review API server for BUFS students.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "firebase-admin": "^13.5.0",
+    "xml2js": "^0.4.23"
+  }
+}

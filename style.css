@@ -1,0 +1,469 @@
+body {
+    font-family: 'Nanum Myeongjo', sans-serif; /* 폰트 변경 */
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh; /* 100vh는 화면의 높이만큼의 최소 높이를 의미 */
+    /* 배경 이미지 관련 속성 추가 */
+    background-image: url('images/mainimg.png');
+    background-size: cover; /* 이미지가 잘리지 않고 화면에 맞춰지도록 변경 */
+    background-repeat: no-repeat;
+    background-position: center bottom; /* 이미지를 화면 아래쪽 중앙에 배치 */
+    background-attachment: fixed;
+    background-color: #f4f4f4; /* 배경 이미지 주변의 색상 */  
+}
+
+header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
+    width: 100%;
+    background-color: #fff; /* 헤더 배경색을 흰색으로 설정 */
+    border-bottom: 1px solid #ddd; /* 아래쪽에 구분선 추가 */
+}
+
+.header-container {
+    width: 100%;
+    max-width: 1250px; /*맨위 로고랑 로그인 부분의 간격*/
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.logo-link {
+    display: flex; /* 로고 이미지와 텍스트를 나란히 정렬 */
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+}
+
+.logo-image {
+    height: 50px;
+    margin-right: 20px;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.nav-bar .main-nav-item {
+    margin-left: 20px;
+    text-decoration: none !important;
+    color: #333 !important;
+    font-weight: bold;
+}
+
+.main-content {
+    text-align: center;
+    margin-top: 50px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 20px;
+    background-color: transparent; /* 배경색을 투명하게 설정 */
+
+}
+
+.main-title {
+    font-size: 48px;
+    margin-top: 100px; /* 원하는 만큼 조절 가능 */
+    margin-bottom: 20px;
+    color: white; /* 글자색을 흰색으로 변경 */
+}
+
+.search-container { /*검색창*/
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 5px 15px;
+    background-color: #fff;
+    width: 500px; /* 검색창 컨테이너의 너비를 500px로 설정 (원하는 대로 조절 가능) */
+    max-width: 90%; /* 모바일 환경에서도 잘 보이도록 최대 너비 설정 */
+    margin-top: 30px; /* 제목과의 간격을 50px로 설정 (원하는 만큼 조절 가능) */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    font-size: 16px;
+    flex-grow: 1; /* 남은 공간을 모두 차지하도록 설정 */
+    margin-right: 10px; /* 입력창과 돋보기 버튼 사이의 간격 */
+}
+
+.search-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.book-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.book-item {
+    text-align: center;
+    width: 150px;
+}
+
+.book-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rating {
+    color: gold;
+    font-size: 20px;
+    margin-top: 5px;
+}
+
+/* 메인 콘텐츠를 감싸는 래퍼 스타일 */
+.main-content {
+    position: relative; /* 자식 요소의 위치 기준점이 됨 */
+    text-align: center;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 50px; /* 상단 여백 추가 */
+}
+
+/* 왼쪽 섹션 (제목, 검색창) */
+.left-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 오른쪽 섹션 (인기 도서 목록) */
+.right-section {
+    position: fixed; /* 뷰포트를 기준으로 위치를 고정 */
+    right: 50px; /* 오른쪽에서 50px 떨어진 위치로 변경 */
+    top: 200px; /* 상단에서 200px 떨어진 위치로 변경 */
+}
+
+/* 인기 도서 컨테이너 스타일 */
+.top-books-container {
+    width: 150px; /* 컨테이너 너비를 200px로 줄임 */
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+    padding: 5px;
+    border-radius: 10px;
+    color: #333;
+    text-align: center; /* 글자를 중앙으로 정렬 */
+}
+
+.top-books-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.top-books-list {
+    list-style-type: decimal;
+    padding-left: 20px;
+}
+
+/* 기존 .main-title과 .search-container 스타일은 그대로 유지 */
+.main-title {
+    font-size: 48px;
+    margin-top: 100px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.search-container {
+    width: 500px;
+    max-width: 90%;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    margin: 30px auto; /* 상하 여백을 30px로 늘림 */
+}
+
+/* 검색 결과 섹션 */
+.search-results-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center; /* 글자를 중앙으로 정렬 */
+    background-color: rgba(255, 255, 255, 0.2); /* 배경을 조금 더 투명하게 만듦 */
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    color: rgb(0, 0, 0); /* 글자색 변경 */
+}
+
+/* 검색 결과 페이지의 메인 콘텐츠 */
+.main-content-search-page {
+    /* 기존 스타일 유지 */
+    text-align: center; /* 검색 결과 제목을 중앙으로 정렬 */
+}
+
+
+/* 검색 결과 컨테이너 중앙 정렬 */
+.search-results-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* 가로 중앙 정렬 */
+    gap: 20px;
+}
+
+/* 개별 검색 결과 아이템 */
+.search-result-item {
+    width: 250px;
+    background-color: rgba(255, 255, 255, 0.7); /* 아이템 배경을 반투명 흰색으로 */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: #333; /* 아이템 글자색은 어둡게 유지 */
+}
+.search-results-container h3, .search-results-container p {
+    color: rgb(0, 0, 0); /* 검색 결과 제목과 글자색을 흰색으로 변경 */
+}
+
+
+/* search-results-item에 이미지 크기 조절 */
+.search-result-item img {
+    width: 100%; /* 부모 요소의 너비에 맞춰 크기 조절 */
+    height: auto; /* 이미지의 가로세로 비율 유지 */
+    border-radius: 5px;
+}
+
+/*로그인 및 회원가입 페이지*/
+
+/* 인증 통합 UI 스타일 */
+.auth-wrapper {
+    max-width: 400px;
+    margin: 50px auto;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    color: #333;
+}
+
+/* 탭 버튼 스타일 */
+.tab-buttons {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+}
+.tab-buttons button {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+.tab-buttons button.active {
+    color: #4A90E2;
+    border-bottom: 3px solid #4A90E2;
+}
+
+/* 폼 스타일 */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+.auth-form.hidden {
+    display: none;
+}
+.auth-form input {
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.auth-form button {
+    padding: 12px;
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.auth-form button:hover {
+    background-color: #357ABD;
+}
+
+/* 책 상세 페이지 (book-detail.html) 스타일 */
+
+/* 메인 콘텐츠 영역: 배경과 글자색 설정 */
+.main-content-detail-page {
+    /* 이전에 index.html에서 설정한 .main-content와 디자인을 공유합니다. */
+    text-align: center;
+    padding-top: 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    padding-bottom: 50px;
+    color: white; /* 글자색을 흰색으로 통일 */
+}
+
+/* 상세 정보 및 리뷰를 감싸는 컨테이너 */
+.detail-wrapper {
+    margin: 50px auto;
+    width: 90%;
+    max-width: 1000px;
+    background-color: rgba(255, 255, 255, 0.1); /* 반투명 배경 */
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: left;
+}
+
+/* 책 상세 정보 영역 (이미지, 텍스트) */
+.book-info-section {
+    display: flex; /* 자식 요소들을 가로로 정렬 */
+    gap: 50px; /* 이미지와 텍스트 사이의 간격을 50px로 넓힘 */
+    padding-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    align-items: flex-start; /* 상단부터 정렬 */
+    text-align: left; /* 텍스트는 왼쪽 정렬 */
+}
+
+
+/* 책 이미지를 감싸는 div (필요하다면) */
+.detail-image {
+    width: 200px; /* 이미지 너비 고정 */
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0; /* 이미지가 줄어들지 않도록 고정 */
+    order: 1; 
+}
+
+/* 책 제목, 저자 등 텍스트 영역 */
+.detail-text {
+    flex-grow: 1; /* 남은 공간을 모두 차지하도록 확장 */
+    order: 2; 
+
+}
+
+/* detail-text 안에 있는 제목 스타일 */
+.detail-text h1 {
+    font-size: 32px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: white;
+}
+.detail-text p {
+    font-size: 18px;
+    margin-bottom: 5px;
+    color: white;
+}
+
+/* 리뷰 작성 및 목록 영역 */
+.review-section {
+    padding-top: 30px;
+}
+.review-section h2 {
+    font-size: 24px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    padding-bottom: 5px;
+}
+
+/* 리뷰 폼 스타일 */
+#reviewForm {
+    background-color: rgba(255, 255, 255, 0.9); /* 리뷰 폼 배경은 밝게 */
+    padding: 20px;
+    border-radius: 10px;
+    color: #333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#reviewText {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+#submitReviewBtn {
+    padding: 10px 20px;
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* 별점 스타일 */
+.rating-stars {
+    font-size: 24px;
+    color: gold;
+    cursor: pointer;
+}
+.star {
+    opacity: 0.3; /* 기본적으로 별을 흐리게 만듭니다. */
+    transition: opacity 0.2s;
+}
+/* 별점이 선택되었거나 마우스를 올렸을 때 */
+.star.selected, .star:hover {
+    opacity: 1;
+}
+
+/* book-detail.html을 위한 새로운 상단 네비게이션 바 스타일 */
+.top-nav-bar {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    color: white; 
+}
+
+.nav-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+.nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.user-controls .nav-item-detail {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+.user-controls .nav-item-detail:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
