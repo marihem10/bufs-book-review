@@ -26,6 +26,10 @@ const axios = require('axios');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use(cors()); 
+
+
 
 // 네이버 API 설정
 const clientId = process.env.NAVER_CLIENT_ID;
