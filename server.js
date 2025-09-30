@@ -68,10 +68,12 @@ app.post('/api/review-submit', async (req, res) => {
     if (!bookDoc.exists) {
         // 2. 책 정보가 없으면 네이버 API에서 가져와서 저장
         try {
+            // ISBN에서 하이픈 등 불필요한 문자를 제거하고 검색
+            const cleanIsbn = bookIsbn.replace(/[^0-9]/g, '');
+
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    // [핵심 수정 1]: d_isbn을 사용하여 ISBN 상세 검색을 명확히 시도합니다.
-                    d_isbn: bookIsbn, 
+                    d_isbn: cleanIsbn, // 클린된 ISBN 사용
                     display: 1 
                 },
                 headers: {
@@ -92,7 +94,7 @@ app.post('/api/review-submit', async (req, res) => {
 
         } catch (e) {
             console.error("책 정보 자동 저장 실패:", e.message);
-            return res.status(500).json({ error: '리뷰 등록 실패: 책 정보 자동 생성에 실패했습니다. (API 확인 필요)' });
+            return res.status(500).json({ error: ' 책 정보 자동 생성에 실패했습니다. (API 확인 필요)' });
         }
     } else {
     

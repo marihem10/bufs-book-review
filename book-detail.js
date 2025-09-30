@@ -152,12 +152,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('별점과 감상평을 모두 입력해주세요.');
             return;
         }
+        if (!isbn) { 
+            alert('오류: 책 정보(ISBN)를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+            return;
+        }
 
         const reviewData = {
-            bookIsbn: isbn,
-            userId: authInstance.currentUser.email, // 사용자 이메일을 ID로 사용
+            bookIsbn: isbn, // 서버로 보내는 bookIsbn 값
+            userId: authInstance.currentUser.email,
             rating: selectedRating,
-            comment: reviewTextarea.value.trim(),
+            comment: reviewTextarea.value.trim()
         };
 
         try {
