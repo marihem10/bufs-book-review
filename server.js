@@ -61,7 +61,7 @@ app.post('/api/review-submit', async (req, res) => {
     }
     
     // 1. Firebase에서 책 정보가 있는지 확인
-    const bookRef = db.collection('books').doc(isbn);
+    const bookRef = db.collection('books').doc(bookIsbn);
     const bookDoc = await bookRef.get();
     let bookData;
 
@@ -100,7 +100,7 @@ app.post('/api/review-submit', async (req, res) => {
     
     // 3. 리뷰 데이터 reviews 컬렉션에 저장
     const reviewRef = await db.collection('reviews').add({
-        bookIsbn: isbn,
+        bookIsbn: bookIsbn,
         userId: userId,
         rating: rating,
         comment: comment,
