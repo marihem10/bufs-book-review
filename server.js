@@ -41,10 +41,23 @@ app.use(cors());
 
 // [새로운 엔드포인트]: 리뷰 등록 시 책 정보와 리뷰를 동시에 저장/업데이트
 app.post('/api/review-submit', async (req, res) => {
-    const { isbn, userId, rating, comment } = req.body;
 
-    if (!isbn || !userId || !rating || !comment) {
-        return res.status(400).json({ error: '필수 리뷰 정보가 누락되었습니다.' });
+    if (!req.body) {
+        return res.status(400).json({ error: '요청 본문(리뷰 데이터)이 누락되었습니다.' });
+    }
+
+    const { bookIsbn, userId, rating, comment } = req.body; 
+
+    // [핵심 점검]: 필수 필드가 비어있는지 확인합니다.
+    if (!bookIsbn || !userId || !rating || !comment) {
+        // [수정]: 누락된 필드를 명시하여 클라이언트에게 정확한 정보를 반환합니다.
+        const missingFields = [];
+        if (!bookIsbn) missingFields.push('ISBN');
+        if (!userId) missingFields.push('로그인 정보(userId)');
+        if (!rating) missingFields.push('별점');
+        if (!comment) missingFields.push('감상평');
+
+        return res.status(400).json({ error: `필수 리뷰 정보가 누락되었습니다: ${missingFields.join(', ')}` });
     }
     
     // 1. Firebase에서 책 정보가 있는지 확인

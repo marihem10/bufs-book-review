@@ -158,7 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             userId: authInstance.currentUser.email, // 사용자 이메일을 ID로 사용
             rating: selectedRating,
             comment: reviewTextarea.value.trim(),
-            timestamp: new Date()
         };
 
         try {
