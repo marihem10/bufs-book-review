@@ -9,9 +9,9 @@ if (!firebaseServiceAccountJson) {
 }
 let serviceAccount;
 try {
-    serviceAccount = JSON.parse(firebaseServiceAccountJson);
+    serviceAccount = JSON.parse(firebaseServiceAccountJson); // JSON 문자열을 JavaScript 객체로 파싱합니다.
 } catch (e) {
-    console.error("Firebase Service Account JSON 파싱 오류:", e);
+    console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e); 
     process.exit(1);
 }
 
@@ -69,7 +69,7 @@ app.post('/api/review-submit', async (req, res) => {
         // 2. 책 정보가 없으면 네이버 API에서 가져와서 저장
         try {
             const apiResponse = await axios.get(apiHost, {
-                params: { d_isbn: isbn, display: 1 },
+                params: { d_isbn: bookIsbn, display: 1 },
                 headers: {
                     'X-Naver-Client-Id': clientId,
                     'X-Naver-Client-Secret': clientSecret
@@ -83,7 +83,7 @@ app.post('/api/review-submit', async (req, res) => {
                 title: apiBook.title.replace(/<[^>]*>?/g, ''),
                 author: apiBook.author || '저자 없음',
                 publisher: apiBook.publisher || '출판사 없음',
-                isbn: isbn,
+                isbn: bookIsbn,
                 image: apiBook.image || '',
                 reviews: 0, // 초기 리뷰 수
                 ratingSum: 0 // 총 별점 합계
@@ -91,7 +91,7 @@ app.post('/api/review-submit', async (req, res) => {
             await bookRef.set(bookData); // Firestore에 새 책 정보 저장
 
         } catch (e) {
-            console.error("책 정보 자동 저장 실패:", e);
+            console.error("책 정보 자동 저장 실패:", e.response ? e.response.data : e.message);
             return res.status(500).json({ error: '책 정보 자동 생성에 실패했습니다.' });
         }
     } else {
