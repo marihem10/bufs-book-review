@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         await signOut(auth);
                         alert('로그아웃되었습니다.');
-                        window.history.back(); // 로그아웃 후 이전 페이지로 돌아감
+                        window.location.href = 'index.html'; // 로그아웃 후 메인페이지로
                     } catch (error) {
                         console.error("로그아웃 실패:", error);
                     }
@@ -142,7 +142,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 리뷰 등록 기능
     // ----------------------------------------------------
     submitReviewBtn.addEventListener('click', async () => {
-        if (!auth.currentUser) {
+        const authInstance = getAuth(window.firebaseApp);    // Auth 인스턴스를 사용해 현재 로그인된 사용자를 가져오기.
+
+        if (!authInstance.currentUser) {
             alert('리뷰를 작성하려면 먼저 로그인해주세요.');
             return;
         }
@@ -153,14 +155,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const reviewData = {
             bookIsbn: isbn,
-            userId: auth.currentUser.email, // 사용자 이메일을 ID로 사용
+            userId: authInstance.currentUser.email, // 사용자 이메일을 ID로 사용
             rating: selectedRating,
             comment: reviewTextarea.value.trim(),
             timestamp: new Date()
         };
 
         try {
-            // [핵심 수정]: Render 서버의 새로운 엔드포인트에 POST 요청
+            // Render 서버의 새로운 엔드포인트에 POST 요청
             const response = await fetch(`${serverUrl}/api/review-submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -169,8 +171,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const result = await response.json();
 
-            if (result.error) {
-                alert('리뷰 등록 실패: ' + result.error);
+            if (response.status !== 200) {
+                alert('리뷰 등록 실패: ' + (result.error || '알 수 없는 서버 오류'));
                 return;
             }
             
@@ -180,8 +182,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedRating = 0; // 초기화
             fetchAndDisplayReviews(isbn); // 리뷰 목록 새로고침
         } catch (e) {
-            console.error("리뷰 등록 중 오류 발생: ", e);
-            alert('리뷰 등록에 실패했습니다.');
+            console.error("리뷰 등록 실패: ", e);
+            alert('리뷰 등록 중 오류가 발생했습니다.');
         }
     });
 
