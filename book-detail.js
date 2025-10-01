@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('별점과 감상평을 모두 입력해주세요.');
             return;
         }
-        const cleanIsbn = isbn ? isbn.replace(/[^0-9]/g, '') : '';
+        const cleanIsbn = isbn ? isbn.replace(/\D/g, '').trim() : ''; 
         
         if (cleanIsbn.length !== 13) { 
             alert('오류: 책 정보(ISBN)가 유효하지 않습니다. 13자리 숫자를 확인해주세요.');
