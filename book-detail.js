@@ -142,7 +142,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 리뷰 등록 기능
     // ----------------------------------------------------
     submitReviewBtn.addEventListener('click', async () => {
-        const authInstance = getAuth(window.firebaseApp);    // Auth 인스턴스를 사용해 현재 로그인된 사용자를 가져오기.
+        // Auth 인스턴스를 사용해 현재 로그인된 사용자를 가져오기.
+        const authInstance = getAuth(window.firebaseApp);
 
         if (!authInstance.currentUser) {
             alert('리뷰를 작성하려면 먼저 로그인해주세요.');
@@ -152,22 +153,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('별점과 감상평을 모두 입력해주세요.');
             return;
         }
-        const cleanIsbn = isbn ? isbn.replace(/\D/g, '').trim() : ''; 
-        
+
+        // 1. ISBN 클린업 및 검증
+        const cleanIsbn = isbn ? isbn.replace(/[^0-9]/g, '').trim() : ''; 
         if (cleanIsbn.length !== 13) { 
             alert('오류: 책 정보(ISBN)가 유효하지 않습니다. 13자리 숫자를 확인해주세요.');
             return;
         }
-        
+
+        // 2. 서버로 보낼 데이터 준비
         const reviewData = {
-            bookIsbn: cleanIsbn, // 클린한 ISBN 값을 서버로 보냅니다.
+            bookIsbn: cleanIsbn, 
             userId: authInstance.currentUser.email,
             rating: selectedRating,
             comment: reviewTextarea.value.trim()
         };
 
         try {
-            // Render 서버의 새로운 엔드포인트에 POST 요청
+            // 3. [핵심]: Render 서버의 /api/review-submit 엔드포인트에 POST 요청
             const response = await fetch(`${serverUrl}/api/review-submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -182,16 +185,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             alert('리뷰가 성공적으로 등록되었습니다.');
-
             reviewTextarea.value = '';
-            selectedRating = 0; // 초기화
+            selectedRating = 0;
             fetchAndDisplayReviews(isbn); // 리뷰 목록 새로고침
         } catch (e) {
             console.error("리뷰 등록 실패: ", e);
             alert('리뷰 등록 중 오류가 발생했습니다.');
         }
     });
-
+    
     // ----------------------------------------------------
     // 3. 리뷰 목록 불러오기 및 표시
     // ----------------------------------------------------
