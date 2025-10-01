@@ -54,33 +54,35 @@ if (!clientId || !clientSecret) {
 app.use(cors());
 
 // [새로운 엔드포인트]: 리뷰 등록 시 책 정보와 리뷰를 동시에 저장/업데이트
-app.post('/api/review-submit', async (req, res) => {
-
-    if (!req.body) {
+if (!req.body) {
         return res.status(400).json({ error: '요청 본문(리뷰 데이터)이 누락되었습니다.' });
     }
 
     const { bookIsbn, userId, rating, comment } = req.body; 
+    let bookData; // bookData를 여기서 선언하여 모든 블록에서 접근 가능하도록 합니다.
 
     // 필수 필드 확인 (bookIsbn을 사용)
     if (!bookIsbn || !userId || !rating || !comment) {
         const missingFields = [];
         if (!bookIsbn) missingFields.push('ISBN');
-        // ... (나머지 필수 필드 누락 오류 처리 로직 유지) ...
-        return res.status(400).json({ error: `필수 리뷰 정보가 누락되었습니다: ...` });
+        if (!userId) missingFields.push('로그인 정보(userId)');
+        if (!rating) missingFields.push('별점');
+        if (!comment) missingFields.push('감상평');
+
+        return res.status(400).json({ error: `필수 리뷰 정보가 누락되었습니다: ${missingFields.join(', ')}` });
     }
     
-    // 1. Firebase에서 책 정보가 있는지 확인
+     // 1. Firebase에서 책 정보가 있는지 확인
     const bookRef = db.collection('books').doc(bookIsbn); 
     const bookDoc = await bookRef.get();
-    let bookData;
 
     if (!bookDoc.exists) {
         // 2. 책 정보가 없으면 네이버 API에서 가져와서 저장
         try {
+            // 네이버 API 호출 시 d_isbn 파라미터를 사용합니다.
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    d_isbn: bookIsbn, // 클린한 ISBN 값을 그대로 사용
+                    d_isbn: bookIsbn, // 클린된 bookIsbn을 사용
                     display: 1 
                 },
                 headers: {
@@ -106,17 +108,17 @@ app.post('/api/review-submit', async (req, res) => {
                 reviews: 0, 
                 ratingSum: 0 
             };
-            await bookRef.set(bookData); 
+            await bookRef.set(bookData); // Firestore에 새 책 정보 저장
 
         } catch (e) {
             console.error("책 정보 자동 저장 실패:", e.message);
-            return res.status(500).json({ error: '책 정보 자동 생성에 실패했습니다. (API 서버 연결 오류)' });
+            return res.status(500).json({ error: '리뷰 등록 실패: 책 정보 자동 생성에 실패했습니다. (API 서버 연결 오류)' });
         }
     } else {
         bookData = bookDoc.data();
     }
     
-    // 3. 리뷰 데이터 reviews 컬렉션에 저장 (bookIsbn 사용)
+    // 3. 리뷰 데이터 reviews 컬렉션에 저장
     const reviewRef = await db.collection('reviews').add({
         bookIsbn: bookIsbn,
         userId: userId,
@@ -125,7 +127,7 @@ app.post('/api/review-submit', async (req, res) => {
         timestamp: FieldValue.serverTimestamp()
     });
 
-    // 4. books 컬렉션의 통계 데이터 업데이트 (리뷰 수 및 평균 별점)
+    // 4. books 컬렉션의 통계 데이터 업데이트
     const newReviews = (bookData.reviews || 0) + 1;
     const newRatingSum = (bookData.ratingSum || 0) + rating;
     const newAverageRating = newRatingSum / newReviews;
@@ -137,7 +139,7 @@ app.post('/api/review-submit', async (req, res) => {
     });
 
     res.status(200).json({ message: '리뷰가 성공적으로 등록되고 책 정보가 저장/업데이트되었습니다.', reviewId: reviewRef.id });
-});
+;
 
 
 app.get('/api/search', async (req, res) => {
