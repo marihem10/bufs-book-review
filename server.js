@@ -1,23 +1,29 @@
 const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore'); 
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');  
 
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+
 if (!firebaseServiceAccountJson) {
     console.error("FIREBASE_SERVICE_ACCOUNT_JSON 환경 변수가 설정되지 않았습니다.");
-    // 환경 변수가 없으면 서버 실행을 중지하여 배포 오류 방지
     process.exit(1); 
 }
+
 let serviceAccount;
 try {
-    serviceAccount = JSON.parse(firebaseServiceAccountJson); // JSON 문자열을 JavaScript 객체로 파싱합니다.
+    serviceAccount = JSON.parse(firebaseServiceAccountJson.trim()); 
 } catch (e) {
-    console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e); 
+    console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e);
     process.exit(1);
 }
 
-initializeApp({
-  credential: cert(serviceAccount)
-});
+try {
+    initializeApp({
+      credential: cert(serviceAccount)
+    });
+} catch (e) {
+    console.error("Firebase Admin SDK 초기화 실패 (키 오류 가능성):", e.message);
+    process.exit(1);
+}
 
 const db = getFirestore(); // Firestore 인스턴스 초기화
 
@@ -68,12 +74,10 @@ app.post('/api/review-submit', async (req, res) => {
     if (!bookDoc.exists) {
         // 2. 책 정보가 없으면 네이버 API에서 가져와서 저장
         try {
-            // ISBN에서 하이픈 등 불필요한 문자를 제거하고 검색
-            const cleanIsbn = bookIsbn.replace(/[^0-9]/g, '');
-
+            // 클라이언트에서 이미 ISBN을 클린하게 보냈다고 가정하고 그대로 사용합니다.
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    d_isbn: cleanIsbn, // 클린된 ISBN 사용
+                    d_isbn: bookIsbn, // 클린한 ISBN (숫자만 있음)
                     display: 1 
                 },
                 headers: {
@@ -82,22 +86,35 @@ app.post('/api/review-submit', async (req, res) => {
                 }
             });
             
-            // API가 오류 코드를 반환했는지 확인합니다.
+            // API가 오류 코드를 반환했는지 또는 검색 결과가 없는지 확인
             if (apiResponse.data.errorCode) {
+                // 네이버 API 자체 오류일 경우
                  throw new Error(`네이버 API 오류: ${apiResponse.data.errorMessage}`);
             }
 
             const apiBook = apiResponse.data.items[0];
-            if (!apiResponse.data.items || apiResponse.data.items.length === 0) { 
-                throw new Error('API에서 ISBN을 찾지 못했습니다.');
-            }
-            if (!apiBook) throw new Error('API에서 책 정보를 찾을 수 없습니다.');
 
-            // ... (bookData 객체 생성 및 저장 로직 유지) ...
+            if (!apiResponse.data.items || apiResponse.data.items.length === 0 || !apiBook) { 
+                // 검색 결과가 아예 없을 경우 (ISBN 불일치 포함)
+                throw new Error('네이버 API에서 유효한 책 정보를 찾을 수 없습니다.');
+            }
+
+            // 책 정보 객체 생성
+            bookData = {
+                title: apiBook.title.replace(/<[^>]*>?/g, ''),
+                author: apiBook.author || '저자 없음',
+                publisher: apiBook.publisher || '출판사 없음',
+                isbn: bookIsbn, // 클린된 ISBN 사용
+                image: apiBook.image || '',
+                reviews: 0, 
+                ratingSum: 0 
+            };
+            await bookRef.set(bookData); // Firestore에 새 책 정보 저장
 
         } catch (e) {
             console.error("책 정보 자동 저장 실패:", e.message);
-            return res.status(500).json({ error: ' 책 정보 자동 생성에 실패했습니다. (API 확인 필요)' });
+            // 최종적으로 오류 메시지를 클라이언트로 반환
+            return res.status(500).json({ error: `리뷰 등록 실패: 책 정보 자동 생성 실패. (${e.message})` });
         }
     } else {
     
