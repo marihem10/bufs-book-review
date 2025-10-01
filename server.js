@@ -1,5 +1,5 @@
 const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore'); 
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
@@ -14,7 +14,7 @@ try {
     const cleanJsonString = firebaseServiceAccountJson.replace(/\s/g, '').trim(); 
     serviceAccount = JSON.parse(cleanJsonString);
 } catch (e) {
-    console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e);
+    console.error("Firebase Service Account JSON 파싱 오류. Render 환경 변수 값을 확인하세요:", e);
     process.exit(1);
 }
 
