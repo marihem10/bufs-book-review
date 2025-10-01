@@ -88,6 +88,9 @@ app.post('/api/review-submit', async (req, res) => {
             }
 
             const apiBook = apiResponse.data.items[0];
+            if (!apiResponse.data.items || apiResponse.data.items.length === 0) { 
+                throw new Error('API에서 ISBN을 찾지 못했습니다.');
+            }
             if (!apiBook) throw new Error('API에서 책 정보를 찾을 수 없습니다.');
 
             // ... (bookData 객체 생성 및 저장 로직 유지) ...
