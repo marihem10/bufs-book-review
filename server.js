@@ -1,16 +1,17 @@
 const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');  
+const { getFirestore, FieldValue } = require('firebase-admin/firestore'); 
 
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
 if (!firebaseServiceAccountJson) {
-    console.error("FIREBASE_SERVICE_ACCOUNT_JSON 환경 변수가 설정되지 않았습니다.");
+    console.error("FATAL ERROR: FIREBASE_SERVICE_ACCOUNT_JSON 환경 변수가 설정되지 않았습니다.");
     process.exit(1); 
 }
 
 let serviceAccount;
+
 try {
-    const cleanJsonString = firebaseServiceAccountJson.replace(/(\r\n|\n|\r)/gm, "").trim(); 
+    const cleanJsonString = firebaseServiceAccountJson.replace(/\s/g, '').trim(); 
     serviceAccount = JSON.parse(cleanJsonString);
 } catch (e) {
     console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e);
