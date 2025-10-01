@@ -74,10 +74,17 @@ app.post('/api/review-submit', async (req, res) => {
     if (!bookDoc.exists) {
         // 2. 책 정보가 없으면 네이버 API에서 가져와서 저장
         try {
-            // 클라이언트에서 이미 ISBN을 클린하게 보냈다고 가정하고 그대로 사용합니다.
+            // [핵심 수정 1]: ISBN에서 숫자만 남기고 13자리로 강제 변환합니다.
+            let cleanIsbn = bookIsbn.replace(/[^0-9]/g, '');
+
+            // 10자리 ISBN일 경우, 978을 붙여 13자리로 변환 (네이버 API가 자주 요구하는 형식)
+            if (cleanIsbn.length === 10) {
+                cleanIsbn = '978' + cleanIsbn.substring(0, 9);
+            }
+            
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    d_isbn: bookIsbn, // 클린한 ISBN (숫자만 있음)
+                    d_isbn: cleanIsbn, // 클린된 ISBN 사용
                     display: 1 
                 },
                 headers: {
@@ -113,8 +120,8 @@ app.post('/api/review-submit', async (req, res) => {
 
         } catch (e) {
             console.error("책 정보 자동 저장 실패:", e.message);
-            // 최종적으로 오류 메시지를 클라이언트로 반환
-            return res.status(500).json({ error: `리뷰 등록 실패: 책 정보 자동 생성 실패. (${e.message})` });
+            // 최종적으로 오류 메시지를 클라이언트에게 명확히 반환합니다.
+            return res.status(500).json({ error: '리뷰 등록 실패: API 요청 형식 오류로 인한 실패.' });
         }
     } else {
     
