@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const cleanIsbn = isbn ? isbn.replace(/[^0-9]/g, '') : '';
         
-        if (!cleanIsbn || cleanIsbn.length !== 13) { // [안전 장치 추가] 13자리가 아니면 오류 처리
+        if (!cleanIsbn || cleanIsbn.length !== 13) { 
             alert('오류: 책 정보(ISBN)가 유효하지 않습니다. 13자리 숫자를 확인해주세요.');
             return;
         }

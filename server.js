@@ -71,10 +71,9 @@ app.post('/api/review-submit', async (req, res) => {
     if (!bookDoc.exists) {
         // 2. 책 정보가 없으면 네이버 API에서 가져와서 저장
         try {
-            // [핵심 수정]: API 호출 시 bookIsbn 변수만 사용
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    d_isbn: bookIsbn, // 클린된 ISBN을 사용
+                    d_isbn: bookIsbn, //클라이언트에서 클린된 bookIsbn을 사용
                     display: 1 
                 },
                 headers: {
