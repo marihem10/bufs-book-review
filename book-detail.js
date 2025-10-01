@@ -152,13 +152,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('별점과 감상평을 모두 입력해주세요.');
             return;
         }
-        if (!isbn) { 
-            alert('오류: 책 정보(ISBN)를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+        const cleanIsbn = isbn ? isbn.replace(/[^0-9]/g, '') : '';
+        
+        if (!cleanIsbn) {
+            alert('오류: 책 정보를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
             return;
         }
 
         const reviewData = {
-            bookIsbn: isbn, // 서버로 보내는 bookIsbn 값
+            bookIsbn: cleanIsbn, // 클린한 ISBN 값을 서버로 보냅니다.
             userId: authInstance.currentUser.email,
             rating: selectedRating,
             comment: reviewTextarea.value.trim()
