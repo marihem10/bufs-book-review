@@ -10,7 +10,8 @@ if (!firebaseServiceAccountJson) {
 
 let serviceAccount;
 try {
-    serviceAccount = JSON.parse(firebaseServiceAccountJson.trim()); 
+    const cleanJsonString = firebaseServiceAccountJson.replace(/(\r\n|\n|\r)/gm, "").trim(); 
+    serviceAccount = JSON.parse(cleanJsonString);
 } catch (e) {
     console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e);
     process.exit(1);
