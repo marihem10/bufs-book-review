@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('오류: 책 정보(ISBN)가 유효하지 않습니다. 13자리 숫자를 확인해주세요.');
             return;
         }
-
+        
         const reviewData = {
             bookIsbn: cleanIsbn, // 클린한 ISBN 값을 서버로 보냅니다.
             userId: authInstance.currentUser.email,

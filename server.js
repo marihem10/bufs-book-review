@@ -43,6 +43,12 @@ const clientId = process.env.NAVER_CLIENT_ID;
 const clientSecret = process.env.NAVER_CLIENT_SECRET;
 const apiHost = 'https://openapi.naver.com/v1/search/book.json';
 
+// [핵심 강화]: API 키가 로드되지 않았다면 서버 실행을 중단합니다.
+if (!clientId || !clientSecret) {
+    console.error("FATAL ERROR: 네이버 API 키(Client ID 또는 Secret) 환경 변수가 설정되지 않았습니다.");
+    process.exit(1); 
+}
+
 // 모든 도메인에서 요청 허용
 app.use(cors());
 
@@ -73,7 +79,7 @@ app.post('/api/review-submit', async (req, res) => {
         try {
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    d_isbn: bookIsbn, // 클린된 bookIsbn 사용
+                    d_isbn: bookIsbn, // 클린한 ISBN 값을 그대로 사용
                     display: 1 
                 },
                 headers: {
@@ -103,7 +109,7 @@ app.post('/api/review-submit', async (req, res) => {
 
         } catch (e) {
             console.error("책 정보 자동 저장 실패:", e.message);
-            return res.status(500).json({ error: '리뷰 등록 실패: 책 정보 자동 생성에 실패했습니다. (API 서버 연결 오류)' });
+            return res.status(500).json({ error: '책 정보 자동 생성에 실패했습니다. (API 서버 연결 오류)' });
         }
     } else {
         bookData = bookDoc.data();
