@@ -73,7 +73,7 @@ app.post('/api/review-submit', async (req, res) => {
         try {
             const apiResponse = await axios.get(apiHost, {
                 params: { 
-                    d_isbn: bookIsbn, //클라이언트에서 클린된 bookIsbn을 사용
+                    d_isbn: bookIsbn, // 클린된 bookIsbn 사용
                     display: 1 
                 },
                 headers: {
