@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 리뷰 등록 기능
     // ----------------------------------------------------
     submitReviewBtn.addEventListener('click', async () => {
+        const db = window.db; 
         const authInstance = getAuth(window.firebaseApp);    // Auth 인스턴스를 사용해 현재 로그인된 사용자를 가져오기.
 
         if (!authInstance.currentUser) {
@@ -152,43 +153,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('별점과 감상평을 모두 입력해주세요.');
             return;
         }
+
+        // ISBN 클린업 및 검증
         const cleanIsbn = isbn ? isbn.replace(/\D/g, '').trim() : ''; 
-        
         if (cleanIsbn.length !== 13) { 
             alert('오류: 책 정보(ISBN)가 유효하지 않습니다. 13자리 숫자를 확인해주세요.');
             return;
         }
 
+        // 1. 리뷰 데이터 준비 (클라이언트 시간 사용)
         const reviewData = {
-            bookIsbn: cleanIsbn, // 클린한 ISBN 값을 서버로 보냅니다.
+            bookIsbn: cleanIsbn, 
             userId: authInstance.currentUser.email,
             rating: selectedRating,
-            comment: reviewTextarea.value.trim()
+            comment: reviewTextarea.value.trim(),
+            timestamp: new Date().toISOString() // 현재 시간을 ISO 형식으로 기록
         };
 
         try {
-            // Render 서버의 새로운 엔드포인트에 POST 요청
-            const response = await fetch(`${serverUrl}/api/review-submit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(reviewData)
-            });
-
-            const result = await response.json();
-
-            if (response.status !== 200) {
-                alert('리뷰 등록 실패: ' + (result.error || '알 수 없는 서버 오류'));
-                return;
-            }
+            // 2. [핵심]: 서버를 거치지 않고 Firestore 'reviews' 컬렉션에 직접 저장
+            await addDoc(collection(db, "reviews"), reviewData);
             
+            // 3. (통계 업데이트는 서버 없이 불가능하므로, 일단 성공 메시지만 표시)
             alert('리뷰가 성공적으로 등록되었습니다.');
-
             reviewTextarea.value = '';
-            selectedRating = 0; // 초기화
+            selectedRating = 0;
             fetchAndDisplayReviews(isbn); // 리뷰 목록 새로고침
         } catch (e) {
             console.error("리뷰 등록 실패: ", e);
-            alert('리뷰 등록 중 오류가 발생했습니다.');
+            alert('리뷰 등록 중 오류가 발생했습니다. (Firestore 권한 확인 필요)');
         }
     });
 
