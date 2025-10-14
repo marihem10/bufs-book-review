@@ -1,4 +1,4 @@
-// auth.js (수정 완료)
+// auth.js
 
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
@@ -14,11 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. 탭 전환 기능
     function switchTab(targetForm) {
+        // 모든 폼과 버튼에서 'active' 클래스를 제거하고 'hidden' 클래스를 추가/제거합니다.
         formLogin.classList.add('hidden');
         formSignup.classList.add('hidden');
         tabLogin.classList.remove('active');
         tabSignup.classList.remove('active');
 
+        // 선택된 폼과 버튼에 'active' 클래스를 추가하고 'hidden' 클래스를 제거합니다.
         targetForm.classList.remove('hidden');
         if (targetForm === formLogin) {
             tabLogin.classList.add('active');
@@ -36,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loginBtn = document.getElementById('loginBtn');
 
     loginBtn.addEventListener('click', async () => {
+        // ... (이전에 드린 로그인 로직을 여기에 넣습니다.) ...
         try {
             await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
             alert('로그인에 성공했습니다!');
@@ -48,12 +51,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 5. 회원가입 로직
     const signupEmail = document.getElementById('signupEmail');
     const signupPassword = document.getElementById('signupPassword');
-    const submitSignupBtn = document.getElementById('signupBtn'); // ID가 'signupBtn'인 폼 제출 버튼
+    const signupBtn = document.getElementById('signupBtn');
 
+    const submitSignupBtn = document.getElementById('signupBtn'); // ID가 'signupBtn'인 폼 제출 버튼
     submitSignupBtn.addEventListener('click', async (e) => {
+        // [핵심 수정]: 폼 제출 버튼의 기본 동작(페이지 새로고침)을 막습니다.
         e.preventDefault(); 
         
-        const password = signupPassword.value;
+        // 현재 활성화된 폼의 비밀번호 입력창 값을 사용해야 합니다.
+        // 여기서는 signupPassword.value를 사용합니다.
+    const password = signupPassword.value;
         
         if (password.length < 6) {
             alert('비밀번호는 6자리 이상이어야 합니다.');
@@ -61,12 +68,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
+            // Firebase에 새 계정 생성 요청
             await createUserWithEmailAndPassword(auth, signupEmail.value, password);
             
             alert('회원가입에 성공했습니다! 이제 로그인 탭에서 로그인할 수 있습니다.');
             
+            // 성공 후 로그인 탭으로 자동 전환
             switchTab(formLogin);
             
+            // 입력 필드 비우기
             signupEmail.value = '';
             signupPassword.value = '';
         } catch (error) {
@@ -81,4 +91,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     })
-});
+    });
