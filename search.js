@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const searchInput = document.querySelector('.search-input');
     const searchButton = document.querySelector('.search-button');
-    const db = getFirestore();
+    const db = window.db; 
 
     searchButton.addEventListener('click', async () => {
         const queryText = searchInput.value;
@@ -63,8 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 이 함수를 호출하여 Firebase에서 데이터를 가져오고 화면에 표시합니다.
     async function fetchPopularBooks() {
-        // Firebase Firestore 인스턴스를 가져옵니다.
-        const db = getFirestore();
+        const db = window.db; 
         const booksCol = collection(db, 'books');
         
         // 'reviews' 필드를 기준으로 내림차순 정렬하고 5개만 가져옵니다.
