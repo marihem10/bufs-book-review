@@ -143,7 +143,7 @@ app.get('/api/search', async (req, res) => {
         const response = await axios.get(apiHost, {
             params: {
                 query: query,
-                display: 10
+                display: 12
             },
             headers: {
                 'X-Naver-Client-Id': clientId,

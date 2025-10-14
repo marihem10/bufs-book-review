@@ -189,37 +189,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. 리뷰 목록 불러오기 및 표시
     // ----------------------------------------------------
     async function fetchAndDisplayReviews(bookIsbn) {
-        userReviewsContainer.innerHTML = '로딩 중...';
-        const reviewsQuery = query(collection(db, "reviews"), where("bookIsbn", "==", bookIsbn));
+        // [핵심]: db 인스턴스를 전역 window.db에서 가져옵니다.
+        const db = window.db; 
+        const userReviewsContainer = document.getElementById('userReviews');
         
+        userReviewsContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
+
         try {
+            // Firestore 쿼리: 해당 ISBN에 대한 리뷰만 가져옵니다.
+            const reviewsQuery = query(collection(db, "reviews"), where("bookIsbn", "==", bookIsbn));
             const querySnapshot = await getDocs(reviewsQuery);
-            userReviewsContainer.innerHTML = ''; // 목록 비우기
 
             if (querySnapshot.empty) {
                 userReviewsContainer.innerHTML = '<p>아직 이 책에 대한 리뷰가 없습니다.</p>';
                 return;
             }
 
+            userReviewsContainer.innerHTML = ''; // 목록 비우기
+
             querySnapshot.forEach((doc) => {
                 const review = doc.data();
+                // Firestore timestamp 객체를 JavaScript Date 객체로 변환
+                const date = review.timestamp ? review.timestamp.toDate().toLocaleDateString('ko-KR') : '날짜 없음';
+                
+                const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                const userIdDisplay = review.userId.split('@')[0]; // 이메일 앞부분만 표시
+
                 const reviewElement = document.createElement('div');
                 reviewElement.classList.add('user-review-item');
                 
-                // 별점 표시
-                const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-
                 reviewElement.innerHTML = `
-                    <p><strong>작성자:</strong> ${review.userId.split('@')[0]}</p>
+                    <p><strong>작성자:</strong> ${userIdDisplay} (${date})</p>
                     <p class="review-rating">${starsHtml}</p>
-                    <p>${review.comment}</p>
+                    <p class="review-comment">${review.comment}</p>
                     <hr>
                 `;
                 userReviewsContainer.appendChild(reviewElement);
             });
 
         } catch (e) {
-            userReviewsContainer.innerHTML = '<p>리뷰를 불러오는 데 실패했습니다.</p>';
+            console.error("리뷰 목록 가져오기 실패:", e);
+            userReviewsContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다. (DB 연결 오류)</p>';
         }
     }
-});
+    }
+
+);

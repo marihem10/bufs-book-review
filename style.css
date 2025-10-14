@@ -483,7 +483,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .mypage-wrapper #reviewForm,
 .mypage-wrapper .user-review-item {
     color: #333; 
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.95);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -493,4 +493,10 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .mypage-wrapper h1,
 .mypage-wrapper #userStatus {
     color: white !important;
+}
+
+.user-review-item .review-rating {
+    font-size: 20px;
+    color: gold;
+    margin: 5px 0;
 }
