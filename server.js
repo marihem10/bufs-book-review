@@ -135,11 +135,6 @@ app.post('/api/review-submit', async (req, res) => {
 
 app.get('/api/search', async (req, res) => {
     const query = req.query.query;
-    const page = parseInt(req.query.page) || 1; // 페이지 번호 받기 (없으면 1페이지)
-    const displayCount = 12; // 한 페이지에 표시할 책 개수 (최대 100까지 가능)
-
-    const startOffset = (page - 1) * displayCount + 1;  // 네이버 API의 'start' 파라미터
-
     if (!query) {
         return res.status(400).json({ error: '검색어를 입력해주세요.' });
     }
@@ -148,9 +143,7 @@ app.get('/api/search', async (req, res) => {
         const response = await axios.get(apiHost, {
             params: {
                 query: query,
-                display: displayCount, // 표시 개수
-                start: startOffset // 시작 위치 전달
-
+                display: 12
             },
             headers: {
                 'X-Naver-Client-Id': clientId,
@@ -166,10 +159,7 @@ app.get('/api/search', async (req, res) => {
             image: book.image || ''
         }));
 
-        res.json({
-            items: books,
-            total: response.data.total // 네이버 API에서 제공하는 전체 검색 결과 수
-        });
+        res.json(books);
 
     } catch (error) {
         console.error('API 호출 실패:', error);
