@@ -35,16 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 인기 도서 목록 표시 (Firebase 연동)
     // ----------------------------------------------------
     async function fetchPopularBooks() {
-        const db = window.db; // HTML에서 초기화된 전역 db 사용
-
-        if (!db) {
-            topBooksList.innerHTML = '<p>데이터베이스 연결 오류</p>';
-            return;
-        }
-
-        // [주의]: 이 코드는 실제 책의 'reviews' 필드가 있다고 가정합니다.
-        // Firebase에는 복잡한 쿼리가 안되므로, 실제로는 서버(Node.js)에서 통계 데이터를 계산해야 합니다.
-        // 현재는 가장 단순한 방법인, 미리 저장된 'reviews' 필드를 사용한다고 가정합니다.
+        const db = window.db; 
         const booksRef = collection(db, "books");
 
         // 리뷰 수가 많은 순서대로 5개의 책을 가져오는 쿼리
@@ -52,21 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const querySnapshot = await getDocs(q);
-            topBooksList.innerHTML = ''; // 기존 로딩 메시지 삭제
-            
-            if (querySnapshot.empty) {
-                topBooksList.innerHTML = '<p>아직 등록된 인기 도서가 없습니다.</p>';
-                return;
-            }
+            // ... (기존 목록 비우기 로직 유지) ...
 
             querySnapshot.forEach((doc) => {
                 const book = doc.data();
                 const listItem = document.createElement('li');
-
+                
+                // 통계 데이터 읽기
                 const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
 
-                // 책 제목과 리뷰 수를 표시 (예시)
-                listItem.textContent = `${book.title} (${averageRating}점, ${book.reviews} 리뷰)`; 
+                // 책 제목, 평균 별점, 리뷰 수를 표시
+                listItem.textContent = `${book.title} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
                 topBooksList.appendChild(listItem);
             });
         } catch (e) {

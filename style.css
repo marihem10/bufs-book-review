@@ -174,7 +174,6 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     padding-left: 20px;
 }
 
-/* 기존 .main-title과 .search-container 스타일은 그대로 유지 */
 .main-title {
     font-size: 48px;
     margin-top: 100px;
@@ -272,8 +271,8 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     font-weight: bold;
 }
 .tab-buttons button.active {
-    color: #4A90E2;
-    border-bottom: 3px solid #4A90E2;
+    color: #734e20ab;
+    border-bottom: 3px solid #734e20ab;
 }
 
 /* 폼 스타일 */
@@ -292,7 +291,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 }
 .auth-form button {
     padding: 12px;
-    background-color: #4A90E2;
+    background-color: #734e20ab;
     color: white;
     border: none;
     border-radius: 5px;
@@ -301,7 +300,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     transition: background-color 0.2s;
 }
 .auth-form button:hover {
-    background-color: #357ABD;
+    background-color: #734e20ab;
 }
 
 /* 책 상세 페이지 (book-detail.html) 스타일 */
@@ -404,7 +403,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 
 #submitReviewBtn {
     padding: 10px 20px;
-    background-color: #4A90E2;
+    background-color: #734e20ab;
     color: white;
     border: none;
     border-radius: 5px;
@@ -467,6 +466,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .user-controls .nav-item-detail:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
+
 /*마이페이지*/
 
 /* 1. 마이페이지 전체 컨테이너 (배경 위에 있는 모든 요소) */
@@ -513,7 +513,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 
 /* (마이페이지 수정 모드 스타일) */
 .user-review-item.editing {
-    border: 2px solid #4A90E2;
+    border: 2px solid #734e20ab;
     padding: 20px;
 }
 .edit-textarea {
@@ -521,7 +521,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     min-height: 100px;
     margin-top: 10px;
     padding: 10px;
-    border: 1px solid #4A90E2;
+    border: 1px solid #734e20ab;
     box-sizing: border-box;
 }
 
@@ -547,7 +547,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     transition: background-color 0.2s;
 }
 .user-review-item .edit-btn {
-    background-color: #4A90E2; /* 저장 버튼 */
+    background-color: #734e20ab; /* 저장 버튼 */
     color: white;
     border: none;
 }
