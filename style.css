@@ -415,16 +415,21 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 /* 별점 스타일 */
 .rating-stars {
     font-size: 24px;
-    color: gold;
+    color: #ffd700;
     cursor: pointer;
 }
 .star {
     opacity: 0.3; /* 기본적으로 별을 흐리게 만듭니다. */
     transition: opacity 0.2s;
 }
-/* 별점이 선택되었거나 마우스를 올렸을 때 */
-.star.selected, .star:hover {
-    opacity: 1;
+/*선택된 별의 디자인 */
+.rating-stars .star.selected {
+    opacity: 1; /* 완전히 진하게 */
+    color: #f08716; 
+}
+
+.rating-stars .star:hover {
+    opacity: 1; 
 }
 
 /* book-detail.html을 위한 새로운 상단 네비게이션 바 스타일 */

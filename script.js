@@ -37,8 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const db = window.db; 
         const booksRef = collection(db, "books");
 
-        // 리뷰 수가 많은 순서대로 5개의 책을 가져오는 쿼리
-        const q = query(booksRef, orderBy("reviews", "desc"), limit(5));
+        const q = query(
+            booksRef, 
+            orderBy("averageRating", "desc"), // 1순위: 평균 별점 (높은 순)
+            orderBy("reviews", "desc"),      // 2순위: 리뷰 수 (많은 순)
+            limit(5)
+        );
 
         try {
             const querySnapshot = await getDocs(q);
