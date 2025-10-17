@@ -1,6 +1,5 @@
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. URL에서 ISBN 가져오기 (초기화)
@@ -206,17 +205,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-            // [핵심]: 서버를 거치지 않고 Firestore 'reviews' 컬렉션에 직접 저장
+            // 1. 리뷰 저장
             await addDoc(collection(db, "reviews"), reviewData);
+
+            // 2. [핵심 추가]: books 컬렉션의 통계 데이터 업데이트
+            const bookRef = doc(db, "books", cleanIsbn);
+            const bookDoc = await getDoc(bookRef);
             
+            let currentReviews = 0;
+            let currentRatingSum = 0;
+
+            if (bookDoc.exists()) {
+                const firestoreData = bookDoc.data();
+                currentReviews = firestoreData.reviews || 0;
+                currentRatingSum = firestoreData.ratingSum || 0;
+            } else {
+                // 문서가 존재하지 않으면 초기 통계 데이터만 설정 (책 상세 정보는 API에서 가져왔다고 가정)
+                await setDoc(bookRef, {
+                    isbn: cleanIsbn,
+                    reviews: 0,
+                    ratingSum: 0,
+                    averageRating: 0
+                }, { merge: true });
+            }
+
+            // 새 통계 계산
+            const newReviews = currentReviews + 1;
+            const newRatingSum = currentRatingSum + selectedRating;
+            const newAverageRating = newRatingSum / newReviews;
+
+            // Firestore에 통계 업데이트 (merge: true로 안전하게)
+            await updateDoc(bookRef, {
+                reviews: newReviews,
+                ratingSum: newRatingSum,
+                averageRating: newAverageRating
+            });
+
             alert('리뷰가 성공적으로 등록되었습니다.');
             reviewTextarea.value = '';
             selectedRating = 0;
-            // 폼 초기화 및 리뷰 목록 새로고침
+            
+            // 폼 초기화 및 화면 새로고침 (책 정보 및 리뷰 목록)
             fetchAndDisplayReviews(isbn); 
+            fetchBookDetails(isbn); // 책 정보 및 통계 재로드
+
         } catch (e) {
             console.error("리뷰 등록 실패: ", e);
-            alert('리뷰 등록 중 오류가 발생했습니다. (Firestore 권한 확인 필요)');
+            alert('리뷰 등록 중 오류가 발생했습니다. (DB 연결 오류)');
         }
     });
 });
