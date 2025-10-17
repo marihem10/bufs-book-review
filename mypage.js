@@ -195,22 +195,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const newComment = item.querySelector('.edit-textarea').value.trim();
         const newRating = parseInt(item.querySelector('.edit-rating-stars').dataset.ratingValue);
 
-        if (newComment.length === 0 || newRating === 0) {
-            alert('리뷰 내용과 별점을 확인해주세요.');
-            return;
-        }
-
         try {
             const reviewRef = doc(db, "reviews", reviewId);
             await updateDoc(reviewRef, {
                 comment: newComment,
                 rating: newRating,
-                timestamp: FieldValue.serverTimestamp()
+                // [핵심 수정]: 수정 시 timestamp를 서버 시간으로 업데이트
+                timestamp: FieldValue.serverTimestamp() 
             });
             alert('리뷰가 수정되었습니다.');
             fetchUserReviews(auth.currentUser.email); // 목록 새로고침
         } catch (e) {
-            alert('수정에 실패했습니다.');
+            alert('수정에 실패했습니다. (권한 또는 DB 연결 확인)');
             console.error("리뷰 수정 실패:", e);
         }
     }
