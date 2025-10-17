@@ -508,7 +508,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     font-size: 18px;
     font-weight: bold;
     margin-top: 0;
-    color: #4A90E2; /* 제목 색상을 파란색으로 강조 */
+    color: #734e20ab; /* 제목 색상을 파란색으로 강조 */
 }
 
 /* (마이페이지 수정 모드 스타일) */

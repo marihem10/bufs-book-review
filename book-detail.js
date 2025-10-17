@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // [B] 함수 정의: 책 상세 정보 가져오기 (서버 사용)
     // ----------------------------------------------------
     async function fetchBookDetails(isbn) {
+        const book = await fetchBookDetails(isbn); // 기존 함수 호출
         try {
             const response = await fetch(`${serverUrl}/api/book-detail?isbn=${isbn}`);
             const book = await response.json();
@@ -57,6 +58,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             return null;
         }
     }
+
+    async function fetchBookDetailsAndStats(isbn) {
+    const book = await fetchBookDetails(isbn);
+
+    if (book) {
+        const db = window.db;
+        const bookRef = doc(db, "books", isbn);
+        const docSnap = await getDoc(bookRef); 
+
+        let totalReviews = 0;
+        let averageRating = 0;
+
+        if (docSnap.exists()) {
+            const firestoreData = docSnap.data();
+            totalReviews = firestoreData.reviews || 0;
+            averageRating = firestoreData.averageRating || 0;
+        }
+
+        const ratingDisplay = averageRating.toFixed(1);
+        const fullStars = '★'.repeat(Math.round(averageRating));
+        const emptyStars = '☆'.repeat(5 - Math.round(averageRating));
+        const starsHtml = fullStars + emptyStars;
+
+        // HTML 생성 로직
+        bookDetailContainer.innerHTML = `
+            <p><strong>평균 별점:</strong> <span class="average-rating-stars">${starsHtml}</span> (${ratingDisplay}/5.0)</p>
+            <p><strong>총 리뷰 수:</strong> ${totalReviews}개</p>
+            `;
+    }
+}
 
 
     // ----------------------------------------------------
@@ -109,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     
     // 1. 책 상세 정보 로딩 및 표시
-    const book = await fetchBookDetails(isbn);
+    const book = await fetchBookDetails(isbn); // Render 서버에서 기본 정보 가져옴
     if (book) {
         document.getElementById('pageTitle').textContent = book.title;
 
@@ -206,17 +237,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-            // [핵심]: 서버를 거치지 않고 Firestore 'reviews' 컬렉션에 직접 저장
+            // 1. 리뷰 저장
             await addDoc(collection(db, "reviews"), reviewData);
+
+            // 2. books 컬렉션의 통계 데이터 업데이트
+            const bookRef = doc(db, "books", cleanIsbn);
+            const bookDoc = await getDoc(bookRef);
             
+            let currentReviews = 0;
+            let currentRatingSum = 0;
+
+            if (bookDoc.exists()) {
+                const firestoreData = bookDoc.data();
+                currentReviews = firestoreData.reviews || 0;
+                currentRatingSum = firestoreData.ratingSum || 0;
+            }
+
+            // 새 통계 계산
+            const newReviews = currentReviews + 1;
+            const newRatingSum = currentRatingSum + selectedRating;
+            const newAverageRating = newRatingSum / newReviews;
+
+            // Firestore에 통계 업데이트
+            await updateDoc(bookRef, {
+                reviews: newReviews,
+                ratingSum: newRatingSum,
+                averageRating: newAverageRating
+            });
+
             alert('리뷰가 성공적으로 등록되었습니다.');
             reviewTextarea.value = '';
             selectedRating = 0;
-            // 폼 초기화 및 리뷰 목록 새로고침
+            
+            // 폼 초기화 및 화면 새로고침 (책 정보 및 리뷰 목록)
             fetchAndDisplayReviews(isbn); 
+            // 통계가 업데이트되었으므로 책 정보도 다시 불러옵니다.
+            fetchBookDetailsAndStats(isbn); // (아래에서 이 함수를 새로 만듭니다.)
+
         } catch (e) {
             console.error("리뷰 등록 실패: ", e);
-            alert('리뷰 등록 중 오류가 발생했습니다. (Firestore 권한 확인 필요)');
+            alert('리뷰 등록 중 오류가 발생했습니다. (DB 연결 오류)');
         }
     });
 });
