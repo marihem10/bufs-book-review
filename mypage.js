@@ -200,8 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await updateDoc(reviewRef, {
                 comment: newComment,
                 rating: newRating,
-                // [핵심 수정]: 수정 시 timestamp를 서버 시간으로 업데이트
-                timestamp: FieldValue.serverTimestamp() 
+                timestamp: new Date().toISOString() 
             });
             alert('리뷰가 수정되었습니다.');
             fetchUserReviews(auth.currentUser.email); // 목록 새로고침
