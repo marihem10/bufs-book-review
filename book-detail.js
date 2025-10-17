@@ -111,32 +111,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     
     // 1. 책 상세 정보 로딩 및 표시
-    const book = await fetchBookDetails(isbn); // Render 서버에서 기본 정보 가져옴
+    const book = await fetchBookDetails(isbn);
     if (book) {
         document.getElementById('pageTitle').textContent = book.title;
 
-        // [핵심 추가]: Firebase Firestore에서 통계 데이터를 가져옵니다.
-        const db = window.db;
-        const bookRef = doc(db, "books", isbn);
-        const docSnap = await getDoc(bookRef); // 문서 가져오기
-
-        let totalReviews = 0;
-        let averageRating = 0;
-
-        if (docSnap.exists()) {
-            const firestoreData = docSnap.data();
-            totalReviews = firestoreData.reviews || 0;
-            averageRating = firestoreData.averageRating || 0;
-        }
-
-        // 별점 및 리뷰 수 계산
-        const ratingDisplay = averageRating.toFixed(1);
-        const fullStars = '★'.repeat(Math.round(averageRating));
-        const emptyStars = '☆'.repeat(5 - Math.round(averageRating));
-        const starsHtml = fullStars + emptyStars;
-
-
-        // HTML 생성 로직
+        // HTML 생성 로직 유지
         bookDetailContainer.innerHTML = `
             <div class="detail-image-wrapper"> 
                 <img src="${book.image}" alt="${book.title}" class="detail-image"> 
@@ -150,13 +129,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 <hr style="border-top: 1px solid rgba(255, 255, 255, 0.3); margin: 15px 0;">
                 
-                <p><strong>평균 별점:</strong> <span class="average-rating-stars">${starsHtml}</span> (${ratingDisplay}/5.0)</p>
-                <p><strong>총 리뷰 수:</strong> ${totalReviews}개</p>
+                <p><strong>평균 별점:</strong> <span class="average-rating-stars">평가 중...</span></p>
+                <p><strong>총 리뷰 수:</strong> 로딩 중...</p>
             </div>
         `;
         // 2. 리뷰 목록 로드
         await fetchAndDisplayReviews(isbn); 
-    }
+    } 
 
     // ----------------------------------------------------
     // [E] 리뷰 등록 이벤트 리스너
