@@ -1,11 +1,18 @@
 import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
+    const db = window.db;
     const searchInput = document.querySelector('.search-input');
     const searchButton = document.querySelector('.search-button');
     const topBooksList = document.querySelector('.top-books-list');
-    const db = window.db;
+
+    if (!db) {
+        // DB 인스턴스가 없으면 오류 메시지를 명확히 표시하고 함수 종료
+        topBooksList.innerHTML = '<p>데이터베이스 연결 오류 (초기화 실패)</p>';
+        console.error("Firebase DB 인스턴스를 찾을 수 없습니다. Firebase SDK를 확인하세요.");
+        return; 
+    }
     
     // ----------------------------------------------------
     // 1. 검색 기능 이벤트 리스너
