@@ -30,9 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 현재 사용자의 리뷰를 Firestore에서 가져오는 함수
     async function fetchUserReviews(userEmail) {
         reviewListContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
-        
+        const serverUrl = 'https://bufs-book-review.onrender.com'; // 서버 URL 재정의
+
         try {
-            // Firestore 쿼리: bookIsbn 대신 userId 필드를 사용해 필터링합니다.
             const q = query(collection(db, "reviews"), where("userId", "==", userEmail));
             const querySnapshot = await getDocs(q);
 
@@ -41,46 +41,44 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            // 리뷰 데이터를 모두 가져와서 Promise 배열로 변환
+            const reviewsWithTitles = querySnapshot.docs.map(async (doc) => {
+                const review = doc.data();
+                const reviewId = doc.id;
+                
+                // [핵심 로직]: Render 서버에 책 상세 정보를 요청합니다.
+                const response = await fetch(`${serverUrl}/api/book-detail?isbn=${review.bookIsbn}`);
+                const bookDetail = await response.json();
+                
+                // 책 제목을 가져오지 못하면 기본값 사용
+                const bookTitle = bookDetail.title || '책 제목을 찾을 수 없음';
+
+                return { review, reviewId, bookTitle };
+            });
+
+            // 모든 비동기 작업(책 제목 가져오기)이 완료될 때까지 기다립니다.
+            const finalReviews = await Promise.all(reviewsWithTitles);
+            
             reviewListContainer.innerHTML = ''; // 목록 비우기
 
-            querySnapshot.forEach(async (doc) => {
-                const review = doc.data();
-                const reviewId = doc.id; // Firestore 문서 ID (수정/삭제에 필요)
-                
-                //책 제목을 가져오는 함수 (이 부분은 임시 로딩 메시지로 대체)
-                const bookTitle = review.bookTitle || '책 제목 불러오는 중...'; // 임시 로딩 텍스트
+            finalReviews.forEach((data) => {
+                const { review, reviewId, bookTitle } = data;
                 
                 const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-                const reviewDate = review.timestamp ? new Date(review.timestamp.toDate()).toLocaleDateString('ko-KR') : '날짜 없음';
 
                 const reviewElement = document.createElement('div');
                 reviewElement.classList.add('user-review-item');
                 reviewElement.dataset.reviewId = reviewId;
-                
-                //삭제 시 사용할 리뷰 데이터를 문자열로 저장
-                reviewElement.dataset.reviewData = JSON.stringify({
-                    bookIsbn: review.bookIsbn,
-                    bookTitle: bookTitle, // 임시 제목
-                    rating: review.rating,
-                    comment: review.comment 
-                });
 
                 reviewElement.innerHTML = `
                     <h3 class="review-book-title">${bookTitle}</h3>
                     <p class="review-rating">${starsHtml}</p>
                     <p class="review-comment">${review.comment}</p>
-                    <p class="review-date">작성일: ${reviewDate}</p>
                     <button class="edit-btn">수정</button>
                     <button class="delete-btn">삭제</button>
                     <hr>
                 `;
                 reviewListContainer.appendChild(reviewElement);
-
-                // [추가 기능]: 제목이 로딩 중일 경우, 서버에서 제목을 가져와 업데이트하는 비동기 로직
-                if (review.bookTitle === undefined) {
-                    // 이 로직은 복잡해지므로, 현재는 Firestroe에 저장된 bookTitle 필드를 사용한다고 가정하겠습니다.
-                    // (만약 bookTitle이 Firestore review 문서에 저장되지 않았다면, 이 부분이 '책 제목 불러오는 중...'으로 남게 됩니다.)
-                }
             });
 
             attachEventListeners(); // 버튼에 이벤트 리스너 연결
