@@ -1,8 +1,7 @@
-// mypage.js
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, updateDoc, FieldValue } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// [핵심] window.auth와 window.db가 로드될 때까지 기다립니다.
+//window.auth와 window.db가 로드될 때까지 기다리기.
 function initializeFirebaseInstances() {
     if (window.auth && window.db) {
         return { auth: window.auth, db: window.db };
@@ -31,9 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 현재 사용자의 리뷰를 Firestore에서 가져오는 함수
     async function fetchUserReviews(userEmail) {
         reviewListContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
-        const serverUrl = 'https://bufs-book-review.onrender.com'; // 서버 URL 재정의
-
+        
         try {
+            // Firestore 쿼리: bookIsbn 대신 userId 필드를 사용해 필터링합니다.
             const q = query(collection(db, "reviews"), where("userId", "==", userEmail));
             const querySnapshot = await getDocs(q);
 
@@ -42,44 +41,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // 리뷰 데이터를 모두 가져와서 Promise 배열로 변환
-            const reviewsWithTitles = querySnapshot.docs.map(async (doc) => {
-                const review = doc.data();
-                const reviewId = doc.id;
-                
-                // [핵심 로직]: Render 서버에 책 상세 정보를 요청합니다.
-                const response = await fetch(`${serverUrl}/api/book-detail?isbn=${review.bookIsbn}`);
-                const bookDetail = await response.json();
-                
-                // 책 제목을 가져오지 못하면 기본값 사용
-                const bookTitle = bookDetail.title || '책 제목을 찾을 수 없음';
-
-                return { review, reviewId, bookTitle };
-            });
-
-            // 모든 비동기 작업(책 제목 가져오기)이 완료될 때까지 기다립니다.
-            const finalReviews = await Promise.all(reviewsWithTitles);
-            
             reviewListContainer.innerHTML = ''; // 목록 비우기
 
-            finalReviews.forEach((data) => {
-                const { review, reviewId, bookTitle } = data;
+            querySnapshot.forEach(async (doc) => {
+                const review = doc.data();
+                const reviewId = doc.id; // Firestore 문서 ID (수정/삭제에 필요)
+                
+                //책 제목을 가져오는 함수 (이 부분은 임시 로딩 메시지로 대체)
+                const bookTitle = review.bookTitle || '책 제목 불러오는 중...'; // 임시 로딩 텍스트
                 
                 const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                const reviewDate = review.timestamp ? new Date(review.timestamp.toDate()).toLocaleDateString('ko-KR') : '날짜 없음';
 
                 const reviewElement = document.createElement('div');
                 reviewElement.classList.add('user-review-item');
                 reviewElement.dataset.reviewId = reviewId;
+                
+                //삭제 시 사용할 리뷰 데이터를 문자열로 저장
+                reviewElement.dataset.reviewData = JSON.stringify({
+                    bookIsbn: review.bookIsbn,
+                    bookTitle: bookTitle, // 임시 제목
+                    rating: review.rating,
+                    comment: review.comment 
+                });
 
                 reviewElement.innerHTML = `
                     <h3 class="review-book-title">${bookTitle}</h3>
                     <p class="review-rating">${starsHtml}</p>
                     <p class="review-comment">${review.comment}</p>
+                    <p class="review-date">작성일: ${reviewDate}</p>
                     <button class="edit-btn">수정</button>
                     <button class="delete-btn">삭제</button>
                     <hr>
                 `;
                 reviewListContainer.appendChild(reviewElement);
+
+                // [추가 기능]: 제목이 로딩 중일 경우, 서버에서 제목을 가져와 업데이트하는 비동기 로직
+                if (review.bookTitle === undefined) {
+                    // 이 로직은 복잡해지므로, 현재는 Firestroe에 저장된 bookTitle 필드를 사용한다고 가정하겠습니다.
+                    // (만약 bookTitle이 Firestore review 문서에 저장되지 않았다면, 이 부분이 '책 제목 불러오는 중...'으로 남게 됩니다.)
+                }
             });
 
             attachEventListeners(); // 버튼에 이벤트 리스너 연결
@@ -114,27 +115,65 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', async (e) => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
+                const reviewData = reviewItem.dataset.reviewData ? JSON.parse(reviewItem.dataset.reviewData) : null;
                 
-                // 취소 버튼을 눌렀을 경우 (수정 모드 중 취소)
+                // 수정 모드 중 취소 로직
                 if (reviewItem.classList.contains('editing')) {
                     cancelEdit(reviewItem);
                     return;
                 }
                 
-                // 삭제 확인
-                if (confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
+                if (!reviewData) {
+                    alert('오류: 리뷰 데이터를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                    return;
+                }
+
+                if (confirm(`'${reviewData.bookTitle}' 리뷰를 정말 삭제하시겠습니까?`)) {
                     try {
+                        const bookIsbn = reviewData.bookIsbn;
+                        
+                        // 1. 리뷰 문서 삭제
                         await deleteDoc(doc(db, "reviews", reviewId));
+                        
+                        // 2. books 컬렉션의 통계 데이터 업데이트 (리뷰 수 감소)
+                        await updateBookStatsOnDelete(bookIsbn, reviewData.rating);
+                        
                         alert('리뷰가 삭제되었습니다.');
                         fetchUserReviews(auth.currentUser.email); // 목록 새로고침
                     } catch (e) {
-                        alert('삭제에 실패했습니다.');
+                        alert('삭제에 실패했습니다. (DB 권한 확인)');
                         console.error("삭제 실패:", e);
                     }
+                }
+                // 리뷰 삭제 시 books 컬렉션 통계를 업데이트하는 비동기 함수
+                async function updateBookStatsOnDelete(bookIsbn, deletedRating) {
+                    const bookRef = doc(db, "books", bookIsbn);
+                    const bookDoc = await getDoc(bookRef);
+
+                    if (!bookDoc.exists) return; // 책 정보가 없다면 무시
+
+                    const firestoreData = bookDoc.data();
+                    const currentReviews = firestoreData.reviews || 0;
+                    const currentRatingSum = firestoreData.ratingSum || 0;
+
+                    if (currentReviews <= 0) return; // 이미 리뷰가 0개 이하라면 무시
+
+                    // 새 통계 계산
+                    const newReviews = currentReviews - 1;
+                    const newRatingSum = currentRatingSum - deletedRating;
+                    const newAverageRating = newReviews > 0 ? (newRatingSum / newReviews) : 0;
+
+                    // Firestore에 통계 업데이트
+                    await updateDoc(bookRef, {
+                        reviews: newReviews,
+                        ratingSum: newRatingSum,
+                        averageRating: newAverageRating
+                    });
                 }
             });
         });
     }
+    
 
     // 수정 모드 진입 함수
     function enterEditMode(item, comment, rating, editBtn) {

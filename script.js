@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bookTitle = book.title || '제목 정보 없음'; // book.title이 undefined면 '제목 정보 없음'으로 표시
 
                 // 책 제목과 리뷰 수를 표시
-                listItem.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
+                listItem.textContent = `${bookTitle} (${averageRating}점, 리뷰 ${book.reviews || 0}개)`; 
                 topBooksList.appendChild(listItem);
             });
         } catch (e) {
