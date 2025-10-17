@@ -3,22 +3,18 @@ import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc } 
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. URL에서 ISBN 가져오기 (초기화)
+    document.addEventListener('DOMContentLoaded', async () => {
+    
+    // 1. URL에서 ISBN 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     const isbn = urlParams.get('isbn');
 
     const bookDetailContainer = document.getElementById('bookDetail');
     const backButton = document.getElementById('backButton');
     
-    // Firebase 인스턴스 (HTML에서 초기화됨)
-    const db = await (async function getDbInstance() {
-        if (window.db) return window.db;
-        return new Promise(resolve => setTimeout(() => resolve(getDbInstance()), 50));
-    })();
-    const auth = await (async function getAuthInstance() {
-        if (window.auth) return window.auth;
-        return new Promise(resolve => setTimeout(() => resolve(getAuthInstance()), 50));
-    })(); 
+    // [핵심]: Firebase 인스턴스 전역에서 가져오기
+    const db = window.db; 
+    const auth = window.auth; 
     
     // 리뷰 관련 요소
     const reviewTextarea = document.getElementById('reviewText');
@@ -27,17 +23,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userReviewsContainer = document.getElementById('userReviews');
     
     let selectedRating = 0; // 사용자가 선택한 별점
-    const serverUrl = 'https://bufs-book-review.onrender.com'; // 서버 URL (책 정보 가져올 때 사용)
+    const serverUrl = 'https://bufs-book-review.onrender.com'; // 서버 URL
 
-
+    // ----------------------------------------------------
+    // 초기화 및 오류 확인
+    // ----------------------------------------------------
     if (!isbn) {
         bookDetailContainer.innerHTML = '<h2>오류: 책 정보를 찾을 수 없습니다.</h2>';
         return;
     }
-
-    // ----------------------------------------------------
-    // [A] 뒤로가기 버튼 기능
-    // ----------------------------------------------------
+    if (!db) {
+        bookDetailContainer.innerHTML = '<h2>오류: 데이터베이스 연결에 실패했습니다.</h2>';
+        return;
+    }
+    
+    // 뒤로가기 기능
     if (backButton) {
         backButton.addEventListener('click', () => {
             window.history.back(); 
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // [B] 함수 정의: 책 상세 정보 가져오기 (서버 사용)
     // ----------------------------------------------------
     async function fetchBookDetails(isbn) {
-        const book = await fetchBookDetails(isbn); // 기존 함수 호출
         try {
             const response = await fetch(`${serverUrl}/api/book-detail?isbn=${isbn}`);
             const book = await response.json();
@@ -96,13 +95,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // ----------------------------------------------------
-    // [C] 함수 정의: 리뷰 목록 불러오기 (Firestore 직접 사용)
+    // [C] 함수 정의: 리뷰 목록 불러오기
     // ----------------------------------------------------
     async function fetchAndDisplayReviews(bookIsbn) {
         userReviewsContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
 
         try {
-            // Firestore 쿼리: 해당 ISBN에 대한 리뷰만 가져옵니다.
+            // Firestore 쿼리
             const reviewsQuery = query(collection(db, "reviews"), where("bookIsbn", "==", bookIsbn));
             const querySnapshot = await getDocs(reviewsQuery);
 
@@ -144,19 +143,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     // [D] 메인 실행 및 초기 로드
     // ----------------------------------------------------
     
-    // 1. 책 상세 정보 로딩 및 표시
-    const book = await fetchBookDetails(isbn); // Render 서버에서 기본 정보 가져옴
+    // 1. 책 상세 정보 로딩
+    const book = await fetchBookDetails(isbn); 
+
     if (book) {
         document.getElementById('pageTitle').textContent = book.title;
 
-        // Firebase Firestore에서 통계 데이터를 가져옵니다.
+        // [핵심]: Firebase Firestore에서 통계 데이터를 가져옵니다.
         const bookRef = doc(db, "books", isbn);
         const docSnap = await getDoc(bookRef); // 문서 가져오기
 
         let totalReviews = 0;
         let averageRating = 0;
 
-        // Firestore에 데이터가 존재하면 통계 정보를 업데이트합니다.
         if (docSnap.exists()) {
             const firestoreData = docSnap.data();
             totalReviews = firestoreData.reviews || 0;
@@ -188,12 +187,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>총 리뷰 수:</strong> ${totalReviews}개</p>
             </div>
         `;
-        // 2. 리뷰 목록 로드 (여기서 bookIsbn은 URL에서 가져온 isbn 변수입니다.)
+        // 2. 리뷰 목록 로드
         await fetchAndDisplayReviews(isbn); 
-    } else {
-         // 책 정보를 가져오지 못했을 때 오류 메시지를 표시합니다.
-         bookDetailContainer.innerHTML = '<h2>책 상세 정보를 불러올 수 없습니다.</h2>';
-    }
+    } 
 
     // ----------------------------------------------------
     // [E] 리뷰 등록 이벤트 리스너
@@ -282,5 +278,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("리뷰 등록 실패: ", e);
             alert('리뷰 등록 중 오류가 발생했습니다. (DB 연결 오류)');
         }
+    });
     });
 });
