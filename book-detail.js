@@ -11,8 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const backButton = document.getElementById('backButton');
     
     // Firebase 인스턴스 (HTML에서 초기화됨)
-    const db = window.db; 
-    const auth = window.auth; 
+    const db = await (async function getDbInstance() {
+        if (window.db) return window.db;
+        return new Promise(resolve => setTimeout(() => resolve(getDbInstance()), 50));
+    })();
+    const auth = await (async function getAuthInstance() {
+        if (window.auth) return window.auth;
+        return new Promise(resolve => setTimeout(() => resolve(getAuthInstance()), 50));
+    })(); 
     
     // 리뷰 관련 요소
     const reviewTextarea = document.getElementById('reviewText');
@@ -63,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const book = await fetchBookDetails(isbn);
 
     if (book) {
-        const db = window.db;
         const bookRef = doc(db, "books", isbn);
         const docSnap = await getDoc(bookRef); 
 
@@ -145,7 +150,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('pageTitle').textContent = book.title;
 
         // Firebase Firestore에서 통계 데이터를 가져옵니다.
-        const db = window.db;
         const bookRef = doc(db, "books", isbn);
         const docSnap = await getDoc(bookRef); // 문서 가져오기
 
