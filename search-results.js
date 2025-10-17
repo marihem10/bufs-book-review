@@ -1,5 +1,3 @@
-// search-results.js (일부)
-
 document.addEventListener('DOMContentLoaded', async () => {
     // URL에서 검색어 가져오기
     const urlParams = new URLSearchParams(window.location.search);

@@ -1,4 +1,3 @@
-// script.js
 import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,17 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const querySnapshot = await getDocs(q);
-            // ... (기존 목록 비우기 로직 유지) ...
 
             querySnapshot.forEach((doc) => {
                 const book = doc.data();
                 const listItem = document.createElement('li');
-                
-                // 통계 데이터 읽기
-                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
 
-                // 책 제목, 평균 별점, 리뷰 수를 표시
-                listItem.textContent = `${book.title} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
+                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
+                
+                // 임시로 JSON 문자열 전체를 출력하여 문제 진단:
+                const bookTitle = book.title || '제목 정보 없음'; // book.title이 undefined면 '제목 정보 없음'으로 표시
+
+                // 책 제목과 리뷰 수를 표시
+                listItem.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
                 topBooksList.appendChild(listItem);
             });
         } catch (e) {

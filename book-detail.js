@@ -208,33 +208,51 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 1. 리뷰 저장
             await addDoc(collection(db, "reviews"), reviewData);
 
-            // 2. [핵심 추가]: books 컬렉션의 통계 데이터 업데이트
+            // 2. books 컬렉션의 통계 데이터 가져오기 및 업데이트
             const bookRef = doc(db, "books", cleanIsbn);
             const bookDoc = await getDoc(bookRef);
             
             let currentReviews = 0;
             let currentRatingSum = 0;
-
+            
+            const displayedTitle = document.querySelector('.detail-text h1').textContent.trim();
+            const displayedImage = document.querySelector('.detail-image').src;
+            
             if (bookDoc.exists()) {
+                // 문서가 이미 존재하면 기존 통계 로드 및 업데이트 로직 유지
                 const firestoreData = bookDoc.data();
                 currentReviews = firestoreData.reviews || 0;
                 currentRatingSum = firestoreData.ratingSum || 0;
+
+                // 새 통계 계산
+                const newReviews = currentReviews + 1;
+                const newRatingSum = currentRatingSum + selectedRating;
+                const newAverageRating = newRatingSum / newReviews;
+
+                await updateDoc(bookRef, {
+                    reviews: newReviews,
+                    ratingSum: newRatingSum,
+                    averageRating: newAverageRating
+                });
+
             } else {
-                // 문서가 존재하지 않으면 초기 통계 데이터만 설정 (책 상세 정보는 API에서 가져왔다고 가정)
+                const newReviews = 1;
+                const newRatingSum = selectedRating;
+                
                 await setDoc(bookRef, {
                     isbn: cleanIsbn,
-                    reviews: 0,
-                    ratingSum: 0,
-                    averageRating: 0
-                }, { merge: true });
+                    title: displayedTitle, 
+                    image: displayedImage,
+                    reviews: newReviews,
+                    ratingSum: newRatingSum,
+                    averageRating: newRatingSum / newReviews
+                });
             }
-
             // 새 통계 계산
             const newReviews = currentReviews + 1;
             const newRatingSum = currentRatingSum + selectedRating;
             const newAverageRating = newRatingSum / newReviews;
 
-            // Firestore에 통계 업데이트 (merge: true로 안전하게)
             await updateDoc(bookRef, {
                 reviews: newReviews,
                 ratingSum: newRatingSum,
