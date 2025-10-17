@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 현재 사용자의 리뷰를 Firestore에서 가져오는 함수
     async function fetchUserReviews(userEmail) {
         reviewListContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
-        const serverUrl = 'https://bufs-book-review.onrender.com'; // 서버 URL
+        const serverUrl = 'https://bufs-book-review.onrender.com'; 
 
         try {
             const q = query(collection(db, "reviews"), where("userId", "==", userEmail));
@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("리뷰 목록 가져오기 실패:", e);
         }
     }
+
 // 3. 수정/삭제 버튼에 이벤트 리스너 연결
     function attachEventListeners() {
         // [수정 기능]
