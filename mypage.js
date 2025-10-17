@@ -1,8 +1,6 @@
-// mypage.js
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, updateDoc, FieldValue } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// [핵심] window.auth와 window.db가 로드될 때까지 기다립니다.
 function initializeFirebaseInstances() {
     if (window.auth && window.db) {
         return { auth: window.auth, db: window.db };
@@ -114,21 +112,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', async (e) => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
-                
-                // 취소 버튼을 눌렀을 경우 (수정 모드 중 취소)
+                // [핵심]: JSON.parse를 시도하고, 실패하면 null 처리
+                const reviewDataJson = reviewItem.dataset.reviewData;
+                let reviewData;
+                try {
+                    reviewData = JSON.parse(reviewDataJson);
+                } catch (e) {
+                    alert('오류: 리뷰 데이터 파싱에 실패했습니다. 페이지를 새로고침해주세요.');
+                    return; 
+                }
+
+                // 수정 모드 중 취소 로직 (유지)
                 if (reviewItem.classList.contains('editing')) {
                     cancelEdit(reviewItem);
                     return;
                 }
+
+                if (!reviewData || !reviewData.bookIsbn || typeof reviewData.rating !== 'number') {
+                    alert('오류: 리뷰 데이터(ISBN 또는 별점)가 누락되어 삭제할 수 없습니다.');
+                    return;
+                }
                 
-                // 삭제 확인
-                if (confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
+                if (confirm(`'${reviewData.bookTitle}' 리뷰를 정말 삭제하시겠습니까?`)) {
                     try {
+                        const bookIsbn = reviewData.bookIsbn;
+                        
+                        // 1. [핵심]: 통계 데이터 업데이트 (리뷰 수 감소)
+                        await updateBookStatsOnDelete(bookIsbn, reviewData.rating); 
+                        
+                        // 2. 리뷰 문서 삭제
                         await deleteDoc(doc(db, "reviews", reviewId));
-                        alert('리뷰가 삭제되었습니다.');
+                        
+                        alert('리뷰가 삭제되었습니다. 인기도서 목록에 반영됩니다.');
                         fetchUserReviews(auth.currentUser.email); // 목록 새로고침
                     } catch (e) {
-                        alert('삭제에 실패했습니다.');
+                        alert('삭제에 실패했습니다. (통계 업데이트 오류)');
                         console.error("삭제 실패:", e);
                     }
                 }
@@ -208,5 +226,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('수정에 실패했습니다. (권한 또는 DB 연결 확인)');
             console.error("리뷰 수정 실패:", e);
         }
+    }
+    async function updateBookStatsOnDelete(bookIsbn, deletedRating) {
+        const bookRef = doc(db, "books", bookIsbn);
+        const bookDoc = await getDoc(bookRef);
+
+        if (!bookDoc.exists) return; // 책 정보가 없다면 무시
+
+        const firestoreData = bookDoc.data();
+        const currentReviews = firestoreData.reviews || 0;
+        const currentRatingSum = firestoreData.ratingSum || 0;
+
+        if (currentReviews <= 0) return; // 이미 리뷰가 0개 이하라면 무시
+
+        // 새 통계 계산
+        const newReviews = currentReviews - 1;
+        const newRatingSum = currentRatingSum - deletedRating;
+        const newAverageRating = newReviews > 0 ? (newRatingSum / newReviews) : 0; // 0개일 때 0으로 설정
+
+        // Firestore에 통계 업데이트
+        await updateDoc(bookRef, {
+            reviews: newReviews,
+            ratingSum: newRatingSum,
+            averageRating: newAverageRating
+        });
     }
 });
