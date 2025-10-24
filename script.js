@@ -38,13 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const booksRef = collection(db, "books");
 
         // 리뷰 수가 많은 순서대로 5개의 책을 가져오는 쿼리
-        const q = query(
-            booksRef, 
-            orderBy("averageRating", "desc"),
-            orderBy("reviews", "desc"), 
-            limit(5)
-        );
-        
+        const q = query(booksRef, orderBy("reviews", "desc"), limit(5));
+
         try {
             const querySnapshot = await getDocs(q);
 
@@ -66,5 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             topBooksList.innerHTML = '<p>인기 도서 목록을 불러올 수 없습니다.</p>';
         }
     }
+
     fetchPopularBooks(); // 페이지 로드 시 함수 실행
 });
