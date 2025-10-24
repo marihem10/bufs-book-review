@@ -492,6 +492,8 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px; 
+
 }
 
 /* 3. 리뷰 목록 제목/별점 등 */
@@ -520,6 +522,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .user-review-item.editing {
     border: 2px solid #734e20ab;
     padding: 20px;
+    
 }
 .edit-textarea {
     width: 100%;
