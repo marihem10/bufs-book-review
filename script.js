@@ -34,33 +34,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 인기 도서 목록 표시 (Firebase 연동)
     // ----------------------------------------------------
     async function fetchPopularBooks() {
-        const db = window.db; 
-        const booksRef = collection(db, "books");
+        const db = window.db; // HTML에서 초기화된 전역 db를 사용
 
-        // 리뷰 수가 많은 순서대로 5개의 책을 가져오는 쿼리
+        if (!db) {
+            // DB 인스턴스가 없으면 오류 메시지를 명확히 표시하고 함수 종료
+            topBooksList.innerHTML = '<p>데이터베이스 연결 오류 (초기화 실패)</p>';
+            console.error("Firebase DB 인스턴스를 찾을 수 없습니다. Firebase SDK를 확인하세요.");
+            return; 
+        }
+
+        const booksRef = collection(db, "books"); // db 인스턴스 사용
+
+        // 리뷰 수가 많은 순서대로 5개의 책을 가져오는 쿼리 (이미 설정됨)
         const q = query(
             booksRef, 
-            orderBy("averageRating", "desc"), // 1순위: 평균 별점 (높은 순)
-            orderBy("reviews", "desc"),      // 2순위: 리뷰 수 (많은 순)
+            orderBy("averageRating", "desc"),
+            orderBy("reviews", "desc"), 
             limit(5)
         );
 
         try {
             const querySnapshot = await getDocs(q);
-
-            querySnapshot.forEach((doc) => {
-                const book = doc.data();
-                const listItem = document.createElement('li');
-
-                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
-                
-                // 임시로 JSON 문자열 전체를 출력하여 문제 진단:
-                const bookTitle = book.title || '제목 정보 없음'; // book.title이 undefined면 '제목 정보 없음'으로 표시
-
-                // 책 제목과 리뷰 수를 표시
-                listItem.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
-                topBooksList.appendChild(listItem);
-            });
+            topBooksList.innerHTML = ''; // 기존 로딩 메시지 삭제
+            
+            if (querySnapshot.empty) {
+                topBooksList.innerHTML = '<p>아직 등록된 인기 도서가 없습니다.</p>';
+                return;
+            }
         } catch (e) {
             console.error("인기 도서 목록 가져오기 실패:", e);
             topBooksList.innerHTML = '<p>인기 도서 목록을 불러올 수 없습니다.</p>';
