@@ -122,13 +122,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 
                 // 삭제 확인
-                if (confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
+                if (confirm(`'${reviewData.bookTitle}' 리뷰를 정말 삭제하시겠습니까?`)) {
                     try {
+                        const bookIsbn = reviewData.bookIsbn;
+                        
+                        // 1. [핵심 로직]: 통계 데이터 업데이트 (리뷰 수 감소)
+                        await updateBookStatsOnDelete(bookIsbn, reviewData.rating); 
+                        
+                        // 2. 리뷰 문서 삭제
                         await deleteDoc(doc(db, "reviews", reviewId));
-                        alert('리뷰가 삭제되었습니다.');
+                        
+                        alert('리뷰가 삭제되었습니다. 인기도서 목록에 반영됩니다.');
                         fetchUserReviews(auth.currentUser.email); // 목록 새로고침
                     } catch (e) {
-                        alert('삭제에 실패했습니다.');
+                        alert('삭제에 실패했습니다. (통계 업데이트 오류)');
                         console.error("삭제 실패:", e);
                     }
                 }
@@ -208,5 +215,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('수정에 실패했습니다. (권한 또는 DB 연결 확인)');
             console.error("리뷰 수정 실패:", e);
         }
+    }
+    async function updateBookStatsOnDelete(bookIsbn, deletedRating) {
+        const db = window.db; // 전역 db 인스턴스 사용
+        const bookRef = doc(db, "books", bookIsbn);
+        const bookDoc = await getDoc(bookRef);
+
+        if (!bookDoc.exists) return; // 책 정보가 없다면 무시
+
+        const firestoreData = bookDoc.data();
+        const currentReviews = firestoreData.reviews || 0;
+        const currentRatingSum = firestoreData.ratingSum || 0;
+
+        if (currentReviews <= 0) return; // 이미 리뷰가 0개 이하라면 무시
+
+        // 새 통계 계산
+        const newReviews = currentReviews - 1;
+        const newRatingSum = currentRatingSum - deletedRating;
+        const newAverageRating = newReviews > 0 ? (newRatingSum / newReviews) : 0; // 0개일 때 0으로 설정
+
+        // Firestore에 통계 업데이트
+        await updateDoc(bookRef, {
+            reviews: newReviews,
+            ratingSum: newRatingSum,
+            averageRating: newAverageRating
+        });
     }
 });
