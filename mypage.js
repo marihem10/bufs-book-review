@@ -125,15 +125,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', async (e) => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
-
-                // [핵심 수정]: JSON.parse 대신 dataset에서 직접 읽기
+                
+                // [핵심]: JSON.parse 대신 dataset에서 직접 읽기
                 const bookIsbn = reviewItem.dataset.bookIsbn;
                 const deletedRating = parseInt(reviewItem.dataset.rating);
                 const bookTitle = reviewItem.dataset.bookTitle;
                 
                 // 수정 모드 중 취소
                 if (reviewItem.classList.contains('editing')) {
-                    cancelEdit(reviewItem, userEmail, dbInstance);
+                    cancelEdit(reviewItem, userEmail, db);
                     return;
                 }
 
@@ -144,13 +144,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (confirm(`'${bookTitle}' 리뷰를 정말 삭제하시겠습니까?`)) {
                     try {
-                        await updateBookStatsOnDelete(bookIsbn, deletedRating, dbInstance); 
-                        await deleteDoc(doc(dbInstance, "reviews", reviewId));
-                        
+                        // [핵심 수정]: 서버에 DELETE 요청 전송
+                        const serverUrl = 'https://bufs-book-review.onrender.com'; 
+                        const response = await fetch(`${serverUrl}/api/review-delete`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                reviewId: reviewId,
+                                bookIsbn: bookIsbn,
+                                deletedRating: deletedRating
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const errorResult = await response.json();
+                            throw new Error(errorResult.error || '서버에서 삭제 실패');
+                        }
+
                         alert('리뷰가 삭제되었습니다.');
-                        fetchUserReviews(userEmail, dbInstance); // 목록 새로고침
+                        fetchUserReviews(userEmail, db); // 목록 새로고침
                     } catch (e) {
-                        alert('삭제에 실패했습니다. (통계 업데이트 오류)');
+                        alert(`삭제에 실패했습니다: ${e.message}`);
                         console.error("삭제 실패:", e);
                     }
                 }

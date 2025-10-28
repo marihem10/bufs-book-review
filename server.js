@@ -250,6 +250,53 @@ app.get('/api/my-reviews', async (req, res) => {
     }
 });
 
+// ------------------------------------------------------------------
+// [새로운 엔드포인트 3]: 마이페이지 리뷰 삭제 (통계 업데이트 포함)
+// ------------------------------------------------------------------
+app.delete('/api/review-delete', async (req, res) => {
+    // [핵심]: 클라이언트가 보낸 JSON 본문에서 데이터를 가져옵니다.
+    const { reviewId, bookIsbn, deletedRating } = req.body;
+
+    if (!reviewId || !bookIsbn || deletedRating === undefined) {
+        return res.status(400).json({ error: '필수 삭제 정보(reviewId, bookIsbn, rating)가 누락되었습니다.' });
+    }
+
+    try {
+        const db = getFirestore(); // Firestore 인스턴스 가져오기
+
+        // 1. [서버 로직]: books 컬렉션의 통계 데이터 업데이트 (리뷰 수 감소)
+        const bookRef = db.collection('books').doc(bookIsbn);
+        const bookDoc = await bookRef.get();
+
+        if (bookDoc.exists()) {
+            const firestoreData = bookDoc.data();
+            const currentReviews = firestoreData.reviews || 0;
+            const currentRatingSum = firestoreData.ratingSum || 0;
+
+            if (currentReviews > 0) {
+                const newReviews = currentReviews - 1;
+                const newRatingSum = currentRatingSum - deletedRating;
+                const newAverageRating = newReviews > 0 ? (newRatingSum / newReviews) : 0;
+
+                await bookRef.update({
+                    reviews: newReviews,
+                    ratingSum: newRatingSum,
+                    averageRating: newAverageRating
+                });
+            }
+        }
+
+        // 2. [서버 로직]: reviews 컬렉션에서 해당 리뷰 문서 삭제
+        await db.collection('reviews').doc(reviewId).delete();
+
+        res.status(200).json({ message: '리뷰 삭제 및 통계 업데이트가 성공적으로 완료되었습니다.' });
+
+    } catch (error) {
+        console.error('서버 측 리뷰 삭제 오류:', error);
+        res.status(500).json({ error: '서버 오류로 인해 리뷰 삭제에 실패했습니다.' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
