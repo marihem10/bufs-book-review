@@ -34,25 +34,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 인기 도서 목록 표시 (Firebase 연동)
     // ----------------------------------------------------
     async function fetchPopularBooks() {
-        const db = window.db; 
-        const booksRef = collection(db, "books");
-
-        // 리뷰 수가 많은 순서대로 5개의 책을 가져오는 쿼리
-        const q = query(booksRef, orderBy("reviews", "desc"), limit(5));
-
+        // [핵심 수정]: Render 서버에 인기 도서 목록을 요청합니다.
+        const serverUrl = 'https://bufs-book-review.onrender.com'; 
+        
         try {
-            const querySnapshot = await getDocs(q);
+            const response = await fetch(`${serverUrl}/api/popular-books`);
+            const popularBooks = await response.json();
 
-            querySnapshot.forEach((doc) => {
-                const book = doc.data();
+            topBooksList.innerHTML = ''; // 기존 로딩 메시지 삭제
+
+            if (!popularBooks || popularBooks.length === 0) {
+                topBooksList.innerHTML = '<p>아직 등록된 인기 도서가 없습니다.</p>';
+                return;
+            }
+
+            popularBooks.forEach((book) => {
                 const listItem = document.createElement('li');
-
                 const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
+                const bookTitle = book.title || '제목 정보 없음';
                 
-                // 임시로 JSON 문자열 전체를 출력하여 문제 진단:
-                const bookTitle = book.title || '제목 정보 없음'; // book.title이 undefined면 '제목 정보 없음'으로 표시
-
-                // 책 제목과 리뷰 수를 표시
                 listItem.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
                 topBooksList.appendChild(listItem);
             });

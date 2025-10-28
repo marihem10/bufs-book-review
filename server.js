@@ -167,6 +167,89 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
+// ------------------------------------------------------------------
+// [새로운 엔드포인트 1]: 인기 도서 목록 가져오기
+// ------------------------------------------------------------------
+app.get('/api/popular-books', async (req, res) => {
+    try {
+        const booksRef = db.collection('books');
+        
+        // 1순위: 평균 별점, 2순위: 리뷰 수로 정렬
+        const q = query(
+            booksRef, 
+            orderBy("averageRating", "desc"),
+            orderBy("reviews", "desc"), 
+            limit(5)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            return res.json([]); // 데이터가 없으면 빈 배열 반환
+        }
+
+        const popularBooks = [];
+        querySnapshot.forEach((doc) => {
+            popularBooks.push(doc.data());
+        });
+
+        res.json(popularBooks);
+
+    } catch (error) {
+        console.error('인기 도서 목록 가져오기 실패 (서버 측):', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+
+// ------------------------------------------------------------------
+// [새로운 엔드포인트 2]: 마이페이지 리뷰 목록 가져오기
+// ------------------------------------------------------------------
+app.get('/api/my-reviews', async (req, res) => {
+    const userEmail = req.query.userId; // 클라이언트에서 userId를 쿼리로 받음
+
+    if (!userEmail) {
+        return res.status(400).json({ error: '사용자 ID가 누락되었습니다.' });
+    }
+
+    try {
+        const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", userEmail));
+        const querySnapshot = await getDocs(reviewsQuery);
+
+        if (querySnapshot.empty) {
+            return res.json([]); // 리뷰가 없으면 빈 배열 반환
+        }
+
+        // 리뷰 목록과 책 제목을 조합
+        const reviewsWithTitles = querySnapshot.docs.map(async (document) => {
+            const review = document.data();
+            const reviewId = document.id;
+            let bookTitle = '책 제목 정보 없음';
+            
+            // books 컬렉션에서 책 정보를 가져옴
+            const bookRef = doc(db, "books", review.bookIsbn);
+            const bookDoc = await getDoc(bookRef);
+            if (bookDoc.exists()) {
+                bookTitle = bookDoc.data().title || bookTitle;
+            }
+
+            return { 
+                review, 
+                reviewId, 
+                bookTitle, 
+                reviewDate: review.timestamp ? new Date(review.timestamp.toDate()).toLocaleDateString('ko-KR') : '날짜 없음'
+            };
+        });
+
+        const finalReviews = await Promise.all(reviewsWithTitles);
+        res.json(finalReviews);
+
+    } catch (error) {
+        console.error('마이페이지 리뷰 가져오기 실패 (서버 측):', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
