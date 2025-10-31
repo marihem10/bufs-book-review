@@ -115,45 +115,47 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
                 
-                // [핵심]: JSON.parse 대신 dataset에서 직접 읽기
-                const bookIsbn = reviewItem.dataset.bookIsbn;
-                const deletedRating = parseInt(reviewItem.dataset.rating);
-                const bookTitle = reviewItem.dataset.bookTitle;
-                
                 // 수정 모드 중 취소
                 if (reviewItem.classList.contains('editing')) {
-                    cancelEdit(reviewItem, userEmail, db); // cancelEdit 함수는 db 인스턴스가 필요할 수 있음
+                    cancelEdit(reviewItem);
                     return;
                 }
 
-                if (!bookIsbn || isNaN(deletedRating)) {
-                    alert('오류: 리뷰 데이터(ISBN 또는 별점)가 누락되어 삭제할 수 없습니다.');
+                if (!reviewId) {
+                    alert('오류: 리뷰 ID를 찾을 수 없습니다.');
                     return;
                 }
                 
-                if (confirm(`'${bookTitle}' 리뷰를 정말 삭제하시겠습니까?`)) {
+                if (confirm(`이 리뷰를 정말 삭제하시겠습니까?`)) {
                     try {
-                        // [핵심 수정]: 서버에 DELETE 요청 전송
-                        const serverUrl = 'https://bufs-book-review.onrender.com'; 
-                        const response = await fetch(`${serverUrl}/api/review-delete`, {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                reviewId: reviewId,
-                                bookIsbn: bookIsbn,
-                                deletedRating: deletedRating
-                            })
-                        });
+                        // [핵심 수정]: Firestore에 다시 접속하여 삭제할 리뷰의 정보를 가져옵니다.
+                        const reviewRef = doc(db, "reviews", reviewId);
+                        const reviewDoc = await getDoc(reviewRef);
 
-                        if (!response.ok) {
-                            const errorResult = await response.json();
-                            throw new Error(errorResult.error || '서버에서 삭제 실패');
+                        if (!reviewDoc.exists()) {
+                            alert('오류: 삭제할 리뷰를 찾을 수 없습니다.');
+                            return;
                         }
 
+                        const reviewData = reviewDoc.data();
+                        const bookIsbn = reviewData.bookIsbn;
+                        const deletedRating = reviewData.rating;
+
+                        if (!bookIsbn || typeof deletedRating !== 'number') {
+                            alert('오류: 리뷰 데이터(ISBN 또는 별점)가 유효하지 않아 통계를 업데이트할 수 없습니다.');
+                            return;
+                        }
+
+                        // 1. 통계 데이터 업데이트 (리뷰 수 감소)
+                        await updateBookStatsOnDelete(bookIsbn, deletedRating, db); 
+                        
+                        // 2. 리뷰 문서 삭제
+                        await deleteDoc(reviewRef);
+                        
                         alert('리뷰가 삭제되었습니다.');
-                        fetchUserReviews(userEmail, db); // 목록 새로고침
+                        fetchUserReviews(auth.currentUser.email, db); // 목록 새로고침
                     } catch (e) {
-                        alert(`삭제에 실패했습니다: ${e.message}`);
+                        alert('삭제에 실패했습니다. (DB 권한 확인)');
                         console.error("삭제 실패:", e);
                     }
                 }
