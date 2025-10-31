@@ -53,7 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Render 서버에 책 상세 정보를 요청
                 const response = await fetch(`${serverUrl}/api/book-detail?isbn=${review.bookIsbn}`);
                 const bookDetail = await response.json();
-                const bookTitle = bookDetail.title || '책 제목을 찾을 수 없음';
+                
+                // [핵심 수정]: 서버 오류가 나도 제목만 기본값으로 처리
+                const bookTitle = (bookDetail && bookDetail.title) ? bookDetail.title : '책 제목을 찾을 수 없음';
 
                 return { 
                     review, 
@@ -125,15 +127,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', async (e) => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
-                
-                // [핵심]: JSON.parse 대신 dataset에서 직접 읽기
+
+                // [핵심 수정]: JSON.parse 대신 dataset에서 직접 읽기
                 const bookIsbn = reviewItem.dataset.bookIsbn;
                 const deletedRating = parseInt(reviewItem.dataset.rating);
                 const bookTitle = reviewItem.dataset.bookTitle;
                 
                 // 수정 모드 중 취소
                 if (reviewItem.classList.contains('editing')) {
-                    cancelEdit(reviewItem, userEmail, db);
+                    cancelEdit(reviewItem, userEmail, dbInstance);
                     return;
                 }
 
@@ -144,27 +146,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (confirm(`'${bookTitle}' 리뷰를 정말 삭제하시겠습니까?`)) {
                     try {
-                        // [핵심 수정]: 서버에 DELETE 요청 전송
-                        const serverUrl = 'https://bufs-book-review.onrender.com'; 
-                        const response = await fetch(`${serverUrl}/api/review-delete`, {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                reviewId: reviewId,
-                                bookIsbn: bookIsbn,
-                                deletedRating: deletedRating
-                            })
-                        });
-
-                        if (!response.ok) {
-                            const errorResult = await response.json();
-                            throw new Error(errorResult.error || '서버에서 삭제 실패');
-                        }
-
+                        await updateBookStatsOnDelete(bookIsbn, deletedRating, dbInstance); 
+                        await deleteDoc(doc(dbInstance, "reviews", reviewId));
+                        
                         alert('리뷰가 삭제되었습니다.');
-                        fetchUserReviews(userEmail, db); // 목록 새로고침
+                        fetchUserReviews(userEmail, dbInstance); // 목록 새로고침
                     } catch (e) {
-                        alert(`삭제에 실패했습니다: ${e.message}`);
+                        alert('삭제에 실패했습니다. (통계 업데이트 오류)');
                         console.error("삭제 실패:", e);
                     }
                 }
