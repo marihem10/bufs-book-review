@@ -305,25 +305,16 @@ app.listen(port, () => {
 
 // ISBN으로 책 상세 정보를 가져오는 엔드포인트
 app.get('/api/book-detail', async (req, res) => {
-    const isbnQuery = req.query.isbn; 
+    const isbn = req.query.isbn; 
 
-    if (!isbnQuery) {
+    if (!isbn) {
         return res.status(400).json({ error: 'ISBN이 필요합니다.' });
-    }
-
-    // [핵심 수정]: ISBN을 13자리 숫자로 완벽하게 정리
-    // 네이버 API는 13자리 ISBN을 선호하며, 10자리/13자리가 섞인 ISBN을 받지 못합니다.
-    const cleanIsbn = isbnQuery.replace(/\D/g, '').trim();
-    const isbnToSearch = cleanIsbn.length > 13 ? cleanIsbn.substring(cleanIsbn.length - 13) : cleanIsbn;
-
-    if (isbnToSearch.length < 10) { // 너무 짧은 ISBN은 거부
-         return res.status(400).json({ error: '유효하지 않은 ISBN 형식입니다.' });
     }
 
     try {
         const response = await axios.get(apiHost, {
             params: {
-                d_isbn: isbnToSearch, // [핵심]: d_isbn (상세 검색) 파라미터를 사용
+                query: isbn, // [핵심 수정]: d_isbn 대신 일반 query 파라미터에 ISBN을 넣음
                 display: 1
             },
             headers: {
@@ -336,21 +327,26 @@ app.get('/api/book-detail', async (req, res) => {
             return res.status(404).json({ error: '해당 ISBN의 책을 찾을 수 없습니다.' });
         }
         
-        const book = response.data.items[0];
+        // 검색 결과 중 ISBN이 정확히 일치하는 항목을 찾습니다.
+        const book = response.data.items.find(item => item.isbn === isbn);
+
+        if (!book) {
+            return res.status(404).json({ error: 'ISBN이 정확히 일치하는 책을 찾을 수 없습니다.' });
+        }
 
         // 필요한 데이터만 추출
         const bookDetail = {
             title: book.title.replace(/<[^>]*>?/g, ''),
             author: book.author || '저자 없음',
             publisher: book.publisher || '출판사 없음',
-            isbn: book.isbn, // 네이버가 반환한 ISBN 사용
+            isbn: book.isbn,
             image: book.image || 'https://via.placeholder.com/200x300'
         };
 
         res.json(bookDetail);
 
     } catch (error) {
-        console.error('책 상세 정보 API 호출 실패:', error.message);
+        console.error('책 상세 정보 API 호출 실패:', error);
         res.status(500).json({ error: '서버 내부 오류가 발생했습니다. (API 확인 필요)' });
     }
 });
