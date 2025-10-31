@@ -262,7 +262,8 @@ app.delete('/api/review-delete', async (req, res) => {
     }
 
     try {
-        const db = getFirestore(); // Firestore 인스턴스 가져오기
+        // [주의]: db 인스턴스는 server.js 상단에서 getFirestore()로 초기화되어 있어야 합니다.
+        const db = getFirestore(); 
 
         // 1. [서버 로직]: books 컬렉션의 통계 데이터 업데이트 (리뷰 수 감소)
         const bookRef = db.collection('books').doc(bookIsbn);
@@ -296,6 +297,7 @@ app.delete('/api/review-delete', async (req, res) => {
         res.status(500).json({ error: '서버 오류로 인해 리뷰 삭제에 실패했습니다.' });
     }
 });
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
