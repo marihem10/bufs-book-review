@@ -18,10 +18,8 @@ const firebaseConfig = {
 // 앱 인스턴스 초기화
 const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app); 
-export const db = getFirestore(app);
 
 // 모든 페이지에서 사용할 전역 인스턴스를 노출합니다.
-//window.firebaseApp = app; 
-//window.auth = getAuth(app); 
-//window.db = getFirestore(app);
+window.firebaseApp = app; 
+window.auth = getAuth(app); 
+window.db = getFirestore(app);
