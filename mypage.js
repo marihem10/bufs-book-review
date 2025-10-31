@@ -2,6 +2,7 @@
 
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, updateDoc, FieldValue, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { auth, db } from './firebase-init.js';
 
 // [핵심] window.auth와 window.db가 로드될 때까지 기다립니다.
 function initializeFirebaseInstances() {
