@@ -70,10 +70,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             querySnapshot.forEach((doc) => {
                 const book = doc.data();
                 const listItem = document.createElement('li');
+                
+                // 텍스트 대신 <a> 링크 태그를 생성합니다.
+                const link = document.createElement('a');
+                
+                // 1. 책 상세 페이지로 이동하는 링크 설정 (ISBN 포함)
+                // book.isbn 필드가 Firestore 'books' 컬렉션에 있어야 합니다.
+                link.href = `book-detail.html?isbn=${book.isbn}`; 
+                
+                // 2. 링크 텍스트 설정
                 const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
                 const bookTitle = book.title || '제목 정보 없음';
+                link.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`;
                 
-                listItem.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`; 
+                // 3. 링크에 스타일 클래스 추가 (선택 사항)
+                link.classList.add('popular-book-link');
+
+                // 4. li에 링크를 추가
+                listItem.appendChild(link);
                 topBooksList.appendChild(listItem);
             });
         } catch (e) {

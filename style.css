@@ -174,6 +174,16 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     padding-left: 20px;
 }
 
+.top-books-list li a.popular-book-link {
+    text-decoration: none; /* 밑줄 제거 */
+    color: #333; /* 기본 글자색 (검은색 계열) */
+    transition: color 0.2s;
+}
+.top-books-list li a.popular-book-link:hover {
+    color: #734e20ab; /* 마우스를 올리면 색변경 */
+    text-decoration: underline; /* 마우스를 올리면 밑줄 표시 */
+}
+
 .main-title {
     font-size: 48px;
     margin-top: 100px;
