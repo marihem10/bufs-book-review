@@ -1,8 +1,6 @@
-// script.js (Firebase 초기화 대기 로직 추가)
+import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-// [핵심] window.auth와 window.db가 로드될 때까지 기다리는 헬퍼 함수
+// window.auth와 window.db가 로드될 때까지 기다리는 헬퍼 함수
 function initializeFirebaseInstances() {
     if (window.auth && window.db) {
         return { auth: window.auth, db: window.db };
@@ -50,9 +48,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const booksRef = collection(db, "books");
         
-        // [수정 확인]: 정렬 기준 (평균 별점 우선, 그다음 리뷰 수)
+        // 정렬 기준 (평균 별점 우선, 그다음 리뷰 수)
         const q = query(
             booksRef, 
+            where("reviews", ">", 0),
             orderBy("averageRating", "desc"), 
             orderBy("reviews", "desc"), 
             limit(5)
