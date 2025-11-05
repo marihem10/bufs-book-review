@@ -11,7 +11,7 @@ function initializeFirebaseInstances() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // [핵심 수정]: Firebase 인스턴스를 기다려서 가져옵니다.
+    // [핵심]: Firebase 인스턴스를 기다려서 가져옵니다.
     const { auth, db } = await initializeFirebaseInstances();
 
     const searchInput = document.querySelector('.search-input');
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const topBooksList = document.querySelector('.top-books-list');
     
     // ----------------------------------------------------
-    // 1. 검색 기능 이벤트 리스너 (기존 코드)
+    // 1. 검색 기능 이벤트 리스너
     // ----------------------------------------------------
     const handleSearch = () => {
         const queryText = searchInput.value;
@@ -47,29 +47,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const booksRef = collection(db, "books");
         
-        // 1순위: 'averageRating' (평균 별점)
-        // 2순위: 'reviews' (리뷰 개수)
+        // (참고) Firebase 규칙상 'reviews' > 0 필터 사용 시 'reviews' 정렬이 먼저 와야 합니다.
         const q = query(
             booksRef, 
             where("reviews", ">", 0),
-            orderBy("averageRating", "desc"), // <-- 1순위: 평균 별점
-            orderBy("reviews", "desc"),       // <-- 2순위: 리뷰 개수
-            limit(5)
+            orderBy("reviews", "desc"),
+            orderBy("averageRating", "desc"), 
+            limit(20) // 20개를 가져와서
         );
 
         try {
             const querySnapshot = await getDocs(q);
-            topBooksList.innerHTML = ''; // 기존 로딩 메시지 삭제
+            
+            let books = [];
+            querySnapshot.forEach((doc) => {
+                books.push(doc.data());
+            });
 
-            if (querySnapshot.empty) {
+            if (books.length === 0) {
                 topBooksList.innerHTML = '<p>아직 등록된 인기 도서가 없습니다.</p>';
                 return;
             }
 
-            querySnapshot.forEach((doc) => {
-                const book = doc.data();
-                const listItem = document.createElement('li');
+            // (참고) 클라이언트에서 '평균 별점' 순으로 재정렬
+            books.sort((a, b) => {
+                // 1. 평균 별점 (내림차순)
+                if ((b.averageRating || 0) > (a.averageRating || 0)) return 1;
+                if ((b.averageRating || 0) < (a.averageRating || 0)) return -1;
                 
+                // 2. (별점이 같으면) 리뷰 개수 (내림차순)
+                if ((b.reviews || 0) > (a.reviews || 0)) return 1;
+                if ((b.reviews || 0) < (a.reviews || 0)) return -1;
+                
+                return 0;
+            });
+            
+            const top5Books = books.slice(0, 5); // 재정렬된 리스트에서 5개 선택
+            topBooksList.innerHTML = ''; // 기존 로딩 메시지 삭제
+            
+            top5Books.forEach((book) => {
+                const listItem = document.createElement('li');
                 const link = document.createElement('a');
                 
                 link.href = `book-detail.html?isbn=${book.isbn}`; 
@@ -79,10 +96,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 link.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`;
                 
                 link.classList.add('popular-book-link');
-
                 listItem.appendChild(link);
                 topBooksList.appendChild(listItem);
             });
+            
         } catch (e) {
             console.error("인기 도서 목록 가져오기 실패:", e);
             topBooksList.innerHTML = '<p>인기 도서 목록을 불러올 수 없습니다.</p>';
@@ -91,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                  topBooksList.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. 콘솔을 확인하세요.</p>';
             }
         }
-    }
+    } 
+    await fetchPopularBooks();
 
-    fetchPopularBooks();
-});
+}); 
