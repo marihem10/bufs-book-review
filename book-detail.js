@@ -214,26 +214,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-            // 1. 리뷰 저장
-            await addDoc(collection(db, "reviews"), reviewData);
+            // [수정 1] 사용자 ID(uid)와 email을 가져옵니다.
+            const userId = auth.currentUser.uid;
+            const userEmail = auth.currentUser.email;
+            
+            // [수정 2] "uid_isbn" 형식으로 고유한 문서 ID를 생성합니다.
+            const docId = `${userId}_${cleanIsbn}`;
+            const reviewRef = doc(db, "reviews", docId);
 
-            // 2. books 컬렉션의 통계 데이터 가져오기 및 업데이트
+            // [수정 3] (클라이언트 검사) setDoc을 시도하기 전에,
+            // 이 ID로 된 문서가 이미 있는지 확인합니다.
+            const reviewDoc = await getDoc(reviewRef);
+            if (reviewDoc.exists()) {
+                alert('이미 이 책에 대한 리뷰를 작성했습니다.');
+                return; // 등록 절차 중단
+            }
+
+            // [수정 4] 저장할 리뷰 데이터 (timestamp를 Date 객체로 저장)
+            const reviewData = {
+                bookIsbn: cleanIsbn, 
+                userId: userEmail, // 마이페이지 쿼리를 위해 email 저장
+                rating: selectedRating,
+                comment: reviewTextarea.value.trim(),
+                timestamp: new Date() // Date 객체로 저장 (Invalid Date 문제 해결)
+            };
+
+            // [수정 5] addDoc (랜덤 ID) 대신 setDoc (고유 ID)을 사용합니다.
+            // 이것이 중복 등록을 막는 2번째 방어선(DB 레벨)입니다.
+            await setDoc(reviewRef, reviewData);
+
+            // [수정 6] 책 통계 업데이트 (기존 버그 수정)
             const bookRef = doc(db, "books", cleanIsbn);
             const bookDoc = await getDoc(bookRef);
             
-            let currentReviews = 0;
-            let currentRatingSum = 0;
-            
-            const displayedTitle = document.querySelector('.detail-text h1').textContent.trim();
-            const displayedImage = document.querySelector('.detail-image').src;
-            
             if (bookDoc.exists()) {
-                // 문서가 이미 존재하면 기존 통계 로드 및 업데이트 로직 유지
+                // 6-1. 책이 이미 DB에 있으면, 통계를 +1 업데이트합니다.
                 const firestoreData = bookDoc.data();
-                currentReviews = firestoreData.reviews || 0;
-                currentRatingSum = firestoreData.ratingSum || 0;
+                const currentReviews = firestoreData.reviews || 0;
+                const currentRatingSum = firestoreData.ratingSum || 0;
 
-                // 새 통계 계산
                 const newReviews = currentReviews + 1;
                 const newRatingSum = currentRatingSum + selectedRating;
                 const newAverageRating = newRatingSum / newReviews;
@@ -243,42 +262,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ratingSum: newRatingSum,
                     averageRating: newAverageRating
                 });
-
             } else {
-                const newReviews = 1;
-                const newRatingSum = selectedRating;
+                // 6-2. 책이 DB에 없으면(첫 리뷰), 새 문서를 생성합니다.
+                const displayedTitle = document.querySelector('.detail-text h1').textContent.trim();
+                const displayedImage = document.querySelector('.detail-image').src;
                 
                 await setDoc(bookRef, {
                     isbn: cleanIsbn,
                     title: displayedTitle, 
                     image: displayedImage,
-                    reviews: newReviews,
-                    ratingSum: newRatingSum,
-                    averageRating: newRatingSum / newReviews
+                    reviews: 1,
+                    ratingSum: selectedRating,
+                    averageRating: selectedRating // 1로 나누나 마나
                 });
             }
-            // 새 통계 계산
-            const newReviews = currentReviews + 1;
-            const newRatingSum = currentRatingSum + selectedRating;
-            const newAverageRating = newRatingSum / newReviews;
-
-            await updateDoc(bookRef, {
-                reviews: newReviews,
-                ratingSum: newRatingSum,
-                averageRating: newAverageRating
-            });
 
             alert('리뷰가 성공적으로 등록되었습니다.');
+            
+            // 폼 초기화
             reviewTextarea.value = '';
+            ratingStars.forEach(s => s.classList.remove('selected'));
             selectedRating = 0;
             
-            // 폼 초기화 및 화면 새로고침 (책 정보 및 리뷰 목록)
+            // 리뷰 목록과 책 상세 정보(통계)를 즉시 새로고침
             fetchAndDisplayReviews(isbn); 
-            fetchBookDetails(isbn); // 책 정보 및 통계 재로드
+            fetchBookDetails(isbn); 
 
         } catch (e) {
             console.error("리뷰 등록 실패: ", e);
-            alert('리뷰 등록 중 오류가 발생했습니다. (DB 연결 오류)');
+            if (e.code === 'permission-denied') {
+                alert('리뷰 등록에 실패했습니다. (DB 쓰기 권한 오류)');
+            } else {
+                alert('리뷰 등록 중 오류가 발생했습니다.');
+            }
         }
     });
 });
