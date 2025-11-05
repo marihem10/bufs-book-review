@@ -574,3 +574,77 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     color: #333;
     border: none;
 }
+
+/* ---------------------------------    */
+/* 검색 결과 페이지 (정렬, 페이지네이션) */
+/* ---------------------------------   */
+
+/* 정렬 버튼 컨테이너 */
+.sort-options {
+    margin-top: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+/* 정렬 버튼 */
+.sort-btn {
+    font-family: 'Nanum Myeongjo', sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: white; /* 기본 글자색 */
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin: 0 5px;
+}
+
+/* 활성화된 정렬 버튼 */
+.sort-btn.active {
+    opacity: 1;
+    color: #ffd700; /* 활성화 색상 (금색) */
+    border-bottom: 2px solid #ffd700;
+}
+
+.sort-btn:hover:not(.active) {
+    opacity: 1;
+}
+
+/* 페이지네이션 컨테이너 */
+.pagination {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+/* 페이지네이션 버튼 */
+.page-btn {
+    font-family: 'Nanum Myeongjo', sans-serif;
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 현재 페이지 버튼 */
+.page-btn.active {
+    background-color: #734e20ab; /* 기존 버튼 색상 활용 */
+    border-color: #734e20ab;
+    color: white;
+    cursor: default;
+}
+
+.page-btn:disabled {
+    cursor: default;
+    opacity: 0.5;
+}

@@ -134,16 +134,25 @@ app.post('/api/review-submit', async (req, res) => {
 
 
 app.get('/api/search', async (req, res) => {
-    const query = req.query.query;
+    // 1. 클라이언트로부터 파라미터 받기 (query, sort, page)
+    const { query, sort, page } = req.query;
+    
     if (!query) {
         return res.status(400).json({ error: '검색어를 입력해주세요.' });
     }
+    // 2. API 파라미터 설정
+    const display = 12; // 페이지당 12개 (기존 유지)
+    const pageNum = parseInt(page) || 1; // 페이지 번호 (기본값 1)
+    const start = 1 + (pageNum - 1) * display; // 네이버 API 시작 위치 계산
+    const sortOption = sort === 'date' ? 'date' : 'sim'; // 정렬 옵션 (기본값 'sim')
 
     try {
         const response = await axios.get(apiHost, {
             params: {
                 query: query,
-                display: 12
+                display: display,     // 12
+                start: start,         // 계산된 시작 위치
+                sort: sortOption      // 'sim' 또는 'date'
             },
             headers: {
                 'X-Naver-Client-Id': clientId,
@@ -151,18 +160,43 @@ app.get('/api/search', async (req, res) => {
             }
         });
 
+        // 3. 네이버 API 응답에서 총 결과 수(total) 추출 (페이지네이션 계산용)
+        const totalResults = response.data.total || 0;
+        
+        // [수정]: 네이버 API는 최대 1000개(start=1000)까지만 결과를 줍니다. 
+        // 1000개를 초과하는 결과는 totalPages 계산에서 제외합니다.
+        const effectiveTotal = Math.min(totalResults, 1000); 
+        const totalPages = Math.ceil(effectiveTotal / display);
+
+        // 4. 책 목록 데이터 가공
         const books = response.data.items.map(book => ({
             title: book.title.replace(/<[^>]*>?/g, ''),
             author: book.author || '저자 없음',
             publisher: book.publisher || '출판사 없음',
-            isbn: book.isbn || Date.now().toString(),
+            isbn: book.isbn || Date.now().toString(), // ISBN 없는 경우 대체
             image: book.image || ''
         }));
 
-        res.json(books);
+        // 5. 클라이언트에 응답 (책 목록 + 페이지네이션 정보)
+        res.json({
+            books: books,
+            currentPage: pageNum,
+            totalPages: totalPages,
+            totalResults: totalResults
+        });
 
     } catch (error) {
-        console.error('API 호출 실패:', error);
+        // [수정]: API 호출 실패 시 에러 로그에 요청 파라미터 포함
+        console.error(`API 호출 실패 (Query: ${query}, Start: ${start}, Sort: ${sortOption}):`, error.message);
+        
+        if (error.response && error.response.status === 400) {
+            // 네이버 API가 400 에러를 반환하는 경우 (예: start 값이 1000을 넘을 때)
+            return res.status(400).json({ 
+                error: '잘못된 요청입니다. (검색 범위를 초과했을 수 있습니다)',
+                details: error.response.data 
+            });
+        }
+        
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
