@@ -210,6 +210,7 @@ app.get('/api/popular-books', async (req, res) => {
         
         // Admin SDK 구문 사용
         const querySnapshot = await booksRef
+            .where("reviews", ">", 0)           // <--리뷰가 1개 이상인 책만
             .orderBy("averageRating", "desc")
             .orderBy("reviews", "desc") 
             .limit(5)
