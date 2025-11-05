@@ -126,21 +126,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     const bookIsbn = reviewItem.dataset.bookIsbn;
                     const deletedRating = parseInt(reviewItem.dataset.currentRating);
+                    const reviewId = reviewItem.dataset.reviewId; // reviewId도 여기서 가져옵니다.
 
-                    if (!bookIsbn || isNaN(deletedRating)) {
-                        alert('오류: 리뷰 데이터(ISBN 또는 별점)가 유효하지 않아 통계를 업데이트할 수 없습니다.');
+                    if (!bookIsbn || isNaN(deletedRating) || !reviewId) {
+                        alert('오류: 리뷰 데이터(ISBN, 별점, 또는 ID)가 유효하지 않습니다.');
                         return;
                     }
 
                     try {
-                        // 데이터를 URL 쿼리 파라미터로 전송 (body 제거)
-                        const response = await fetch(
-                            `${serverUrl}/api/review-delete?reviewId=${reviewId}&bookIsbn=${bookIsbn}&deletedRating=${deletedRating}`, 
-                            {
-                                method: 'DELETE'
-                                // headers와 body 속성 제거
-                            }
-                        );
+                        // [핵심 수정 1]: 요청할 URL을 변수로 만듭니다.
+                        const requestUrl = `${serverUrl}/api/review-delete?reviewId=${reviewId}&bookIsbn=${bookIsbn}&deletedRating=${deletedRating}`;
+
+                        // [핵심 수정 2]: URL을 콘솔에 출력하여 확인합니다.
+                        console.log('서버에 삭제 요청 URL:', requestUrl);
+
+                        // [핵심 수정 3]: 변수를 사용하여 fetch 요청
+                        const response = await fetch(requestUrl, {
+                            method: 'DELETE'
+                        });
 
                         if (!response.ok) {
                             const err = await response.json();
