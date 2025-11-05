@@ -124,7 +124,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (confirm(`이 리뷰를 정말 삭제하시겠습니까?`)) {
                     
-                    // [핵심 수정]: data 속성에서 통계 계산에 필요한 정보 가져오기
                     const bookIsbn = reviewItem.dataset.bookIsbn;
                     const deletedRating = parseInt(reviewItem.dataset.currentRating);
 
@@ -134,16 +133,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                     try {
-                        // [핵심 수정]: 서버의 삭제 API 호출
-                        const response = await fetch(`${serverUrl}/api/review-delete`, {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                reviewId: reviewId,
-                                bookIsbn: bookIsbn,
-                                deletedRating: deletedRating
-                            })
-                        });
+                        // 데이터를 URL 쿼리 파라미터로 전송 (body 제거)
+                        const response = await fetch(
+                            `${serverUrl}/api/review-delete?reviewId=${reviewId}&bookIsbn=${bookIsbn}&deletedRating=${deletedRating}`, 
+                            {
+                                method: 'DELETE'
+                                // headers와 body 속성 제거
+                            }
+                        );
 
                         if (!response.ok) {
                             const err = await response.json();

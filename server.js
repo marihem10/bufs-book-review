@@ -288,16 +288,17 @@ app.get('/api/my-reviews', async (req, res) => {
 // [새로운 엔드포인트 3]: 마이페이지 리뷰 삭제 (통계 업데이트 포함)
 // ------------------------------------------------------------------
 app.delete('/api/review-delete', async (req, res) => {
-    // [핵심]: 클라이언트가 보낸 JSON 본문에서 데이터를 가져옵니다.
-    const { reviewId, bookIsbn, deletedRating } = req.body;
+    // [수정]: req.body 대신 req.query에서 데이터를 가져옵니다.
+    const { reviewId, bookIsbn } = req.query;
+    const deletedRating = parseInt(req.query.deletedRating); // 쿼리 파라미터는 문자열이므로 숫자로 변환
 
-    if (!reviewId || !bookIsbn || deletedRating === undefined) {
+    if (!reviewId || !bookIsbn || isNaN(deletedRating)) { // [수정]: deletedRating === undefined 를 isNaN(deletedRating)으로 변경
         return res.status(400).json({ error: '필수 삭제 정보(reviewId, bookIsbn, rating)가 누락되었습니다.' });
     }
 
     try {
         // [주의]: db 인스턴스는 server.js 상단에서 getFirestore()로 초기화되어 있어야 합니다.
-        const db = getFirestore(); 
+        // const db = getFirestore(); // <-- 이 줄은 server.js 상단에 이미 있어야 합니다.
 
         // 1. [서버 로직]: books 컬렉션의 통계 데이터 업데이트 (리뷰 수 감소)
         const bookRef = db.collection('books').doc(bookIsbn);
