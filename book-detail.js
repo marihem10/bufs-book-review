@@ -79,7 +79,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             querySnapshot.forEach((doc) => {
                 const review = doc.data();
                 // Timestamp 객체가 아닌 String일 경우 대비
-                const date = review.timestamp ? new Date(review.timestamp).toLocaleDateString('ko-KR') : '날짜 없음'; 
+                let date = '날짜 없음';
+                if (review.timestamp) {
+                    if (typeof review.timestamp.toDate === 'function') {
+                        // 1. Firestore Timestamp 객체 (수정된 리뷰)
+                        date = review.timestamp.toDate().toLocaleDateString('ko-KR');
+                    } else {
+                        // 2. ISO String (최초 등록된 리뷰)
+                        date = new Date(review.timestamp).toLocaleDateString('ko-KR');
+                    }
+                }
                 
                 const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
                 const userIdDisplay = review.userId.split('@')[0]; // 이메일 앞부분만 표시
