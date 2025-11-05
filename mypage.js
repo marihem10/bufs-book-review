@@ -87,80 +87,80 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // 3. [수정]: 수정/삭제 버튼 이벤트 리스너 (API 호출로 변경)
+    // 3. 수정/삭제 버튼 이벤트 리스너 (API 호출로 변경)
     function attachEventListeners() {
         // [수정 기능]
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const reviewItem = e.target.closest('.user-review-item');
-                const reviewId = reviewItem.dataset.reviewId;
-                
-                if (reviewItem.classList.contains('editing')) {
-                    // -> 수정 완료 (저장) 로직 실행
-                    saveReview(reviewItem, reviewId); // [수정]
-                } else {
-                    // -> 수정 모드 진입
-                    enterEditMode(reviewItem, btn); // [수정]
-                }
-            });
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const reviewItem = e.target.closest('.user-review-item');
+            const reviewId = reviewItem.dataset.reviewId;
+            
+            if (reviewItem.classList.contains('editing')) {
+                // -> 수정 완료 (저장) 로직 실행
+                saveReview(reviewItem, reviewId); 
+            } else {
+                // -> 수정 모드 진입
+                enterEditMode(reviewItem, btn); 
+            }
         });
-        
-        // [삭제 기능]
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const reviewItem = e.target.closest('.user-review-item');
-                const reviewId = reviewItem.dataset.reviewId;
+    });
+    
+    // [삭제 기능]
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const reviewItem = e.target.closest('.user-review-item');
+            
+            // 1. 수정 모드 중이면 '취소'로 동작
+            if (reviewItem.classList.contains('editing')) {
+                cancelEdit(reviewItem);
+                return;
+            }
+
+            // 2. 삭제 확인
+            if (!confirm(`이 리뷰를 정말 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            // 3. data- 속성에서 API에 필요한 모든 정보 가져오기
+            const reviewId = reviewItem.dataset.reviewId;
+            const bookIsbn = reviewItem.dataset.bookIsbn;
+            const deletedRating = parseInt(reviewItem.dataset.currentRating);
+
+            // 4. 정보 유효성 검사
+            if (!reviewId || !bookIsbn || isNaN(deletedRating)) {
+                alert('오류: 리뷰 데이터(ISBN, 별점 또는 ID)가 유효하지 않아 삭제할 수 없습니다.');
+                console.error('삭제 정보 누락:', { reviewId, bookIsbn, deletedRating });
+                return;
+            }
+
+            try {
+                // 5. 서버에 DELETE 요청 (URL 쿼리 파라미터 사용)
+                const requestUrl = `${serverUrl}/api/review-delete?reviewId=${reviewId}&bookIsbn=${bookIsbn}&deletedRating=${deletedRating}`;
                 
-                // 수정 모드 중 취소
-                if (reviewItem.classList.contains('editing')) {
-                    cancelEdit(reviewItem); // [수정]
-                    return;
-                }
+                console.log('서버에 삭제 요청:', requestUrl); // 디버깅용 로그
 
-                if (!reviewId) {
-                    alert('오류: 리뷰 ID를 찾을 수 없습니다.');
-                    return;
+                const response = await fetch(requestUrl, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    // 서버가 4xx, 5xx 에러를 반환한 경우
+                    const err = await response.json();
+                    throw new Error(err.error || `서버 오류 (${response.status})`);
                 }
                 
-                if (confirm(`이 리뷰를 정말 삭제하시겠습니까?`)) {
-                    
-                    const bookIsbn = reviewItem.dataset.bookIsbn;
-                    const deletedRating = parseInt(reviewItem.dataset.currentRating);
-                    const reviewId = reviewItem.dataset.reviewId; // reviewId도 여기서 가져옵니다.
+                // 6. 성공 처리
+                alert('리뷰가 삭제되었습니다.');
+                fetchUserReviews(auth.currentUser.email, db); // 목록 새로고침
 
-                    if (!bookIsbn || isNaN(deletedRating) || !reviewId) {
-                        alert('오류: 리뷰 데이터(ISBN, 별점, 또는 ID)가 유효하지 않습니다.');
-                        return;
-                    }
-
-                    try {
-                        // [핵심 수정 1]: 요청할 URL을 변수로 만듭니다.
-                        const requestUrl = `${serverUrl}/api/review-delete?reviewId=${reviewId}&bookIsbn=${bookIsbn}&deletedRating=${deletedRating}`;
-
-                        // [핵심 수정 2]: URL을 콘솔에 출력하여 확인합니다.
-                        console.log('서버에 삭제 요청 URL:', requestUrl);
-
-                        // [핵심 수정 3]: 변수를 사용하여 fetch 요청
-                        const response = await fetch(requestUrl, {
-                            method: 'DELETE'
-                        });
-
-                        if (!response.ok) {
-                            const err = await response.json();
-                            throw new Error(err.error || '서버 통신 오류');
-                        }
-                        
-                        alert('리뷰가 삭제되었습니다.');
-                        fetchUserReviews(auth.currentUser.email, db); // 목록 새로고침
-
-                    } catch (e) {
-                        alert('삭제에 실패했습니다: ' + e.message);
-                        console.error("삭제 실패:", e);
-                    }
-                }
-            });
+            } catch (e) {
+                // 7. 실패 처리
+                alert('삭제에 실패했습니다: ' + e.message);
+                console.error("클라이언트 측 삭제 실패:", e);
+            }
         });
-    }
+    });
+}
 
     // [수정]: 수정 모드 진입 함수
     function enterEditMode(item, editBtn) {
