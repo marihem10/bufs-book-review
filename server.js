@@ -332,6 +332,59 @@ app.delete('/api/review-delete', async (req, res) => {
     }
 });
 
+// ------------------------------------------------------------------
+// [새로운 엔드포인트 4]: 마이페이지 리뷰 수정 (통계 업데이트 포함)
+// ------------------------------------------------------------------
+app.put('/api/review-edit', async (req, res) => {
+    // 1. 클라이언트로부터 필요한 모든 정보를 받습니다.
+    const { reviewId, bookIsbn, newComment, newRating, oldRating } = req.body;
+
+    if (!reviewId || !bookIsbn || !newComment || newRating === undefined || oldRating === undefined) {
+        return res.status(400).json({ error: '필수 수정 정보(reviewId, bookIsbn, comment, ratings)가 누락되었습니다.' });
+    }
+
+    try {
+        const bookRef = db.collection('books').doc(bookIsbn);
+        const reviewRef = db.collection('reviews').doc(reviewId);
+
+        // 2. Firestore 트랜잭션을 사용하여 데이터 일관성을 보장합니다.
+        await db.runTransaction(async (transaction) => {
+            // 2-1. 책 정보(통계) 가져오기
+            const bookDoc = await transaction.get(bookRef);
+            if (!bookDoc.exists) {
+                throw new Error('수정할 책 정보를 찾을 수 없습니다.');
+            }
+
+            const bookData = bookDoc.data();
+            const currentRatingSum = bookData.ratingSum || 0;
+            const currentReviews = bookData.reviews || 0; // 리뷰 개수는 변경되지 않음
+
+            // 2-2. 새 통계 계산 (기존 별점은 빼고, 새 별점은 더함)
+            const newRatingSum = (currentRatingSum - oldRating) + newRating;
+            const newAverageRating = (currentReviews > 0) ? (newRatingSum / currentReviews) : 0; // 평균 재계산
+
+            // 2-3. 리뷰 문서 업데이트
+            transaction.update(reviewRef, {
+                comment: newComment,
+                rating: newRating,
+                timestamp: FieldValue.serverTimestamp() // 수정 시간을 최신으로
+            });
+
+            // 2-4. 책(통계) 문서 업데이트
+            transaction.update(bookRef, {
+                ratingSum: newRatingSum,
+                averageRating: newAverageRating
+            });
+        });
+
+        res.status(200).json({ message: '리뷰 수정 및 통계 업데이트가 완료되었습니다.' });
+
+    } catch (error) {
+        console.error('서버 측 리뷰 수정 오류:', error);
+        res.status(500).json({ error: '서버 오류로 인해 리뷰 수정에 실패했습니다.' });
+    }
+});
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
