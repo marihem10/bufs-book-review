@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const q = query(
             booksRef, 
             where("reviews", ">", 0),
-            orderBy("averageRating", "desc"), 
-            orderBy("reviews", "desc"), 
+            orderBy("reviews", "desc"),
+            orderBy("averageRating", "desc"),
             limit(5)
         );
 
