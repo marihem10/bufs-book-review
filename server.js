@@ -208,15 +208,12 @@ app.get('/api/popular-books', async (req, res) => {
     try {
         const booksRef = db.collection('books');
         
-        // 1순위: 평균 별점, 2순위: 리뷰 수로 정렬
-        const q = query(
-            booksRef, 
-            orderBy("averageRating", "desc"),
-            orderBy("reviews", "desc"), 
-            limit(5)
-        );
-        
-        const querySnapshot = await getDocs(q);
+        // Admin SDK 구문 사용
+        const querySnapshot = await booksRef
+            .orderBy("averageRating", "desc")
+            .orderBy("reviews", "desc") 
+            .limit(5)
+            .get(); // .get()으로 실행
         
         if (querySnapshot.empty) {
             return res.json([]); // 데이터가 없으면 빈 배열 반환
@@ -247,8 +244,9 @@ app.get('/api/my-reviews', async (req, res) => {
     }
 
     try {
-        const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", userEmail));
-        const querySnapshot = await getDocs(reviewsQuery);
+        // Admin SDK 구문 사용
+        const reviewsQuery = db.collection("reviews").where("userId", "==", userEmail);
+        const querySnapshot = await reviewsQuery.get();
 
         if (querySnapshot.empty) {
             return res.json([]); // 리뷰가 없으면 빈 배열 반환
@@ -260,18 +258,30 @@ app.get('/api/my-reviews', async (req, res) => {
             const reviewId = document.id;
             let bookTitle = '책 제목 정보 없음';
             
-            // books 컬렉션에서 책 정보를 가져옴
-            const bookRef = doc(db, "books", review.bookIsbn);
-            const bookDoc = await getDoc(bookRef);
+            // Admin SDK 구문 사용
+            const bookRef = db.collection("books").doc(review.bookIsbn);
+            const bookDoc = await bookRef.get(); // .get()으로 실행
+            
             if (bookDoc.exists()) {
                 bookTitle = bookDoc.data().title || bookTitle;
+            }
+
+            // [수정]: 타임스탬프 처리 로직 추가 (날짜 오류 방지)
+            let reviewDate = '날짜 없음';
+            if (review.timestamp) {
+                // toDate 함수가 있는지 확인하여 Timestamp 객체인지 판별
+                if (typeof review.timestamp.toDate === 'function') {
+                    reviewDate = new Date(review.timestamp.toDate()).toLocaleDateString('ko-KR');
+                } else {
+                    reviewDate = new Date(review.timestamp).toLocaleDateString('ko-KR');
+                }
             }
 
             return { 
                 review, 
                 reviewId, 
                 bookTitle, 
-                reviewDate: review.timestamp ? new Date(review.timestamp.toDate()).toLocaleDateString('ko-KR') : '날짜 없음'
+                reviewDate: reviewDate
             };
         });
 
