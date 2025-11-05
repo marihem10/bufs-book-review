@@ -298,19 +298,23 @@ app.get('/api/my-reviews', async (req, res) => {
 // [새로운 엔드포인트 3]: 마이페이지 리뷰 삭제 (통계 업데이트 포함)
 // ------------------------------------------------------------------
 app.delete('/api/review-delete', async (req, res) => {
-    // [수정]: req.body 대신 req.query에서 데이터를 가져옵니다.
+    
+    // 1. URL 쿼리 파라미터에서 정보 추출
     const { reviewId, bookIsbn } = req.query;
-    const deletedRating = parseInt(req.query.deletedRating); // 쿼리 파라미터는 문자열이므로 숫자로 변환
+    const deletedRating = parseInt(req.query.deletedRating);
 
-    if (!reviewId || !bookIsbn || isNaN(deletedRating)) { // [수정]: deletedRating === undefined 를 isNaN(deletedRating)으로 변경
+    // 2. 데이터 유효성 검사
+    if (!reviewId || !bookIsbn || isNaN(deletedRating)) {
         return res.status(400).json({ error: '필수 삭제 정보(reviewId, bookIsbn, rating)가 누락되었습니다.' });
     }
 
-    try {
-        // [주의]: db 인스턴스는 server.js 상단에서 getFirestore()로 초기화되어 있어야 합니다.
-        // const db = getFirestore(); // <-- 이 줄은 server.js 상단에 이미 있어야 합니다.
+    // Render 로그에서 확인할 수 있도록 디버깅 로그 추가
+    console.log(`[삭제 요청 수신] reviewId: ${reviewId}, bookIsbn: ${bookIsbn}, rating: ${deletedRating}`);
 
-        // 1. [서버 로직]: books 컬렉션의 통계 데이터 업데이트 (리뷰 수 감소)
+    try {
+        // [대안 방식] 트랜잭션 대신 2단계로 순차 실행합니다.
+        
+        // 1단계: books 컬렉션 통계 업데이트
         const bookRef = db.collection('books').doc(bookIsbn);
         const bookDoc = await bookRef.get();
 
@@ -322,24 +326,32 @@ app.delete('/api/review-delete', async (req, res) => {
             if (currentReviews > 0) {
                 const newReviews = currentReviews - 1;
                 const newRatingSum = currentRatingSum - deletedRating;
-                const newAverageRating = newReviews > 0 ? (newRatingSum / newReviews) : 0;
-
+                const newAverageRating = (newReviews > 0) ? (newRatingSum / newReviews) : 0;
+                
+                console.log(`[삭제 - 1단계] ${bookIsbn} 통계 업데이트 중...`);
                 await bookRef.update({
                     reviews: newReviews,
                     ratingSum: newRatingSum,
                     averageRating: newAverageRating
                 });
+            } else {
+                console.log(`[삭제 - 1단계] ${bookIsbn} 리뷰가 0이라 통계 업데이트 스킵.`);
             }
+        } else {
+            console.warn(`[삭제 - 1단계 경고] ${bookIsbn} 책 통계 문서를 찾을 수 없습니다.`);
         }
 
-        // 2. [서버 로직]: reviews 컬렉션에서 해당 리뷰 문서 삭제
+        // 2단계: reviews 컬렉션에서 해당 리뷰 문서 삭제
+        console.log(`[삭제 - 2단계] ${reviewId} 리뷰 삭제 중...`);
         await db.collection('reviews').doc(reviewId).delete();
 
+        console.log(`[삭제 성공] ${reviewId} 처리 완료.`);
         res.status(200).json({ message: '리뷰 삭제 및 통계 업데이트가 성공적으로 완료되었습니다.' });
 
     } catch (error) {
-        console.error('서버 측 리뷰 삭제 오류:', error);
-        res.status(500).json({ error: '서버 오류로 인해 리뷰 삭제에 실패했습니다.' });
+        // 3. 실패 응답
+        console.error('서버 측 리뷰 삭제 오류:', error.message); // 에러 메시지를 로그에 출력
+        res.status(500).json({ error: '서버 오류로 인해 리뷰 삭제에 실패했습니다.', details: error.message });
     }
 });
 
