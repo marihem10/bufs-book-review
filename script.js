@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. 인기 도서 목록 표시 (Firebase 연동)
     // ----------------------------------------------------
     async function fetchPopularBooks() {
-        // [핵심 수정]: 위에서 await로 받아온 db 변수를 사용합니다.
         if (!db) {
             topBooksList.innerHTML = '<p>데이터베이스 연결 오류 (초기화 실패)</p>';
             return;
@@ -48,12 +47,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const booksRef = collection(db, "books");
         
-        // 정렬 기준 (평균 별점 우선, 그다음 리뷰 수)
+        // 1순위: 'averageRating' (평균 별점)
+        // 2순위: 'reviews' (리뷰 개수)
         const q = query(
             booksRef, 
             where("reviews", ">", 0),
-            orderBy("reviews", "desc"),
-            orderBy("averageRating", "desc"),
+            orderBy("averageRating", "desc"), // <-- 1순위: 평균 별점
+            orderBy("reviews", "desc"),       // <-- 2순위: 리뷰 개수
             limit(5)
         );
 
@@ -70,30 +70,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const book = doc.data();
                 const listItem = document.createElement('li');
                 
-                // 텍스트 대신 <a> 링크 태그를 생성합니다.
                 const link = document.createElement('a');
                 
-                // 1. 책 상세 페이지로 이동하는 링크 설정 (ISBN 포함)
-                // book.isbn 필드가 Firestore 'books' 컬렉션에 있어야 합니다.
                 link.href = `book-detail.html?isbn=${book.isbn}`; 
                 
-                // 2. 링크 텍스트 설정
                 const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
                 const bookTitle = book.title || '제목 정보 없음';
                 link.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`;
                 
-                // 3. 링크에 스타일 클래스 추가 (선택 사항)
                 link.classList.add('popular-book-link');
 
-                // 4. li에 링크를 추가
                 listItem.appendChild(link);
                 topBooksList.appendChild(listItem);
             });
         } catch (e) {
             console.error("인기 도서 목록 가져오기 실패:", e);
             topBooksList.innerHTML = '<p>인기 도서 목록을 불러올 수 없습니다.</p>';
+            
+            if (e.code === 'failed-precondition') {
+                 topBooksList.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. 콘솔을 확인하세요.</p>';
+            }
         }
     }
 
-    fetchPopularBooks(); // 페이지 로드 시 함수 실행
+    fetchPopularBooks();
 });
