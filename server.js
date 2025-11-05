@@ -308,17 +308,15 @@ app.delete('/api/review-delete', async (req, res) => {
         return res.status(400).json({ error: '필수 삭제 정보(reviewId, bookIsbn, rating)가 누락되었습니다.' });
     }
 
-    // Render 로그에서 확인할 수 있도록 디버깅 로그 추가
     console.log(`[삭제 요청 수신] reviewId: ${reviewId}, bookIsbn: ${bookIsbn}, rating: ${deletedRating}`);
 
     try {
-        // [대안 방식] 트랜잭션 대신 2단계로 순차 실행합니다.
-        
         // 1단계: books 컬렉션 통계 업데이트
         const bookRef = db.collection('books').doc(bookIsbn);
         const bookDoc = await bookRef.get();
 
-        if (bookDoc.exists()) {
+        // [핵심 수정]: bookDoc.exists()가 아니라 bookDoc.exists 입니다. (괄호 제거)
+        if (bookDoc.exists) { 
             const firestoreData = bookDoc.data();
             const currentReviews = firestoreData.reviews || 0;
             const currentRatingSum = firestoreData.ratingSum || 0;
@@ -350,7 +348,7 @@ app.delete('/api/review-delete', async (req, res) => {
 
     } catch (error) {
         // 3. 실패 응답
-        console.error('서버 측 리뷰 삭제 오류:', error.message); // 에러 메시지를 로그에 출력
+        console.error('서버 측 리뷰 삭제 오류:', error.message);
         res.status(500).json({ error: '서버 오류로 인해 리뷰 삭제에 실패했습니다.', details: error.message });
     }
 });
