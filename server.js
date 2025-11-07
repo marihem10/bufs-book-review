@@ -43,11 +43,9 @@ const apiHost = 'https://openapi.naver.com/v1/search/book.json';
 
 
 // ------------------------------------------------------------------
-// [엔드포인트]: 리뷰 등록
+// 리뷰 등록
 // ------------------------------------------------------------------
 app.post('/api/review-submit', async (req, res) => {
-    // ... (이 코드는 기존 코드를 그대로 유지합니다) ...
-    // ... (생략) ...
     if (!req.body) {
         return res.status(400).json({ error: '요청 본문(리뷰 데이터)가 누락되었습니다.' });
     }
@@ -105,11 +103,9 @@ app.post('/api/review-submit', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [엔드포인트]: 검색
+// 검색
 // ------------------------------------------------------------------
 app.get('/api/search', async (req, res) => {
-    // ... (이 코드는 기존 코드를 그대로 유지합니다) ...
-    // ... (생략) ...
     const { query, sort, page } = req.query;
     if (!query) {
         return res.status(400).json({ error: '검색어를 입력해주세요.' });
@@ -144,11 +140,9 @@ app.get('/api/search', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [엔드포인트]: 인기 도서
+// 인기 도서
 // ------------------------------------------------------------------
 app.get('/api/popular-books', async (req, res) => {
-    // ... (이 코드는 기존 코드를 그대로 유지합니다) ...
-    // ... (생략) ...
     try {
         const booksRef = db.collection('books');
         const querySnapshot = await booksRef
@@ -173,11 +167,9 @@ app.get('/api/popular-books', async (req, res) => {
 
 
 // ------------------------------------------------------------------
-// [엔드포인트]: 마이페이지 리뷰 목록
+// 마이페이지 리뷰 목록
 // ------------------------------------------------------------------
 app.get('/api/my-reviews', async (req, res) => {
-    // ... (이 코드는 기존 코드를 그대로 유지합니다) ...
-    // ... (생략) ...
     const userEmail = req.query.userId;
     if (!userEmail) {
         return res.status(400).json({ error: '사용자 ID가 누락되었습니다.' });
@@ -219,8 +211,6 @@ app.get('/api/my-reviews', async (req, res) => {
 // 리뷰 삭제
 // ------------------------------------------------------------------
 app.delete('/api/review-delete', async (req, res) => {
-    // ... (이 코드는 기존 코드를 그대로 유지합니다) ...
-    // ... (생략) ...
     const { reviewId, bookIsbn } = req.query;
     const deletedRating = parseInt(req.query.deletedRating);
     if (!reviewId || !bookIsbn || isNaN(deletedRating)) {
@@ -262,39 +252,51 @@ app.delete('/api/review-delete', async (req, res) => {
 
 // ------------------------------------------------------------------
 // 마이페이지 리뷰 수정
-// (복잡한 트랜잭션 대신 단순 순차 실행으로 변경)
 // ------------------------------------------------------------------
 app.put('/api/review-edit', async (req, res) => {
-    // 1. 클라이언트로부터 필요한 모든 정보를 받습니다.
-    const { reviewId, bookIsbn, newComment, newRating, oldRating } = req.body;
+    // 1. 클라이언트로부터 정보를 받습니다.
+    const { reviewId, bookIsbn, newComment } = req.body;
+    
+    //newRating과 oldRating을 숫자로 변환하고 NaN 검사를 합니다.
+    const newRating = parseInt(req.body.newRating, 10);
+    const oldRating = parseInt(req.body.oldRating, 10);
 
-    if (!reviewId || !bookIsbn || !newComment || newRating === undefined || oldRating === undefined) {
-        return res.status(400).json({ error: '필수 수정 정보(reviewId, bookIsbn, comment, ratings)가 누락되었습니다.' });
+    // 데이터 유효성 검사 (NaN 검사 포함)
+    if (!reviewId || !bookIsbn || !newComment || isNaN(newRating) || isNaN(oldRating)) {
+        const errors = [];
+        if (!reviewId) errors.push('reviewId');
+        if (!bookIsbn) errors.push('bookIsbn');
+        if (!newComment) errors.push('newComment');
+        if (isNaN(newRating)) errors.push('newRating (is NaN)');
+        if (isNaN(oldRating)) errors.push('oldRating (is NaN)');
+        
+        return res.status(400).json({ 
+            error: '필수 수정 정보가 누락되었거나 유효하지 않습니다.',
+            details: errors
+        });
     }
     
     console.log(`[수정 요청 수신] reviewId: ${reviewId}`);
 
     try {
-        // [대안 방식] 트랜잭션 대신 2단계로 순차 실행
         const bookRef = db.collection('books').doc(bookIsbn);
         const reviewRef = db.collection('reviews').doc(reviewId);
 
         // 1단계: books 컬렉션 통계 업데이트
         const bookDoc = await bookRef.get();
-        if (bookDoc.exists) { // .exists는 속성
+        if (bookDoc.exists) {
             const bookData = bookDoc.data();
             const currentRatingSum = bookData.ratingSum || 0;
             const currentReviews = bookData.reviews || 0;
             
             // 새 통계 계산
             const newRatingSum = (currentRatingSum - oldRating) + newRating;
-            const newAverageRating = (currentReviews > 0) ? (newRatingSum / newReviews) : 0;
+            const newAverageRating = (currentReviews > 0) ? (newRatingSum / currentReviews) : 0;
 
             console.log(`[수정 - 1단계] ${bookIsbn} 통계 업데이트 중...`);
             await bookRef.update({
                 ratingSum: newRatingSum,
                 averageRating: newAverageRating
-                // 'reviews' (리뷰 개수)는 수정 시 변경되지 않음
             });
         } else {
             console.warn(`[수정 - 1단계 경고] ${bookIsbn} 책 통계 문서를 찾을 수 없습니다.`);
