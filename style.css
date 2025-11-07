@@ -712,3 +712,18 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .account-btn.danger:hover {
     background-color: #c9302c;
 }
+
+/* 로그인 - 비밀번호 찾기 링크 */
+.forgot-password-link {
+    display: block;
+    text-align: right;
+    font-size: 14px;
+    color: #555; /* 어두운 회색 */
+    text-decoration: none;
+    margin-top: -5px; /* 비밀번호 창과 간격 조절 */
+    margin-bottom: 15px; /* 로그인 버튼과 간격 조절 */
+}
+.forgot-password-link:hover {
+    text-decoration: underline;
+    color: #000;
+}

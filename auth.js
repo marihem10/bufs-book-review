@@ -1,4 +1,4 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = getAuth(window.firebaseApp); 
@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     
     // 버튼을 로딩 상태로 변경하는 함수
-    function showButtonLoading(button) {
+    function showButtonLoading(button, text = '로딩중...') {
         button.disabled = true;
         button.dataset.originalHtml = button.innerHTML; // 원래 내용 저장
-        button.innerHTML = '<span class="button-loader"></span> 로딩중...';
+        button.innerHTML = `<span class="button-loader"></span> ${text}`;
     }
 
     // 버튼을 원래 상태로 되돌리는 함수
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loginBtn = document.getElementById('loginBtn');
 
     loginBtn.addEventListener('click', async () => {
-        showButtonLoading(loginBtn); // [로딩 시작]
+        showButtonLoading(loginBtn, '로그인중...'); // [로딩 시작]
         try {
             await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
             alert('로그인에 성공했습니다!');
@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('로그인에 실패했습니다: ' + error.message);
             hideButtonLoading(loginBtn); // [로딩 종료 - 실패 시]
         }
-        // 성공 시 페이지가 이동하므로 hide는 필요 없음
     });
 
     // ----------------------------------------------------
@@ -83,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        showButtonLoading(signupBtn); // [로딩 시작]
+        showButtonLoading(signupBtn, '생성중...'); // [로딩 시작]
 
         try {
             await createUserWithEmailAndPassword(auth, signupEmail.value, password);
@@ -105,6 +104,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('회원가입에 실패했습니다: ' + error.message);
             }
             hideButtonLoading(signupBtn); // [로딩 종료 - 실패 시]
+        }
+    });
+
+    // ----------------------------------------------------
+    // 비밀번호 찾기 로직
+    // ----------------------------------------------------
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    
+    forgotPasswordLink.addEventListener('click', async (e) => {
+        e.preventDefault(); // 링크 클릭 시 페이지 새로고침 방지
+        
+        const email = loginEmail.value; // 로그인 폼의 이메일 입력창 값
+        
+        if (!email) {
+            alert('비밀번호를 재설정할 이메일 주소를 입력해주세요. (로그인 폼의 아이디 창)');
+            loginEmail.focus();
+            return;
+        }
+
+        if (!confirm(`'${email}' 주소로 비밀번호 재설정 메일을 발송하시겠습니까?`)) {
+            return;
+        }
+        
+        // (임시 로딩) 링크 텍스트 변경
+        forgotPasswordLink.textContent = '메일 발송 중...';
+        
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert('비밀번호 재설정 이메일을 발송했습니다. 이메일함을 확인해주세요.');
+            forgotPasswordLink.textContent = '비밀번호를 잊으셨나요?'; // 텍스트 복원
+        } catch (error) {
+            console.error("비밀번호 재설정 이메일 발송 실패:", error);
+            alert('오류가 발생했습니다: ' + error.message);
+            forgotPasswordLink.textContent = '비밀번호를 잊으셨나요?'; // 텍스트 복원
         }
     });
 });
