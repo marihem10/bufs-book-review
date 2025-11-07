@@ -18,16 +18,20 @@ try {
     process.exit(1);
 }
 
+let firebaseApp; // 앱 변수 선언
 try {
-    initializeApp({
+    firebaseApp = initializeApp({ // [수정 2] 기본 앱이 아닌 'app' 변수에 초기화
       credential: cert(serviceAccount)
     });
+
 } catch (e) {
     console.error("Firebase Admin SDK 초기화 실패 (키 오류 가능성):", e.message);
     process.exit(1);
 }
 
-const db = getFirestore(); // Firestore 인스턴스 초기화
+const db = getFirestore(firebaseApp); 
+const adminAuth = getAuth(firebaseApp);
+
 
 const express = require('express');
 const axios = require('axios');
