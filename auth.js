@@ -1,26 +1,41 @@
-// auth.js
-
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. 초기화
     const auth = getAuth(window.firebaseApp); 
     
-    // 2. 탭 요소 선택
+    // ----------------------------------------------------
+    // 로딩 버튼 헬퍼 함수
+    // ----------------------------------------------------
+    
+    // 버튼을 로딩 상태로 변경하는 함수
+    function showButtonLoading(button) {
+        button.disabled = true;
+        button.dataset.originalHtml = button.innerHTML; // 원래 내용 저장
+        button.innerHTML = '<span class="button-loader"></span> 로딩중...';
+    }
+
+    // 버튼을 원래 상태로 되돌리는 함수
+    function hideButtonLoading(button) {
+        if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml; // 원래 내용 복원
+        }
+        button.disabled = false;
+    }
+    
+    // ----------------------------------------------------
+    // 기존 탭 기능
+    // ----------------------------------------------------
     const tabLogin = document.getElementById('tabLogin');
     const tabSignup = document.getElementById('tabSignup');
     const formLogin = document.getElementById('formLogin');
     const formSignup = document.getElementById('formSignup');
 
-    // 3. 탭 전환 기능
     function switchTab(targetForm) {
-        // 모든 폼과 버튼에서 'active' 클래스를 제거하고 'hidden' 클래스를 추가/제거합니다.
         formLogin.classList.add('hidden');
         formSignup.classList.add('hidden');
         tabLogin.classList.remove('active');
         tabSignup.classList.remove('active');
 
-        // 선택된 폼과 버튼에 'active' 클래스를 추가하고 'hidden' 클래스를 제거합니다.
         targetForm.classList.remove('hidden');
         if (targetForm === formLogin) {
             tabLogin.classList.add('active');
@@ -32,53 +47,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabLogin.addEventListener('click', () => switchTab(formLogin));
     tabSignup.addEventListener('click', () => switchTab(formSignup));
     
-    // 4. 로그인 로직
+    // ----------------------------------------------------
+    // 로그인 로직 (로딩 적용)
+    // ----------------------------------------------------
     const loginEmail = document.getElementById('loginEmail');
     const loginPassword = document.getElementById('loginPassword');
     const loginBtn = document.getElementById('loginBtn');
 
     loginBtn.addEventListener('click', async () => {
-        // ... (이전에 드린 로그인 로직을 여기에 넣습니다.) ...
+        showButtonLoading(loginBtn); // [로딩 시작]
         try {
             await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
             alert('로그인에 성공했습니다!');
             window.location.href = 'index.html';
         } catch (error) {
             alert('로그인에 실패했습니다: ' + error.message);
+            hideButtonLoading(loginBtn); // [로딩 종료 - 실패 시]
         }
+        // 성공 시 페이지가 이동하므로 hide는 필요 없음
     });
 
-    // 5. 회원가입 로직
+    // ----------------------------------------------------
+    // 회원가입 로직 (로딩 적용)
+    // ----------------------------------------------------
     const signupEmail = document.getElementById('signupEmail');
     const signupPassword = document.getElementById('signupPassword');
     const signupBtn = document.getElementById('signupBtn');
 
-    const submitSignupBtn = document.getElementById('signupBtn'); // ID가 'signupBtn'인 폼 제출 버튼
-    submitSignupBtn.addEventListener('click', async (e) => {
-        // [핵심 수정]: 폼 제출 버튼의 기본 동작(페이지 새로고침)을 막습니다.
+    signupBtn.addEventListener('click', async (e) => {
         e.preventDefault(); 
         
-        // 현재 활성화된 폼의 비밀번호 입력창 값을 사용해야 합니다.
-        // 여기서는 signupPassword.value를 사용합니다.
-    const password = signupPassword.value;
-        
+        const password = signupPassword.value;
         if (password.length < 6) {
             alert('비밀번호는 6자리 이상이어야 합니다.');
             return;
         }
 
+        showButtonLoading(signupBtn); // [로딩 시작]
+
         try {
-            // Firebase에 새 계정 생성 요청
             await createUserWithEmailAndPassword(auth, signupEmail.value, password);
-            
             alert('회원가입에 성공했습니다! 이제 로그인 탭에서 로그인할 수 있습니다.');
             
-            // 성공 후 로그인 탭으로 자동 전환
             switchTab(formLogin);
             
-            // 입력 필드 비우기
             signupEmail.value = '';
             signupPassword.value = '';
+            hideButtonLoading(signupBtn); // [로딩 종료 - 성공 시]
         } catch (error) {
             console.error(error);
             
@@ -89,6 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 alert('회원가입에 실패했습니다: ' + error.message);
             }
+            hideButtonLoading(signupBtn); // [로딩 종료 - 실패 시]
         }
-    })
     });
+});

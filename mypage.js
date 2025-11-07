@@ -8,12 +8,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const reviewListContainer = document.getElementById('reviewList');
     const userStatusElement = document.getElementById('userStatus');
+
+    // ----------------------------------------------------
+    // 로딩 버튼 헬퍼 함수
+    // ----------------------------------------------------
+    function showButtonLoading(button, text = '로딩중...') {
+        button.disabled = true;
+        button.dataset.originalHtml = button.innerHTML; 
+        button.innerHTML = `<span class="button-loader"></span> ${text}`;
+    }
+
+    function hideButtonLoading(button) {
+        if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml; 
+        }
+        button.disabled = false;
+    }
     
     // 1. 로그인 상태 확인
     onAuthStateChanged(auth, (user) => {
         if (user) {
             userStatusElement.textContent = `${user.email} 님의 리뷰 목록입니다.`;
-            fetchUserReviews(user.email, db); // db 인스턴스 전달
+            fetchUserReviews(user.email, db); 
         } else {
             userStatusElement.innerHTML = '로그인이 필요합니다. <a href="auth.html">로그인 페이지로 이동</a>';
             reviewListContainer.innerHTML = '';
@@ -25,11 +41,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         reviewListContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
 
         try {
-            // [수정 1]: 'orderBy'를 추가하여 timestamp(작성일) 기준 내림차순(desc)으로 정렬합니다.
+            // [기능 3] 최신순 정렬
             const q = query(
                 collection(db, "reviews"), 
                 where("userId", "==", userEmail),
-                orderBy("timestamp", "desc") // <-- 최신순 정렬
+                orderBy("timestamp", "desc") // 최신순
             );
             const querySnapshot = await getDocs(q);
 
@@ -57,12 +73,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             finalReviews.forEach((data) => {
                 const { review, reviewId, bookTitle } = data;
                 
-                // [수정 2]: 날짜 처리 로직 (Invalid Date 방지)
+                // [기능 2] 날짜 표시 (Invalid Date 방지)
                 let date = '날짜 없음';
                 if (review.timestamp) {
-                    if (typeof review.timestamp.toDate === 'function') { // Firestore Timestamp 객체
+                    if (typeof review.timestamp.toDate === 'function') { 
                         date = review.timestamp.toDate().toLocaleDateString('ko-KR');
-                    } else { // ISO String
+                    } else { 
                         date = new Date(review.timestamp).toLocaleDateString('ko-KR');
                     }
                 }
@@ -77,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reviewElement.dataset.currentRating = review.rating; 
                 reviewElement.dataset.originalComment = review.comment;
 
-                // [수정 3]: HTML 구조 변경 (제목에 <a> 링크 추가, 날짜 <p> 추가)
+                // [기능 1] 제목 링크 + 날짜 표시
                 reviewElement.innerHTML = `
                     <a href="book-detail.html?isbn=${review.bookIsbn}" class="book-title-link">
                         <h3 class="review-book-title">${bookTitle}</h3>
@@ -92,39 +108,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reviewListContainer.appendChild(reviewElement);
             });
 
-            attachEventListeners(); // 버튼에 이벤트 리스너 연결
+            attachEventListeners(); 
         } catch (e) {
             reviewListContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다.</p>';
             console.error("리뷰 목록 가져오기 실패:", e);
             
-            // [중요] 색인 오류 시 사용자에게 힌트 제공
             if (e.code === 'failed-precondition') {
                  reviewListContainer.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. F12 콘솔을 확인하세요.</p>';
             }
         }
     }
     
-    // 3. 수정/삭제 버튼 이벤트 리스너
+    // 3. 수정/삭제 버튼 (로딩 적용)
     function attachEventListeners() {
-        // [수정 기능]
+        // [수정] 버튼
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
                 
                 if (reviewItem.classList.contains('editing')) {
-                    saveReview(reviewItem, reviewId);
+                    saveReview(reviewItem, reviewId); // '저장' 로직
                 } else {
-                    enterEditMode(reviewItem, btn);
+                    enterEditMode(reviewItem, btn); // '수정' 모드 진입
                 }
             });
         });
         
-        // [삭제 기능]
+        // [삭제] 버튼
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const reviewItem = e.target.closest('.user-review-item');
                 const reviewId = reviewItem.dataset.reviewId;
+                const button = e.target; // [로딩]
                 
                 if (reviewItem.classList.contains('editing')) {
                     cancelEdit(reviewItem);
@@ -145,6 +161,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return;
                     }
 
+                    showButtonLoading(button, '삭제중...'); // [로딩 시작]
+
                     try {
                         const requestUrl = `${serverUrl}/api/review-delete?reviewId=${reviewId}&bookIsbn=${bookIsbn}&deletedRating=${deletedRating}`;
                         console.log('서버에 삭제 요청:', requestUrl);
@@ -159,11 +177,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         
                         alert('리뷰가 삭제되었습니다.');
-                        fetchUserReviews(auth.currentUser.email, db); // 목록 새로고침
+                        // 성공 시 목록이 새로고침되므로 hideLoading 불필요
+                        fetchUserReviews(auth.currentUser.email, db); 
 
                     } catch (e) {
                         alert('삭제에 실패했습니다: ' + e.message);
                         console.error("삭제 실패:", e);
+                        hideButtonLoading(button); // [로딩 종료 - 실패 시]
                     }
                 }
             });
@@ -192,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         attachStarListeners(item, currentRatingValue);
     }
     
-    // 5. 별점 편집 기능
+    // 5. 별점 편집 기능 
     function createEditableStars(currentRating) {
         let starsHtml = '';
         for (let i = 1; i <= 5; i++) {
@@ -201,7 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<div class="edit-rating-stars" data-rating-value="${currentRating}">${starsHtml}</div>`;
     }
     
-    // 6. 별점 클릭 핸들러 
+    // 6. 별점 클릭 핸들러
     function attachStarListeners(item, currentRating) {
         let newRating = parseInt(currentRating);
         const ratingContainer = item.querySelector('.edit-rating-stars');
@@ -218,7 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 7. 수정 취소 함수 
+    // 7. 수정 취소 함수
     function cancelEdit(item) {
         item.classList.remove('editing');
         
@@ -234,8 +254,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         deleteBtn.textContent = '삭제';
     }
 
-    // 8. 리뷰 저장 함수 
+    // 8. [수정] 리뷰 저장 함수
     async function saveReview(item, reviewId) {
+        const button = item.querySelector('.edit-btn'); // [로딩]
         const newComment = item.querySelector('.edit-textarea').value.trim();
         const newRating = parseInt(item.querySelector('.edit-rating-stars').dataset.ratingValue);
         
@@ -246,6 +267,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('오류: 리뷰 정보를 저장할 수 없습니다. (데이터 누락)');
             return;
         }
+
+        showButtonLoading(button, '저장중...'); // [로딩 시작]
 
         try {
             const response = await fetch(`${serverUrl}/api/review-edit`, {
@@ -266,10 +289,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             alert('리뷰가 수정되었습니다.');
-            fetchUserReviews(auth.currentUser.email, db); // 목록 새로고침
+            // 성공 시 목록이 새로고침되므로 hideLoading 불필요
+            fetchUserReviews(auth.currentUser.email, db); 
         } catch (e) {
             alert('수정에 실패했습니다: ' + e.message);
             console.error("리뷰 수정 실패:", e);
+            hideButtonLoading(button); // [로딩 종료 - 실패 시]
         }
     }
 });
