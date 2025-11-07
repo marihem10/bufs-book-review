@@ -1,5 +1,7 @@
+import { getAuth, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     const db = window.db; 
@@ -296,5 +298,82 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("리뷰 수정 실패:", e);
             hideButtonLoading(button); // [로딩 종료 - 실패 시]
         }
+    }
+    // ----------------------------------------------------
+    // 비밀번호 변경 기능
+    // ----------------------------------------------------
+    const passwordResetBtn = document.getElementById('passwordResetBtn');
+    if (passwordResetBtn) {
+        passwordResetBtn.addEventListener('click', async () => {
+            if (!auth.currentUser) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+            
+            // 로딩 헬퍼 함수 (auth.js의 것을 재사용)
+            showButtonLoading(passwordResetBtn, '메일 발송중...');
+            
+            try {
+                // Firebase Auth의 비밀번호 재설정 이메일 발송 기능
+                await sendPasswordResetEmail(auth, auth.currentUser.email);
+                
+                alert('비밀번호 재설정 이메일을 발송했습니다. 이메일함을 확인해주세요.');
+                hideButtonLoading(passwordResetBtn);
+            } catch (error) {
+                console.error("비밀번호 재설정 이메일 발송 실패:", error);
+                alert('오류가 발생했습니다: ' + error.message);
+                hideButtonLoading(passwordResetBtn);
+            }
+        });
+    }
+    // ----------------------------------------------------
+    // 계정 삭제 기능
+    // ----------------------------------------------------
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', async () => {
+            if (!auth.currentUser) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            // [중요] 2번 확인
+            if (!confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+            if (!confirm(`[마지막 확인] '${auth.currentUser.email}' 계정의 모든 리뷰가 삭제됩니다. 계속하시겠습니까?`)) {
+                return;
+            }
+
+            showButtonLoading(deleteAccountBtn, '삭제중...');
+
+            try {
+                // 1. 서버 인증을 위한 ID 토큰 가져오기
+                const idToken = await auth.currentUser.getIdToken(true);
+
+                // 2. 서버의 계정 삭제 API 호출
+                const response = await fetch(`${serverUrl}/api/delete-account`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || '서버 응답 오류');
+                }
+                
+                // 3. 성공 시 로그아웃 처리
+                alert('계정이 성공적으로 삭제되었습니다. 이용해주셔서 감사합니다.');
+                await signOut(auth); // Firebase에서 로그아웃
+                window.location.href = 'index.html'; // 메인 페이지로 이동
+
+            } catch (error) {
+                console.error("계정 삭제 실패:", error);
+                alert('계정 삭제에 실패했습니다: ' + error.message);
+                hideButtonLoading(deleteAccountBtn);
+            }
+        });
     }
 });

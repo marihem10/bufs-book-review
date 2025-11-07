@@ -2,6 +2,9 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');  
 
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 
 if (!firebaseServiceAccountJson) {
     console.error("FIREBASE_SERVICE_ACCOUNT_JSON 환경 변수가 설정되지 않았습니다.");
@@ -367,6 +370,79 @@ app.get('/api/book-detail', async (req, res) => {
     }
 });
 
+// ------------------------------------------------------------------
+// 계정 삭제 (데이터 및 통계 포함)
+// ------------------------------------------------------------------
+app.delete('/api/delete-account', async (req, res) => {
+    
+    // 1. 클라이언트가 보낸 ID 토큰을 헤더에서 추출
+    const idToken = req.headers.authorization?.split('Bearer ')[1];
+    if (!idToken) {
+        return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
+    }
+
+    let decodedToken;
+    try {
+        // 2. ID 토큰 검증 (이 사용자가 진짜 본인인지 확인)
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch (error) {
+        return res.status(401).json({ error: '인증 토큰이 유효하지 않습니다.' });
+    }
+
+    const uid = decodedToken.uid;
+    const userEmail = decodedToken.email;
+
+    if (!uid || !userEmail) {
+        return res.status(400).json({ error: '토큰에서 사용자 정보를 찾을 수 없습니다.' });
+    }
+    
+    console.log(`[계정 삭제 시작] UID: ${uid}, Email: ${userEmail}`);
+
+    try {
+        const batch = db.batch(); // 여러 작업을 한 번에 처리하기 위한 배치
+
+        // 3. (Firestore) 이 사용자가 쓴 모든 'reviews' 찾기
+        const reviewsQuery = db.collection('reviews').where('userId', '==', userEmail);
+        const snapshot = await reviewsQuery.get();
+
+        if (!snapshot.empty) {
+            console.log(`${snapshot.size}개의 리뷰를 삭제하고 통계를 업데이트합니다.`);
+            
+            // 4. (Firestore) 모든 리뷰를 순회하며 통계 업데이트 및 삭제 배치
+            for (const doc of snapshot.docs) {
+                const review = doc.data();
+                const bookIsbn = review.bookIsbn;
+                const rating = review.rating;
+                
+                if (bookIsbn && rating) {
+                    const bookRef = db.collection('books').doc(bookIsbn);
+                    
+                    batch.update(bookRef, {
+                        reviews: FieldValue.increment(-1),
+                        ratingSum: FieldValue.increment(-rating)
+                    });
+                }
+                // 리뷰 문서 삭제
+                batch.delete(doc.ref);
+            }
+            
+            // 5. (Firestore) 배치 작업 실행
+            await batch.commit();
+        } else {
+            console.log('삭제할 리뷰가 없습니다.');
+        }
+
+        // 6. (Auth) Firestore 데이터 정리 후, Auth에서 사용자 계정 삭제
+        await adminAuth.deleteUser(uid);
+        
+        console.log(`[계정 삭제 성공] ${userEmail} 계정 및 데이터 삭제 완료.`);
+        res.status(200).json({ message: '계정 및 모든 리뷰가 성공적으로 삭제되었습니다.' });
+
+    } catch (error) {
+        console.error("서버 측 계정 삭제 오류:", error);
+        res.status(500).json({ error: '계정 삭제 중 서버 오류가 발생했습니다.', details: error.message });
+    }
+});
 
 // ------------------------------------------------------------------
 // [서버 시작]

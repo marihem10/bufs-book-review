@@ -681,3 +681,34 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* 마이페이지 - 계정 관리 버튼 */
+.account-btn {
+    font-family: 'Nanum Myeongjo', sans-serif;
+    font-size: 16px;
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #333;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+.account-btn:hover {
+    background-color: #ddd;
+}
+.account-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* 계정 삭제 버튼 (위험) */
+.account-btn.danger {
+    background-color: #d9534f;
+    color: white;
+}
+.account-btn.danger:hover {
+    background-color: #c9302c;
+}
