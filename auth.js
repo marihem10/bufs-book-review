@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // 회원가입 로직 (인증 메일 발송)
+    // [수정] 회원가입 로직 (인증 메일 발송)
     // ----------------------------------------------------
     const signupEmail = document.getElementById('signupEmail');
     const signupPassword = document.getElementById('signupPassword');
@@ -106,7 +106,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 1. 계정 생성
             const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.value, password);
             
-            // 2. 인증 메일 발송
+            // 2. [핵심] 인증 메일 발송
+            // (이 부분이 sendPasswordResetEmail로 잘못되어 있었을 수 있습니다)
             await sendEmailVerification(userCredential.user);
 
             alert('회원가입에 성공했습니다! 이메일함을 확인하여 인증을 완료해주세요.');
