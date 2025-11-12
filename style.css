@@ -727,3 +727,15 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     text-decoration: underline;
     color: #000;
 }
+
+/* 마이페이지 - 로그아웃 상태 텍스트 */
+#userStatus a {
+    display: block;  /* 1. 줄바꿈 */
+    color: white;    /* 2. 흰색 글씨 */
+    margin-top: 10px; /* 3. 위쪽 텍스트와 간격 조절 */
+    text-decoration: underline; /* 4. 링크임을 표시 */
+}
+
+#userStatus a:hover {
+    color: #ddd; /* 마우스 올렸을 때 살짝 연하게 */
+}

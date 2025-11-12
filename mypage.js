@@ -323,4 +323,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
+    // ----------------------------------------------------
+    // 닉네임 변경 기능
+    // ----------------------------------------------------
+    const nicknameChangeBtn = document.getElementById('nicknameChangeBtn');
+    if (nicknameChangeBtn) {
+        nicknameChangeBtn.addEventListener('click', async () => {
+            if (!auth.currentUser) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            const oldNickname = auth.currentUser.displayName || auth.currentUser.email.split('@')[0];
+            
+            // 1. prompt 창으로 새 닉네임 입력받기
+            const newNickname = prompt("새 닉네임을 입력하세요 (2~10자):", oldNickname);
+
+            // 2. 유효성 검사 (클라이언트)
+            if (!newNickname || newNickname.trim() === "") {
+                return; // 취소
+            }
+            if (newNickname.trim() === oldNickname) {
+                alert('현재 닉네임과 동일합니다.');
+                return;
+            }
+            if (newNickname.trim().length < 2 || newNickname.trim().length > 10) {
+                alert('닉네임은 2자 이상 10자 이하여야 합니다.');
+                return;
+            }
+
+            showButtonLoading(nicknameChangeBtn, '변경중...');
+
+            try {
+                // 3. 서버 인증을 위한 ID 토큰 가져오기
+                const idToken = await auth.currentUser.getIdToken();
+                const cleanNickname = newNickname.trim();
+
+                // 4. 서버의 닉네임 변경 API 호출
+                const response = await fetch(`${serverUrl}/api/update-nickname`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        newNickname: cleanNickname
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || `서버 오류 (${response.status})`);
+                }
+                
+                // 5. 성공 처리 (클라이언트)
+                // 5-1. Auth 프로필 강제 새로고침
+                await auth.currentUser.getIdToken(true); 
+                
+                // 5-2. 환영 메시지 업데이트
+                userStatusElement.textContent = `${cleanNickname} 님의 리뷰 목록입니다.`;
+                
+                alert('닉네임이 성공적으로 변경되었습니다.');
+                hideButtonLoading(nicknameChangeBtn);
+
+            } catch (error) {
+                console.error("닉네임 변경 실패:", error);
+                alert('닉네임 변경에 실패했습니다: ' + error.message);
+                hideButtonLoading(nicknameChangeBtn);
+            }
+        });
+    }
+    
 });
