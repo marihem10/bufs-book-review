@@ -391,67 +391,107 @@ app.get('/api/book-detail', async (req, res) => {
 // ------------------------------------------------------------------
 app.delete('/api/delete-account', async (req, res) => {
     
-    // 1. 클라이언트가 보낸 ID 토큰을 헤더에서 추출
+    // 1. 토큰 검증
     const idToken = req.headers.authorization?.split('Bearer ')[1];
     if (!idToken) {
         return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
     }
-
     let decodedToken;
     try {
-        // 2. ID 토큰 검증 (이 사용자가 진짜 본인인지 확인)
         decodedToken = await adminAuth.verifyIdToken(idToken);
     } catch (error) {
         return res.status(401).json({ error: '인증 토큰이 유효하지 않습니다.' });
     }
 
     const uid = decodedToken.uid;
-    const userEmail = decodedToken.email;
-
-    if (!uid || !userEmail) {
-        return res.status(400).json({ error: '토큰에서 사용자 정보를 찾을 수 없습니다.' });
+    if (!uid) {
+        return res.status(400).json({ error: '토큰에서 사용자 UID를 찾을 수 없습니다.' });
     }
     
-    console.log(`[계정 삭제 시작] UID: ${uid}, Email: ${userEmail}`);
+    console.log(`[계정 삭제 시작] UID: ${uid}`);
 
     try {
-        const batch = db.batch(); // 여러 작업을 한 번에 처리하기 위한 배치
+        const batch = db.batch(); // 리뷰/유저 삭제는 배치로 처리
 
         // 3. (Firestore) 이 사용자가 쓴 모든 'reviews' 찾기
-        const reviewsQuery = db.collection('reviews').where('userId', '==', userEmail);
+        const reviewsQuery = db.collection('reviews').where('uid', '==', uid);
         const snapshot = await reviewsQuery.get();
 
         if (!snapshot.empty) {
             console.log(`${snapshot.size}개의 리뷰를 삭제하고 통계를 업데이트합니다.`);
             
-            // 4. (Firestore) 모든 리뷰를 순회하며 통계 업데이트 및 삭제 배치
-            for (const doc of snapshot.docs) {
+            // 통계 업데이트가 필요한 책들을 Map으로 관리
+            const bookStatsToUpdate = new Map();
+            
+            snapshot.forEach(doc => {
                 const review = doc.data();
                 const bookIsbn = review.bookIsbn;
-                const rating = review.rating;
-                
-                if (bookIsbn && rating) {
-                    const bookRef = db.collection('books').doc(bookIsbn);
-                    
-                    batch.update(bookRef, {
-                        reviews: FieldValue.increment(-1),
-                        ratingSum: FieldValue.increment(-rating)
-                    });
+                const rating = parseInt(review.rating, 10);
+
+                if (bookIsbn && !isNaN(rating)) {
+                    // 통계 역산 준비
+                    if (!bookStatsToUpdate.has(bookIsbn)) {
+                         bookStatsToUpdate.set(bookIsbn, { 
+                             reviewsToDecrement: 0, 
+                             ratingToDecrement: 0 
+                         });
+                    }
+                    const bookStat = bookStatsToUpdate.get(bookIsbn);
+                    bookStat.reviewsToDecrement += 1;
+                    bookStat.ratingToDecrement += rating;
                 }
-                // 리뷰 문서 삭제
+                // 리뷰 삭제는 배치에 추가
                 batch.delete(doc.ref);
+            });
+
+            // 4. 책 통계 업데이트
+            for (const [isbn, stat] of bookStatsToUpdate.entries()) {
+                const bookRef = db.collection('books').doc(isbn);
+                
+                try {
+                    await db.runTransaction(async (transaction) => {
+                        const bookDoc = await transaction.get(bookRef);
+                        
+                        if (bookDoc.exists) {
+                            const data = bookDoc.data();
+                            const currentReviews = data.reviews || 0;
+                            const currentRatingSum = data.ratingSum || 0;
+
+                            const newReviews = Math.max(0, currentReviews - stat.reviewsToDecrement);
+                            const newRatingSum = Math.max(0, currentRatingSum - stat.ratingToDecrement);
+                            // [수정] 평균 별점 재계산
+                            const newAverageRating = (newReviews > 0) ? (newRatingSum / newReviews) : 0;
+
+                            console.log(`통계 업데이트 ${isbn}: ${newReviews}개, ${newAverageRating.toFixed(1)}점`);
+                            
+                            transaction.update(bookRef, {
+                                reviews: newReviews,
+                                ratingSum: newRatingSum,
+                                averageRating: newAverageRating
+                            });
+                        }
+                    });
+                } catch (e) {
+                    console.warn(`[계정 삭제] ${isbn} 책의 통계 업데이트 실패: ${e.message}`);
+                    // 트랜잭션이 실패해도 계정 삭제는 계속 진행
+                }
             }
             
-            // 5. (Firestore) 배치 작업 실행
+            // 5. (Firestore) 리뷰 삭제 배치 실행
             await batch.commit();
+            console.log('모든 Firestore 리뷰 정리 완료.');
+
         } else {
             console.log('삭제할 리뷰가 없습니다.');
         }
 
-        // 6. (Auth) Firestore 데이터 정리 후, Auth에서 사용자 계정 삭제
+        // 6. (Auth) Auth에서 사용자 계정 삭제
         await adminAuth.deleteUser(uid);
         
-        console.log(`[계정 삭제 성공] ${userEmail} 계정 및 데이터 삭제 완료.`);
+        // 7. (Firestore) 'users' 컬렉션에서도 프로필 삭제
+        await db.collection('users').doc(uid).delete();
+        
+        console.log(`[계정 삭제 성공] ${uid} 계정 및 데이터 삭제 완료.`);
         res.status(200).json({ message: '계정 및 모든 리뷰가 성공적으로 삭제되었습니다.' });
 
     } catch (error) {
