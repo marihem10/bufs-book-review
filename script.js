@@ -11,12 +11,53 @@ function initializeFirebaseInstances() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // [핵심]: Firebase 인스턴스를 기다려서 가져옵니다.
     const { auth, db } = await initializeFirebaseInstances();
 
     const searchInput = document.querySelector('.search-input');
     const searchButton = document.querySelector('.search-button');
     const topBooksList = document.querySelector('.top-books-list');
+
+    // ----------------------------------------------------
+    // 인기 도서 스크롤 버튼 기능
+    // ----------------------------------------------------
+    const scrollLeftBtn = document.getElementById('scroll-left');
+    const scrollRightBtn = document.getElementById('scroll-right');
+    const popularBooksContainer = document.getElementById('popular-books-list');
+
+    if (popularBooksContainer && scrollLeftBtn && scrollRightBtn) {
+        
+        scrollLeftBtn.addEventListener('click', () => {
+            // 한 번에 스크롤할 양 (컨테이너 너비의 약 70%)
+            const scrollAmount = popularBooksContainer.clientWidth * 0.7;
+            popularBooksContainer.scrollBy({
+                left: -scrollAmount,
+                behavior: 'smooth'
+            });
+        });
+
+        scrollRightBtn.addEventListener('click', () => {
+            const scrollAmount = popularBooksContainer.clientWidth * 0.7;
+            popularBooksContainer.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    // ----------------------------------------------------
+    // 아래로 스크롤 버튼 기능
+    // ----------------------------------------------------
+    const scrollDownBtn = document.getElementById('scroll-down');
+    const popularSection = document.querySelector('.popular-books-section');
+
+    if (scrollDownBtn && popularSection) {
+        scrollDownBtn.addEventListener('click', () => {
+            // '인기 도서' 섹션으로 부드럽게 스크롤
+            popularSection.scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    }
     
     // ----------------------------------------------------
     // 1. 검색 기능 이벤트 리스너
