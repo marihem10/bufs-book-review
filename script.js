@@ -37,23 +37,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchButton.addEventListener('click', handleSearch);
 
     // ----------------------------------------------------
-    // 2. 인기 도서 목록 표시 (Firebase 연동)
+    // 2. 인기 도서 목록 표시
     // ----------------------------------------------------
     async function fetchPopularBooks() {
+        const topBooksList = document.getElementById('popular-books-list');
+
         if (!db) {
             topBooksList.innerHTML = '<p>데이터베이스 연결 오류 (초기화 실패)</p>';
+            return;
+        }
+        if (!topBooksList) {
+            console.error('인기 도서 목록 컨테이너(#popular-books-list)를 찾을 수 없습니다.');
             return;
         }
 
         const booksRef = collection(db, "books");
         
-        // (참고) Firebase 규칙상 'reviews' > 0 필터 사용 시 'reviews' 정렬이 먼저 와야 합니다.
+        // 기존 쿼리 유지 (평균 별점 순으로 재정렬)
         const q = query(
             booksRef, 
             where("reviews", ">", 0),
             orderBy("reviews", "desc"),
             orderBy("averageRating", "desc"), 
-            limit(20) // 20개를 가져와서
+            limit(20)
         );
 
         try {
@@ -69,35 +75,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // (참고) 클라이언트에서 '평균 별점' 순으로 재정렬
+            // 기존 클라이언트 재정렬 유지 (평균 별점 1순위)
             books.sort((a, b) => {
-                // 1. 평균 별점 (내림차순)
                 if ((b.averageRating || 0) > (a.averageRating || 0)) return 1;
                 if ((b.averageRating || 0) < (a.averageRating || 0)) return -1;
-                
-                // 2. (별점이 같으면) 리뷰 개수 (내림차순)
                 if ((b.reviews || 0) > (a.reviews || 0)) return 1;
                 if ((b.reviews || 0) < (a.reviews || 0)) return -1;
-                
                 return 0;
             });
             
-            const top5Books = books.slice(0, 5); // 재정렬된 리스트에서 5개 선택
-            topBooksList.innerHTML = ''; // 기존 로딩 메시지 삭제
+            // 상위 10개
+            const top10Books = books.slice(0, 10);
+            topBooksList.innerHTML = ''; // 로딩 메시지 삭제
             
-            top5Books.forEach((book) => {
-                const listItem = document.createElement('li');
-                const link = document.createElement('a');
+            // 새 HTML 구조 (이미지+텍스트)로 렌더링
+            top10Books.forEach((book) => {
+                const bookItem = document.createElement('a');
+                bookItem.classList.add('popular-book-item');
+                bookItem.href = `book-detail.html?isbn=${book.isbn}`;
+
+                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '0.0';
                 
-                link.href = `book-detail.html?isbn=${book.isbn}`; 
+                bookItem.innerHTML = `
+                    <img src="${book.image || 'https://via.placeholder.com/160x230'}" alt="${book.title}">
+                    <p>${book.title}</p>
+                    <span>★ ${averageRating} (${book.reviews || 0} 리뷰)</span>
+                `;
                 
-                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '평가 없음';
-                const bookTitle = book.title || '제목 정보 없음';
-                link.textContent = `${bookTitle} (${averageRating}점, ${book.reviews || 0} 리뷰)`;
-                
-                link.classList.add('popular-book-link');
-                listItem.appendChild(link);
-                topBooksList.appendChild(listItem);
+                topBooksList.appendChild(bookItem);
             });
             
         } catch (e) {

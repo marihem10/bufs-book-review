@@ -739,3 +739,85 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 #userStatus a:hover {
     color: #ddd; /* 마우스 올렸을 때 살짝 연하게 */
 }
+
+/* --------------------------------- */
+/* 메인 - 인기 도서 섹션 */
+/* --------------------------------- */
+
+/* 기존 오른쪽 고정 박스 제거 */
+.right-section {
+    display: none;
+}
+
+/* 1. 흰색 배경의 새 섹션 */
+.popular-books-section {
+    background-color: #ffffff; /*흰색 배경 */
+    color: #333; /* 글자색은 어둡게 */
+    padding: 60px 0; /* 위아래로 넉넉한 여백 */
+    text-align: center;
+}
+
+/* 2. 새 인기 도서 제목 */
+.popular-books-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #222;
+}
+
+/* 3. 가로 스크롤 컨테이너 */
+.popular-books-container {
+    display: flex;
+    overflow-x: auto; /* [핵심] 가로 스크롤 */
+    padding: 20px 40px; /* 좌우 여백 */
+    gap: 25px; /* 아이템 사이 간격 */
+    
+    /* 스크롤바 숨기기 */
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; /* Firefox */
+}
+.popular-books-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* 4. 개별 책 아이템 (이미지 + 텍스트) */
+.popular-book-item {
+    width: 160px; /* 아이템 가로 크기 */
+    flex-shrink: 0; /* 아이템이 찌그러지지 않게 함 */
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.2s ease;
+}
+.popular-book-item:hover {
+    transform: translateY(-5px); /* 마우스 올리면 살짝 위로 */
+}
+
+/* 5. 책 이미지 */
+.popular-book-item img {
+    width: 100%;
+    height: 230px; /* 이미지 높이 고정 */
+    object-fit: cover; /* 이미지가 비율 맞춰 잘 채워지도록 */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 6. 책 제목 */
+.popular-book-item p {
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 12px;
+    /* 텍스트가 2줄 넘어가면 ... 처리 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* 7. 평균 별점/리뷰 수 */
+.popular-book-item span {
+    font-size: 13px;
+    color: #777;
+    display: block;
+    margin-top: 4px;
+}
