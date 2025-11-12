@@ -19,19 +19,19 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 // ----------------------------------------------------
-// Firebase 인스턴스를 기다리는 헬퍼 함수
+// [핵심 수정] Firebase 인스턴스를 기다리는 헬퍼 함수 (버그 수정)
 // ----------------------------------------------------
-function initializeFirebaseInstances() {
-    if (window.auth && window.db) {
-        // firebase-init.js가 이미 auth와 db를 window에 설정함
-        return { auth: window.auth, db: window.db };
+async function initializeFirebaseInstances() {
+    // window.auth 또는 window.db가 준비될 때까지 0.1초마다 계속 확인합니다.
+    while (!window.auth || !window.db) {
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
-    // 0.1초마다 firebase-init.js가 로드되었는지 확인
-    return new Promise(resolve => setTimeout(() => resolve(initializeFirebaseInstances()), 100));
+    // 준비가 완료되면 객체를 반환합니다.
+    return { auth: window.auth, db: window.db };
 }
 
 // ----------------------------------------------------
-// 로딩 버튼 헬퍼 함수
+// 로딩 버튼 헬퍼 함수 (기존과 동일)
 // ----------------------------------------------------
 function showButtonLoading(button, text = '로딩중...') {
     button.disabled = true;
@@ -48,10 +48,11 @@ function hideButtonLoading(button) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     
+    // [핵심 수정] 수정된 헬퍼 함수를 호출합니다.
     const { auth, db } = await initializeFirebaseInstances();
     
     // ----------------------------------------------------
-    // 탭 기능
+    // 탭 기능 (기존과 동일)
     // ----------------------------------------------------
     const tabLogin = document.getElementById('tabLogin');
     const tabSignup = document.getElementById('tabSignup');
@@ -73,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabSignup.addEventListener('click', () => switchTab(formSignup));
     
     // ----------------------------------------------------
-    // 로그인 로직
+    // 로그인 로직 (기존과 동일)
     // ----------------------------------------------------
     const loginEmail = document.getElementById('loginEmail');
     const loginPassword = document.getElementById('loginPassword');
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // 회원가입 로직
+    // 회원가입 로직 (기존과 동일)
     // ----------------------------------------------------
     const signupEmail = document.getElementById('signupEmail');
     const signupPassword = document.getElementById('signupPassword');
@@ -166,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // 비밀번호 찾기 로직
+    // 비밀번호 찾기 로직 (기존과 동일)
     // ----------------------------------------------------
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
     forgotPasswordLink.addEventListener('click', async (e) => {
