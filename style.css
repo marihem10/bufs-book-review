@@ -821,3 +821,54 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     display: block;
     margin-top: 4px;
 }
+
+.main-content:has(.left-section) {
+    min-height: calc(100vh - 91px); 
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; 
+    align-items: center;
+    padding-top: 180px; 
+}
+
+/* flex-box 정렬을 위해 기존 여백(margin-top) 제거 */
+.left-section {
+    align-items: center;
+}
+.main-title {
+    margin-top: 0; 
+}
+
+/* 다른 페이지들은 원래 스타일로 되돌립니다. */
+.main-content-search-page,
+.main-content:has(.mypage-wrapper),
+.main-content:has(.auth-wrapper) {
+    min-height: 0; 
+    display: block; /* flex-box 취소 */
+    padding-top: 130px; /* 180px 패딩을 50px로 복원 */
+}
+
+/* --------------------------------- */
+/* 인기 도서 - 중앙 정렬 및 순위 */
+/* --------------------------------- */
+.popular-books-container {
+    display: inline-flex; 
+    max-width: 100%;
+    box-sizing: border-box; 
+}
+.popular-book-item {
+    position: relative; 
+}
+.popular-book-rank {
+    position: absolute; 
+    top: 5px;
+    left: 5px;
+    background-color: rgba(0, 0, 0, 0.7); 
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    z-index: 1; 
+}

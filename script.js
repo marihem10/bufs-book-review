@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const booksRef = collection(db, "books");
         
-        // 기존 쿼리 유지 (평균 별점 순으로 재정렬)
         const q = query(
             booksRef, 
             where("reviews", ">", 0),
@@ -75,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // 기존 클라이언트 재정렬 유지 (평균 별점 1순위)
             books.sort((a, b) => {
                 if ((b.averageRating || 0) > (a.averageRating || 0)) return 1;
                 if ((b.averageRating || 0) < (a.averageRating || 0)) return -1;
@@ -84,19 +82,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 0;
             });
             
-            // 상위 10개
             const top10Books = books.slice(0, 10);
-            topBooksList.innerHTML = ''; // 로딩 메시지 삭제
+            topBooksList.innerHTML = '';
             
-            // 새 HTML 구조 (이미지+텍스트)로 렌더링
-            top10Books.forEach((book) => {
+            // (book, index)를 추가하여 순위를 가져옴
+            top10Books.forEach((book, index) => {
                 const bookItem = document.createElement('a');
                 bookItem.classList.add('popular-book-item');
                 bookItem.href = `book-detail.html?isbn=${book.isbn}`;
 
                 const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '0.0';
                 
+                // 순위 표시
                 bookItem.innerHTML = `
+                    <span class="popular-book-rank">${index + 1}</span>
                     <img src="${book.image || 'https://via.placeholder.com/160x230'}" alt="${book.title}">
                     <p>${book.title}</p>
                     <span>★ ${averageRating} (${book.reviews || 0} 리뷰)</span>
@@ -113,7 +112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                  topBooksList.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. 콘솔을 확인하세요.</p>';
             }
         }
-    } 
+    }
+
     await fetchPopularBooks();
 
 }); 
