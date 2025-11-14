@@ -749,12 +749,17 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     display: none;
 }
 
-/* 1. 흰색 배경의 새 섹션 */
+/* 1. 흰색 배경의 새 섹션 + [스크롤 버튼 기준점] */
 .popular-books-section {
-    background-color: #ffffff; /*흰색 배경 */
-    color: #333; /* 글자색은 어둡게 */
-    padding: 60px 0; /* 위아래로 넉넉한 여백 */
+    background-color: #ffffff; 
+    color: #333; 
+    padding: 60px 0; 
     text-align: center;
+    position: relative; /* 좌/우 스크롤 버튼의 기준점 */
+    
+    /* 화면 높이를 꽉 채우도록 설정 */
+    min-height: 100vh;
+    box-sizing: border-box; /* 패딩을 높이에 포함 */
 }
 
 /* 2. 새 인기 도서 제목 */
@@ -1011,4 +1016,20 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 /* --------------------------------- */
 .scroll-btn {
     top: 65%; /* 탭 버튼이 생겨서 조금 내림 (60% -> 65%) */
+}
+
+/* --------------------------------- */
+/* 스크롤 버튼 - 스크롤 시 숨기기      */
+/* --------------------------------- */
+
+/* 기존 .down 버튼에 부드러운 전환 효과 추가 */
+.scroll-btn.down {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 버튼을 숨기는 .hidden 클래스 */
+.scroll-btn.down.hidden {
+    opacity: 0; /* 투명하게 */
+    transform: translateY(20px); /* 아래로 살짝 내리면서 */
+    pointer-events: none; /* 클릭 방지 */
 }

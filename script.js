@@ -64,6 +64,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
+    // 5. 스크롤 시 '아래' 버튼 숨기기
+    // ----------------------------------------------------
+    if (scrollDownBtn) { 
+        window.addEventListener('scroll', () => {
+            // window.scrollY는 사용자가 수직으로 얼마나 스크롤했는지 픽셀(px)로 알려줍니다.
+            if (window.scrollY > 100) { 
+                // 100px 이상 스크롤했으면 버튼 숨기기
+                scrollDownBtn.classList.add('hidden');
+            } else {
+                // 다시 맨 위로 올라오면 버튼 표시
+                scrollDownBtn.classList.remove('hidden');
+            }
+        });
+    }
+
+    // ----------------------------------------------------
     // 4. 인기 도서 목록을 화면에 그리는 *공통 함수*
     // ----------------------------------------------------
     function renderPopularBooks(booksArray) {
