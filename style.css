@@ -941,7 +941,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 /* 2. 아래로 스크롤 버튼 스타일 */
 .scroll-btn.down {
     position: fixed !important;
-    bottom: 1px !important; /* 화면 하단에서 30px */
+    bottom: 30px !important; /* 화면 하단에서 30px */
     right: 40px !important; /* 화면 오른쪽에서 40px */
     
     /* 좌우 버튼과 유사한 스타일 */
@@ -1032,3 +1032,4 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     transform: translateY(20px); /* 아래로 살짝 내리면서 */
     pointer-events: none; /* 클릭 방지 */
 }
+.scroll-btn.down { top: auto !important; }
