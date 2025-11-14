@@ -892,7 +892,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 /* 2. 스크롤 버튼 공통 스타일 */
 .scroll-btn {
     position: absolute;
-    top: 60%; /* 제목을 포함한 컨테이너의 중간쯤 */
+    top: 50% !important; /* 제목을 포함한 컨테이너의 중간쯤 */
     transform: translateY(-50%);
     
     background-color: rgba(255, 255, 255, 0.9);
