@@ -632,35 +632,51 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             averageRating: (data.ratingSum / data.reviewCount) // 이번 달 평균
         }));
 
-        // 정렬: 1순위(리뷰 많은 순), 2순위(평균 별점 높은 순)
+        // 5. 정렬: 1순위(리뷰 많은 순), 2순위(평균 별점 높은 순)
         sortedStats.sort((a, b) => {
             if (b.reviewCount !== a.reviewCount) {
+                // 1순위: 리뷰 개수 (내림차순)
                 return b.reviewCount - a.reviewCount;
+            } else {
+                // 2순위: 평균 별점 (내림차순)
+                return b.averageRating - a.averageRating;
             }
-            return b.averageRating - a.averageRating;
         });
 
-        // 5. (서버) 상위 10개만 추출
-        const top10Isbns = sortedStats.slice(0, 10).map(stat => stat.isbn);
+        // 6. (서버) 상위 10개만 추출
+        const top10Stats = sortedStats.slice(0, 10);
+        const top10Isbns = top10Stats.map(stat => stat.isbn);
 
-        // 6. (Firestore) 상위 10개 책의 상세 정보(제목, 이미지) 가져오기
+        // 7. (Firestore) 상위 10개 책의 상세 정보(제목, 이미지) 가져오기
         const bookPromises = top10Isbns.map(isbn => db.collection('books').doc(isbn).get());
         const bookDocs = await Promise.all(bookPromises);
 
-        // 7. (서버) 최종 데이터 조합
+        // 8. (서버) 최종 데이터 조합
         const popularBooks = bookDocs
-            .map((doc, index) => {
-                if (!doc.exists) return null; // 책 정보가 없는 경우
+            .map((doc) => { // index 대신 .find() 사용
+                if (!doc.exists) return null; 
                 const bookData = doc.data();
-                const stat = sortedStats[index]; // 정렬된 순서 유지
+                
+                // 해당 책의 '이달의' 통계 찾기
+                const stat = top10Stats.find(s => s.isbn === bookData.isbn);
+                if (!stat) return null;
                 
                 return {
-                    ...bookData, // title, image, isbn 등
+                    ...bookData, 
                     reviews: stat.reviewCount, // '이달의' 리뷰 수
                     averageRating: stat.averageRating // '이달의' 평균 별점
                 };
             })
-            .filter(book => book !== null); // null 제거
+            .filter(book => book !== null);
+            
+        // Firestore에서 가져온 순서가 아닌, '이달의 통계' 순서로 다시 정렬
+        popularBooks.sort((a, b) => {
+             if (b.reviews !== a.reviews) {
+                return b.reviews - a.reviews;
+            } else {
+                return b.averageRating - a.averageRating;
+            }
+        });
 
         console.log(`[API] 이달의 인기 도서 ${popularBooks.length}권 반환`);
         res.json(popularBooks);

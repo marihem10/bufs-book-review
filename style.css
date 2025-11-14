@@ -770,19 +770,18 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     color: #222;
 }
 
-/* 3. 가로 스크롤 컨테이너 */
+/* 4. 가로 스크롤 컨테이너 */
 .popular-books-container {
-    display: flex;
-    overflow-x: auto; /* [핵심] 가로 스크롤 */
-    padding: 20px 40px; /* 좌우 여백 */
-    gap: 25px; /* 아이템 사이 간격 */
+    display: inline-flex; 
+    overflow-x: auto; 
+    padding: 20px 40px; 
+    gap: 25px; 
+    max-width: 100%;
+    box-sizing: border-box; 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
     
-    /* 스크롤바 숨기기 */
-    -ms-overflow-style: none; /* IE/Edge */
-    scrollbar-width: none; /* Firefox */
-}
-.popular-books-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    margin-top: 30px;
 }
 
 /* 4. 개별 책 아이템 (이미지 + 텍스트) */
