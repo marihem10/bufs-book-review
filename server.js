@@ -588,6 +588,93 @@ app.put('/api/update-nickname', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
+// 이달의 인기 도서
+// ------------------------------------------------------------------
+app.get('/api/popular-books-monthly', async (req, res) => {
+    console.log('[API] 이달의 인기 도서 요청 수신');
+    
+    try {
+        // 1. 이번 달의 시작 날짜 계산
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        // 2. (Firestore) 'reviews' 컬렉션에서 이번 달 리뷰만 쿼리
+        const reviewsRef = db.collection('reviews');
+        const q = reviewsRef.where('timestamp', '>=', startOfMonth);
+        const snapshot = await q.get();
+
+        if (snapshot.empty) {
+            console.log('이번 달 리뷰 없음.');
+            return res.json([]);
+        }
+
+        // 3. (서버) 리뷰를 책(isbn)별로 집계 (Map 사용)
+        const monthlyStats = new Map();
+        snapshot.forEach(doc => {
+            const review = doc.data();
+            const isbn = review.bookIsbn;
+            const rating = parseInt(review.rating, 10);
+
+            if (!isbn || isNaN(rating)) return;
+
+            if (!monthlyStats.has(isbn)) {
+                monthlyStats.set(isbn, { reviewCount: 0, ratingSum: 0 });
+            }
+            const stat = monthlyStats.get(isbn);
+            stat.reviewCount += 1;
+            stat.ratingSum += rating;
+        });
+
+        // 4. (서버) 집계된 데이터를 배열로 변환하고 정렬
+        let sortedStats = Array.from(monthlyStats.entries()).map(([isbn, data]) => ({
+            isbn: isbn,
+            reviewCount: data.reviewCount,
+            averageRating: (data.ratingSum / data.reviewCount) // 이번 달 평균
+        }));
+
+        // 정렬: 1순위(리뷰 많은 순), 2순위(평균 별점 높은 순)
+        sortedStats.sort((a, b) => {
+            if (b.reviewCount !== a.reviewCount) {
+                return b.reviewCount - a.reviewCount;
+            }
+            return b.averageRating - a.averageRating;
+        });
+
+        // 5. (서버) 상위 10개만 추출
+        const top10Isbns = sortedStats.slice(0, 10).map(stat => stat.isbn);
+
+        // 6. (Firestore) 상위 10개 책의 상세 정보(제목, 이미지) 가져오기
+        const bookPromises = top10Isbns.map(isbn => db.collection('books').doc(isbn).get());
+        const bookDocs = await Promise.all(bookPromises);
+
+        // 7. (서버) 최종 데이터 조합
+        const popularBooks = bookDocs
+            .map((doc, index) => {
+                if (!doc.exists) return null; // 책 정보가 없는 경우
+                const bookData = doc.data();
+                const stat = sortedStats[index]; // 정렬된 순서 유지
+                
+                return {
+                    ...bookData, // title, image, isbn 등
+                    reviews: stat.reviewCount, // '이달의' 리뷰 수
+                    averageRating: stat.averageRating // '이달의' 평균 별점
+                };
+            })
+            .filter(book => book !== null); // null 제거
+
+        console.log(`[API] 이달의 인기 도서 ${popularBooks.length}권 반환`);
+        res.json(popularBooks);
+
+    } catch (error) {
+        console.error('이달의 인기 도서 목록 가져오기 실패 (서버 측):', error);
+        if (error.code === 'failed-precondition') {
+             return res.status(500).json({ error: '데이터베이스 색인 오류가 발생했습니다. (reviews/timestamp)' });
+        }
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// ------------------------------------------------------------------
 // [서버 시작]
 // ------------------------------------------------------------------
 app.listen(port, () => {

@@ -921,11 +921,10 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 /* 메인 - 아래로 스크롤 버튼 */
 /* --------------------------------- */
 
-/* 1. 메인 컨텐츠 영역에 position: relative 추가 (버튼 기준점) */
+/* 1. 메인 컨텐츠 영역에 position: relative 추가 */
 .main-content:has(.left-section) {
     position: relative;
     
-    /* (아래는 기존 코드입니다) */
     min-height: calc(100vh - 91px); 
     box-sizing: border-box;
     display: flex;
@@ -937,26 +936,26 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 
 /* 2. 아래로 스크롤 버튼 스타일 */
 .scroll-btn.down {
-    position: absolute;
-    bottom: 30px; /* 화면 하단에서 30px */
-    right: 40px; /* 화면 오른쪽에서 40px */
+    position: fixed !important;
+    bottom: 1px !important; /* 화면 하단에서 30px */
+    right: 40px !important; /* 화면 오른쪽에서 40px */
     
     /* 좌우 버튼과 유사한 스타일 */
     background-color: rgba(255, 255, 255, 0.9);
     color: #333;
     border: 1px solid #ddd;
     border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    font-size: 24px; /* 화살표 아이콘 크기 */
-    line-height: 45px; /* 화살표 수직 중앙 정렬 */
+    width: 70px;
+    height: 70px;
+    font-size: 35px; /* 화살표 아이콘 크기 */
+    line-height: 70px; /* 화살표 수직 중앙 정렬 */
     font-weight: bold;
     cursor: pointer;
     z-index: 10;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     
     /* 통통 튀는 애니메이션 */
-    animation: bounce 2s infinite;
+    animation: bounce 5s infinite;
 }
 .scroll-btn.down:hover {
     animation-play-state: paused; /* 마우스 올리면 멈춤 */
@@ -975,4 +974,41 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     60% {
         transform: translateY(-5px);
     }
+}
+/* --------------------------------- */
+/* 인기 도서 - 탭 버튼 */
+/* --------------------------------- */
+.popular-books-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px; /* 목록과 탭 사이 간격 */
+    gap: 10px;
+}
+.popular-tab-btn {
+    font-family: 'Nanum Myeongjo', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 8px 20px;
+    border: 2px solid #ccc;
+    border-radius: 20px;
+    background-color: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.popular-tab-btn:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+.popular-tab-btn.active {
+    background-color: #333; /* 활성화된 탭 */
+    color: white;
+    border-color: #333;
+}
+
+/* --------------------------------- */
+/* 인기 도서 - 스크롤 버튼 */
+/* --------------------------------- */
+.scroll-btn {
+    top: 65%; /* 탭 버튼이 생겨서 조금 내림 (60% -> 65%) */
 }
