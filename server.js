@@ -608,7 +608,7 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             return res.json([]);
         }
 
-        // 3. (서버) 리뷰를 책(isbn)별로 집계 (Map 사용)
+        // 3. (서버) 리뷰를 책(isbn)별로 집계
         const monthlyStats = new Map();
         snapshot.forEach(doc => {
             const review = doc.data();
@@ -625,21 +625,21 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             stat.ratingSum += rating;
         });
 
-        // 4. (서버) 집계된 데이터를 배열로 변환하고 정렬
+        // 4. (서버) 집계된 데이터를 배열로 변환
         let sortedStats = Array.from(monthlyStats.entries()).map(([isbn, data]) => ({
             isbn: isbn,
             reviewCount: data.reviewCount,
-            averageRating: (data.ratingSum / data.reviewCount) // 이번 달 평균
+            averageRating: (data.ratingSum / data.reviewCount)
         }));
 
-        // 5. 정렬: 1순위(리뷰 많은 순), 2순위(평균 별점 높은 순)
+        // 5. 정렬: 1순위(평균 별점), 2순위(리뷰 개수)
         sortedStats.sort((a, b) => {
-            if (b.reviewCount !== a.reviewCount) {
-                // 1순위: 리뷰 개수 (내림차순)
-                return b.reviewCount - a.reviewCount;
-            } else {
-                // 2순위: 평균 별점 (내림차순)
+            if (b.averageRating !== a.averageRating) {
+                // 1순위: 평균 별점 (내림차순)
                 return b.averageRating - a.averageRating;
+            } else {
+                // 2순위: 리뷰 개수 (내림차순)
+                return b.reviewCount - a.reviewCount;
             }
         });
 
@@ -647,17 +647,16 @@ app.get('/api/popular-books-monthly', async (req, res) => {
         const top10Stats = sortedStats.slice(0, 10);
         const top10Isbns = top10Stats.map(stat => stat.isbn);
 
-        // 7. (Firestore) 상위 10개 책의 상세 정보(제목, 이미지) 가져오기
+        // 7. (Firestore) 상위 10개 책의 상세 정보 가져오기
         const bookPromises = top10Isbns.map(isbn => db.collection('books').doc(isbn).get());
         const bookDocs = await Promise.all(bookPromises);
 
         // 8. (서버) 최종 데이터 조합
         const popularBooks = bookDocs
-            .map((doc) => { // index 대신 .find() 사용
+            .map((doc) => { 
                 if (!doc.exists) return null; 
                 const bookData = doc.data();
                 
-                // 해당 책의 '이달의' 통계 찾기
                 const stat = top10Stats.find(s => s.isbn === bookData.isbn);
                 if (!stat) return null;
                 
@@ -669,12 +668,12 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             })
             .filter(book => book !== null);
             
-        // Firestore에서 가져온 순서가 아닌, '이달의 통계' 순서로 다시 정렬
+        // 9. (서버) 최종 순서로 다시 정렬
         popularBooks.sort((a, b) => {
-             if (b.reviews !== a.reviews) {
-                return b.reviews - a.reviews;
-            } else {
+             if (b.averageRating !== a.averageRating) {
                 return b.averageRating - a.averageRating;
+            } else {
+                return b.reviews - a.reviews;
             }
         });
 
