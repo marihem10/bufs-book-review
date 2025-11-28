@@ -1,8 +1,7 @@
-// 1. 필요한 모듈을 맨 위에서 한 번만 불러옵니다.
+// 1. 모듈 가져오기 (한 번만 선언)
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
-
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -24,11 +23,11 @@ try {
     process.exit(1);
 }
 
-// 3. 앱 초기화 (변수명 firebaseApp 사용)
+// 3. Firebase 앱 초기화
 let firebaseApp; 
 try {
     firebaseApp = initializeApp({
-      credential: cert(serviceAccount)
+    credential: cert(serviceAccount)
     });
 } catch (e) {
     console.error("Firebase 초기화 실패:", e.message);
@@ -37,14 +36,14 @@ try {
 
 const db = getFirestore(firebaseApp); 
 const adminAuth = getAuth(firebaseApp);
-const axios = require('axios');
-const cors = require('cors');
+
+// 4. Express 앱 설정
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors()); 
 
-// 네이버 API 설정
+// 5. 네이버 API 설정
 const clientId = process.env.NAVER_CLIENT_ID;
 const clientSecret = process.env.NAVER_CLIENT_SECRET;
 const apiHost = 'https://openapi.naver.com/v1/search/book.json';
