@@ -1,19 +1,5 @@
-import { 
-    getAuth, 
-    onAuthStateChanged, 
-    sendPasswordResetEmail, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { 
-    getFirestore, 
-    collection, 
-    query, 
-    where, 
-    getDocs, 
-    doc, 
-    getDoc, 
-    orderBy 
-} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy , deleteDoc} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const db = window.db; 
@@ -41,7 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (user) {
             const displayName = user.displayName || user.email.split('@')[0];
             userStatusElement.textContent = `${displayName} 님의 리뷰 목록입니다.`;
-            fetchUserReviews(user.uid, db); 
+            fetchUserReviews(user.uid, db);
+            
+            // [신규] 알림 불러오기 함수 호출
+            fetchNotifications(user.uid); 
         } else {
             userStatusElement.innerHTML = '로그인이 필요합니다. <a href="auth.html">로그인 페이지로 이동</a>';
             reviewListContainer.innerHTML = '';
@@ -92,9 +81,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let date = '날짜 없음';
                 if (review.timestamp) {
                     if (typeof review.timestamp.toDate === 'function') { 
-                        date = review.timestamp.toDate().toLocaleDateString('ko-KR');
+                        date = review.timestamp.toDate().toLocaleString('ko-KR');
                     } else { 
-                        date = new Date(review.timestamp).toLocaleDateString('ko-KR');
+                        date = new Date(review.timestamp).toLocaleString('ko-KR');
                     }
                 }
                 
@@ -417,3 +406,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
 });
+
+// ----------------------------------------------------
+    // [신규] 알림 불러오기 및 삭제 함수
+    // ----------------------------------------------------
+    async function fetchNotifications(userUid) {
+        const notiSection = document.getElementById('notificationSection');
+        const notiList = document.getElementById('notificationList');
+        
+        // 나에게 온 알림 중, 읽지 않은(read == false) 것만 가져옴 (최신순)
+        const q = query(
+            collection(db, "notifications"), 
+            where("targetUid", "==", userUid),
+            // where("read", "==", false), // (선택) 읽은 것도 보여주려면 이 줄 삭제
+            orderBy("timestamp", "desc")
+        );
+
+        try {
+            const snapshot = await getDocs(q);
+            
+            if (snapshot.empty) {
+                notiSection.style.display = 'none'; // 알림 없으면 숨김
+                return;
+            }
+            
+            notiSection.style.display = 'block'; // 알림 있으면 보임
+            notiList.innerHTML = '';
+
+            snapshot.forEach(docSnap => {
+                const noti = docSnap.data();
+                const li = document.createElement('li');
+                li.classList.add('noti-item');
+                
+                li.innerHTML = `
+                    <a href="${noti.link}" class="noti-link">
+                        ${noti.message}
+                    </a>
+                    <button class="noti-close-btn" data-id="${docSnap.id}">×</button>
+                `;
+                notiList.appendChild(li);
+            });
+
+            // 알림 삭제(닫기) 버튼 이벤트
+            document.querySelectorAll('.noti-close-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const notiId = e.target.dataset.id;
+                    // Firestore에서 알림 문서 삭제
+                    await deleteDoc(doc(db, "notifications", notiId));
+                    e.target.closest('.noti-item').remove(); // 화면에서 제거
+                    
+                    // 다 지웠으면 섹션 숨김
+                    if (notiList.children.length === 0) {
+                        notiSection.style.display = 'none';
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error("알림 로딩 실패:", e);
+            // 색인 오류가 날 수 있으므로 콘솔 확인 필요
+            if (e.code === 'failed-precondition') {
+                console.log('알림 쿼리 색인이 필요합니다. 콘솔 링크 확인');
+            }
+        }
+    }

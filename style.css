@@ -1534,11 +1534,6 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     border-bottom: 1px solid #eee;
     padding-bottom: 5px;
 }
-.reply-date {
-    font-size: 11px;
-    color: #999;
-    margin-left: 5px;
-}
 .no-reply {
     font-size: 12px;
     color: #999;
@@ -1571,13 +1566,26 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 /* 답글 수정/삭제 버튼 스타일 */
 .reply-item {
     display: flex;
-    justify-content: space-between; /* 내용과 버튼 양 끝 배치 */
-    align-items: center;
+    justify-content: space-between;
+    align-items: flex-start; /* [핵심] 내용이 길어져도 버튼은 위쪽에 고정 */
+    gap: 10px; /* 내용과 버튼 사이 간격 */
 }
+
+.reply-content-box {
+    flex: 1; /* 남은 공간을 내용이 모두 차지 */
+    word-break: break-all; /* 긴 단어도 줄바꿈 */
+}
+
+.reply-btn-group {
+    flex-shrink: 0; /* [핵심] 버튼 영역이 찌그러지지 않게 고정 */
+    display: flex;
+    gap: 5px;
+    white-space: nowrap; /* 버튼이 줄바꿈되지 않게 */
+}
+
 .reply-btn-group button {
     font-size: 11px;
     padding: 2px 6px;
-    margin-left: 5px;
     background: #eee;
     border: none;
     border-radius: 3px;
@@ -1586,4 +1594,91 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 }
 .reply-btn-group button:hover {
     background: #ddd;
+}
+.reply-item {
+    color: rgb(0, 0, 0);
+    font-size: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* 구분선도 옅은 흰색 */
+}
+
+.reply-item b {
+    color: #734e20ab; /* 작성자 닉네임 */
+    margin-right: 5px;
+}
+
+.reply-date {
+    color: #000000;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.no-reply {
+    color: #ccc;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+/* 답글 입력창 스타일 */
+.reply-input {
+    background-color: rgba(218, 218, 218, 0.9); /* 입력창은 밝게 */
+    color: #333;
+    border: none;
+}
+
+/*타임스탬프*/
+/* 1. 책 상세 페이지 */
+.main-content-detail-page .review-date {
+    color: #ddd !important; /* 밝은 회색 */
+    font-size: 13px;
+    font-weight: normal;
+}
+
+/* 2. 마이페이지 */
+.mypage-wrapper .review-date {
+    color: #777 !important; /* 진한 회색 (잘 보이게) */
+    font-size: 13px;
+    font-weight: normal;
+}
+
+/* 마이페이지 알림 스타일 */
+.noti-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #ffd700; /* 금색 */
+}
+.noti-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.noti-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.noti-link {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    flex-grow: 1;
+}
+.noti-link:hover {
+    text-decoration: underline;
+}
+.noti-close-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+.noti-close-btn:hover {
+    color: #ff4d4d;
 }

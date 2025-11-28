@@ -690,7 +690,7 @@ app.get('/api/popular-books-monthly', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [신규] 리뷰 좋아요 토글 (Toggle Like)
+// 리뷰 좋아요 토글 (Toggle Like)
 // ------------------------------------------------------------------
 app.post('/api/review-like', async (req, res) => {
     const { reviewId, userId } = req.body;
@@ -724,16 +724,15 @@ app.post('/api/review-like', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [신규] 리뷰 답글 등록 (Add Reply)
+// 리뷰 답글 등록 
 // ------------------------------------------------------------------
 app.post('/api/review-reply', async (req, res) => {
     const { reviewId, userId, nickname, content } = req.body;
     if (!reviewId || !userId || !content) return res.status(400).json({ error: '정보 부족' });
 
     try {
-        // 리뷰 문서 아래에 'replies'라는 서브 컬렉션을 만들어 저장
+        // 1. 답글 저장 (기존 로직)
         const replyRef = db.collection('reviews').doc(reviewId).collection('replies');
-        
         await replyRef.add({
             userId,
             nickname: nickname || '익명',
@@ -741,6 +740,37 @@ app.post('/api/review-reply', async (req, res) => {
             timestamp: FieldValue.serverTimestamp()
         });
         
+        // ---------------------------------------------------------
+        // 2. 알림(Notification) 생성 로직
+        // ---------------------------------------------------------
+        
+        // A. 리뷰 정보 가져오기 (작성자가 누군지 알아야 함)
+        const reviewDoc = await db.collection('reviews').doc(reviewId).get();
+        if (reviewDoc.exists) {
+            const reviewData = reviewDoc.data();
+            const authorUid = reviewData.uid; // 리뷰 쓴 사람 UID
+            const authorEmail = reviewData.userId; // 리뷰 쓴 사람 이메일
+            
+            // B. 본인이 본인 글에 쓴 게 아닐 때만 알림 보냄
+            if (authorEmail !== userId && authorUid) {
+                
+                // C. 책 제목 가져오기 (알림 메시지용)
+                const bookDoc = await db.collection('books').doc(reviewData.bookIsbn).get();
+                const bookTitle = bookDoc.exists ? bookDoc.data().title : '책';
+                
+                // D. 'notifications' 컬렉션에 알림 저장
+                await db.collection('notifications').add({
+                    targetUid: authorUid, // 알림 받을 사람
+                    type: 'reply',
+                    message: `'${bookTitle}' 리뷰에 ${nickname}님이 답글을 남겼습니다.`,
+                    link: `book-detail.html?isbn=${reviewData.bookIsbn}`, // 클릭 시 이동할 주소
+                    read: false, // 아직 안 읽음
+                    timestamp: FieldValue.serverTimestamp()
+                });
+                console.log(`[알림 생성] ${authorEmail}님에게 답글 알림 전송 완료`);
+            }
+        }
+
         res.json({ success: true });
 
     } catch (error) {
@@ -750,7 +780,7 @@ app.post('/api/review-reply', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [신규] 답글 수정 API
+// 답글 수정 API
 // ------------------------------------------------------------------
 app.put('/api/reply-edit', async (req, res) => {
     const { reviewId, replyId, userId, content } = req.body;
@@ -779,7 +809,7 @@ app.put('/api/reply-edit', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [신규] 답글 삭제 API
+// 답글 삭제 API
 // ------------------------------------------------------------------
 app.delete('/api/reply-delete', async (req, res) => {
     const { reviewId, replyId, userId } = req.query;

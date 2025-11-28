@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let date = '날짜 없음';
                 if (review.timestamp) {
                     const ts = review.timestamp.toDate ? review.timestamp.toDate() : new Date(review.timestamp);
-                    date = ts.toLocaleDateString('ko-KR');
+                    date = ts.toLocaleString('ko-KR'); 
                 }
                 
                 const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
@@ -131,8 +131,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     replies.forEach(reply => {
                         let rDate = '';
                         if (reply.timestamp) {
-                             const rTs = reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp);
-                             rDate = rTs.toLocaleDateString();
+                            const rTs = reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp);
+                            rDate = rTs.toLocaleString('ko-KR');
                         }
                         
                         // [신규] 내 답글인지 확인
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             `<span class="reply-btn-group">
                                 <button class="reply-edit-btn" data-rid="${reply.id}">수정</button>
                                 <button class="reply-delete-btn" data-rid="${reply.id}">삭제</button>
-                             </span>` : '';
+                            </span>` : '';
 
                         html += `
                             <div class="reply-item" id="reply-${reply.id}">
