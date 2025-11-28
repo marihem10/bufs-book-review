@@ -158,19 +158,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6. '이달의 인기' (Monthly) 데이터를 가져오는 함수
     // ----------------------------------------------------
     async function fetchPopularBooksMonthly() {
-        popularBooksContainer.innerHTML = '<p>이달의 인기 도서를 불러오는 중입니다...</p>';
+        
+        // [핵심] 로딩 중에 안내 메시지와 스피너를 보여줍니다.
+        popularBooksContainer.innerHTML = `
+            <div class="loading-message">
+                <div class="spinner-dark"></div>
+                <p>이달의 인기도서를 집계하고 있습니다.</p>
+                <p class="sub-text">데이터 양에 따라 시간이 조금 걸릴 수 있습니다.</p>
+            </div>
+        `;
+
         try {
             const response = await fetch(`${serverUrl}/api/popular-books-monthly`);
             if (!response.ok) {
                 const err = await response.json();
                 throw new Error(err.error || '서버 응답 오류');
             }
+            
             const books = await response.json();
-            renderPopularBooks(books); // 공통 렌더링 함수 호출
+            renderPopularBooks(books); // 데이터 로딩 완료 시 목록 표시
 
         } catch (e) {
             console.error("이달의 인기 도서 목록 가져오기 실패:", e);
-            popularBooksContainer.innerHTML = `<p>이달의 인기 목록을 불러올 수 없습니다: ${e.message}</p>`;
+            popularBooksContainer.innerHTML = `<p>목록을 불러올 수 없습니다: ${e.message}</p>`;
         }
     }
 

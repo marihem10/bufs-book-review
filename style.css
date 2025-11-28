@@ -1033,3 +1033,85 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     pointer-events: none; /* 클릭 방지 */
 }
 .scroll-btn.down { top: auto !important; }
+
+/* --------------------------------- */
+/* 마이페이지 - 리뷰 목록 이미지 추가 스타일 */
+/* --------------------------------- */
+
+/* 1. 리뷰 아이템을 가로 배치(Flex)로 변경 */
+.mypage-wrapper .user-review-item {
+    display: flex; /* 가로 정렬 */
+    gap: 20px; /* 이미지와 텍스트 사이 간격 */
+    align-items: flex-start; /* 위쪽 기준 정렬 */
+}
+
+/* 2. 왼쪽 이미지 영역 */
+.review-left {
+    flex-shrink: 0; /* 이미지 영역이 찌그러지지 않게 고정 */
+}
+
+.review-book-img {
+    width: 100px; /* 이미지 너비 */
+    height: 145px; /* 이미지 높이 */
+    object-fit: cover; /* 비율 유지하며 꽉 채우기 */
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.review-book-img:hover {
+    transform: scale(1.05); /* 마우스 올리면 살짝 커짐 */
+}
+
+/* 3. 오른쪽 텍스트 영역 */
+.review-right {
+    flex-grow: 1; /* 남은 공간 모두 차지 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 4. 기존 스타일 수정/보완 */
+.review-buttons {
+    margin-top: 10px;
+}
+
+/* 수정 모드일 때 텍스트 영역 스타일 */
+.user-review-item.editing .review-right {
+    width: 100%; /* 수정 모드에서는 꽉 채우기 */
+}
+
+/* --------------------------------- */
+/* 이달의 인기 도서 - 로딩 메시지 */
+/* --------------------------------- */
+.loading-message {
+    width: 100%;
+    text-align: center;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-message p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #555;
+    margin: 10px 0 5px 0;
+}
+
+.loading-message .sub-text {
+    font-size: 14px;
+    font-weight: normal;
+    color: #888;
+}
+
+/* 검은색 스피너 (흰 배경용) */
+.spinner-dark {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #734e20ab; /* 포인트 색상 */
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 10px;
+}

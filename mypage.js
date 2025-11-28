@@ -70,16 +70,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             const reviewsWithTitles = querySnapshot.docs.map(async (doc_snapshot) => {
                 const review = doc_snapshot.data();
                 const reviewId = doc_snapshot.id;
+                
+                // 책 상세 정보 가져오기
                 const response = await fetch(`${serverUrl}/api/book-detail?isbn=${review.bookIsbn}`);
                 const bookDetail = await response.json();
+                
                 const bookTitle = bookDetail.title || '책 제목을 찾을 수 없음';
-                return { review, reviewId, bookTitle };
+                // [신규] 이미지 정보 가져오기 (없으면 기본 이미지)
+                const bookImage = bookDetail.image || 'https://via.placeholder.com/120x170?text=No+Image';
+
+                return { review, reviewId, bookTitle, bookImage };
             });
+
             const finalReviews = await Promise.all(reviewsWithTitles);
+            
             reviewListContainer.innerHTML = ''; 
 
             finalReviews.forEach((data) => {
-                const { review, reviewId, bookTitle } = data;
+                const { review, reviewId, bookTitle, bookImage } = data;
+                
                 let date = '날짜 없음';
                 if (review.timestamp) {
                     if (typeof review.timestamp.toDate === 'function') { 
@@ -88,23 +97,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                         date = new Date(review.timestamp).toLocaleDateString('ko-KR');
                     }
                 }
+                
                 const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
                 const reviewElement = document.createElement('div');
                 reviewElement.classList.add('user-review-item');
+                
                 reviewElement.dataset.reviewId = reviewId;
                 reviewElement.dataset.bookIsbn = review.bookIsbn;      
                 reviewElement.dataset.currentRating = review.rating; 
                 reviewElement.dataset.originalComment = review.comment;
+
+                // [핵심 수정] Flexbox 구조로 변경 (이미지 왼쪽, 텍스트 오른쪽)
                 reviewElement.innerHTML = `
-                    <a href="book-detail.html?isbn=${review.bookIsbn}" class="book-title-link">
-                        <h3 class="review-book-title">${bookTitle}</h3>
-                    </a>
-                    <p class="review-date">${date}</p>
-                    <p class="review-rating">${starsHtml}</p>
-                    <p class="review-comment">${review.comment}</p>
-                    <button class="edit-btn">수정</button>
-                    <button class="delete-btn">삭제</button>
-                    <hr>
+                    <div class="review-left">
+                        <a href="book-detail.html?isbn=${review.bookIsbn}">
+                            <img src="${bookImage}" alt="${bookTitle}" class="review-book-img">
+                        </a>
+                    </div>
+                    <div class="review-right">
+                        <a href="book-detail.html?isbn=${review.bookIsbn}" class="book-title-link">
+                            <h3 class="review-book-title">${bookTitle}</h3>
+                        </a>
+                        <p class="review-date">${date}</p>
+                        <p class="review-rating">${starsHtml}</p>
+                        <p class="review-comment">${review.comment}</p>
+                        <div class="review-buttons">
+                            <button class="edit-btn">수정</button>
+                            <button class="delete-btn">삭제</button>
+                        </div>
+                    </div>
                 `;
                 reviewListContainer.appendChild(reviewElement);
             });
