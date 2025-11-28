@@ -446,6 +446,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
                 notiList.appendChild(li);
             });
+            
 
             // 알림 삭제(닫기) 버튼 이벤트
             document.querySelectorAll('.noti-close-btn').forEach(btn => {

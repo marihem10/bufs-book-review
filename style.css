@@ -1486,7 +1486,33 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
         padding: 8px 12px;
     }
 
-    /* --------------------------------- */
+    /* [신규] 모바일 답글 날짜 최적화 */
+    .reply-item {
+        flex-direction: column; /* 좁으면 세로로 쌓기 */
+        align-items: flex-start;
+    }
+    
+    .reply-content-box {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    /* 날짜를 닉네임 옆이 아닌, 내용 아래로 보낼 수도 있음 (선택사항) */
+    /* 또는 글자 크기만 줄여서 한 줄 유지 */
+    .reply-date {
+        font-size: 10px; /* [핵심] 날짜 글자 크기 축소 */
+        color: #aaa;     /* 더 연하게 */
+        display: block;  /* 날짜를 아예 다음 줄로 내림 */
+        margin-left: 0;
+        margin-top: 2px;
+    }
+    
+    .reply-btn-group {
+        align-self: flex-end; /* 버튼은 오른쪽 끝으로 */
+        margin-top: -20px;    /* 위쪽 공간 활용 */
+    }
+
+/* --------------------------------- */
 /* 리뷰 좋아요 및 답글 스타일 */
 /* --------------------------------- */
 
@@ -1674,11 +1700,27 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 .noti-close-btn {
     background: none;
     border: none;
-    color: #ccc;
-    font-size: 16px;
+    color: #ffffff;
+    font-size: 30px;
     cursor: pointer;
     padding: 0 5px;
 }
 .noti-close-btn:hover {
     color: #ff4d4d;
+}
+
+/* 알림 섹션 스타일 수정 */
+#notificationSection {
+    max-width: 1000px; /* 마이페이지 박스와 너비 맞춤 */
+    margin: 0 auto 30px auto; /* 중앙 정렬 및 아래 여백 */
+    padding: 0 20px;
+    text-align: left;
+}
+
+/* 모바일에서는 패딩 줄임 */
+@media (max-width: 768px) {
+    #notificationSection {
+        width: 95%;
+        padding: 0;
+    }
 }
