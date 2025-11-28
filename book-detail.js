@@ -71,16 +71,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const review = docSnap.data();
                 const reviewId = docSnap.id;
                 
-                // [수정] 답글 가져오기 (컬렉션 경로 명확하게 지정)
                 const repliesRef = collection(db, "reviews", reviewId, "replies");
-                
-                // [수정] orderBy 사용 시 에러가 난다면, 일단 정렬 없이 가져온 뒤 JS로 정렬하는 방법도 있습니다.
-                // 여기서는 orderBy를 그대로 쓰되, import가 잘 되었는지 확인이 중요합니다.
                 const qReplies = query(repliesRef, orderBy("timestamp", "asc")); 
-                
                 const repliesSnap = await getDocs(qReplies);
+                
+                // [수정] 답글 ID도 같이 저장해야 수정/삭제 가능
                 const replies = [];
-                repliesSnap.forEach(rDoc => replies.push(rDoc.data()));
+                repliesSnap.forEach(rDoc => {
+                    replies.push({ id: rDoc.id, ...rDoc.data() });
+                });
 
                 return { id: reviewId, data: review, replies: replies };
             });
@@ -102,7 +101,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const likes = review.likes || [];
                 const likeCount = likes.length;
-                const isLiked = auth.currentUser && likes.includes(auth.currentUser.email);
+                const currentUser = auth.currentUser;
+                const isLiked = currentUser && likes.includes(currentUser.email);
                 const heartIcon = isLiked ? '♥' : '♡'; 
                 const heartClass = isLiked ? 'liked' : '';
 
@@ -129,15 +129,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (replies.length > 0) {
                     replies.forEach(reply => {
-                        // [수정] 답글 날짜 처리 안전하게
                         let rDate = '';
                         if (reply.timestamp) {
                              const rTs = reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp);
                              rDate = rTs.toLocaleDateString();
                         }
+                        
+                        // [신규] 내 답글인지 확인
+                        const isMyReply = currentUser && reply.userId === currentUser.email;
+                        const replyButtons = isMyReply ? 
+                            `<span class="reply-btn-group">
+                                <button class="reply-edit-btn" data-rid="${reply.id}">수정</button>
+                                <button class="reply-delete-btn" data-rid="${reply.id}">삭제</button>
+                             </span>` : '';
+
                         html += `
-                            <div class="reply-item">
-                                <b>└ ${reply.nickname}</b>: ${reply.content} <span class="reply-date">${rDate}</span>
+                            <div class="reply-item" id="reply-${reply.id}">
+                                <div class="reply-content-box">
+                                    <b>└ ${reply.nickname}</b>: <span class="reply-text">${reply.content}</span>
+                                    <span class="reply-date">${rDate}</span>
+                                </div>
+                                ${replyButtons}
                             </div>
                         `;
                     });
@@ -158,90 +170,94 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reviewItem.innerHTML = html;
                 userReviewsContainer.appendChild(reviewItem);
 
-                // 1. 좋아요 버튼
+                // --- 이벤트 리스너 ---
+                
+                // 1. 좋아요
                 const likeBtn = reviewItem.querySelector('.like-btn');
                 likeBtn.addEventListener('click', async () => {
-                    // [핵심 수정] window.auth를 통해 최신 로그인 상태 확인
-                    const currentUser = window.auth.currentUser;
-                    
-                    if (!currentUser) { 
-                        alert('로그인이 필요합니다.'); return; 
+                    const curUser = auth.currentUser;
+                    if (!curUser) { alert('로그인이 필요합니다.'); return; }
+                    if (review.userId === curUser.email || review.uid === curUser.uid) {
+                        alert('본인의 리뷰에는 좋아요를 누를 수 없습니다.'); return;
                     }
-                    
-                    // 본인 리뷰인지 확인
-                    if (review.userId === currentUser.email || review.uid === currentUser.uid) {
-                        alert('본인의 리뷰에는 좋아요를 누를 수 없습니다.');
-                        return;
-                    }
-                    
                     try {
-                        const response = await fetch(`${serverUrl}/api/review-like`, {
+                        await fetch(`${serverUrl}/api/review-like`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                reviewId: reviewId, 
-                                userId: currentUser.email 
-                            })
+                            body: JSON.stringify({ reviewId: reviewId, userId: curUser.email })
                         });
-                        
-                        if (!response.ok) throw new Error('서버 응답 오류');
-                        
-                        const result = await response.json();
-                        
-                        // [핵심 수정] 전체 새로고침 대신 버튼 숫자만 업데이트 (속도 향상)
-                        likeBtn.innerHTML = `${result.likes.includes(currentUser.email) ? '♥' : '♡'} 좋아요 ${result.likes.length}`;
-                        likeBtn.classList.toggle('liked');
-
-                    } catch (e) { 
-                        console.error(e); 
-                        alert('좋아요 처리 실패');
-                    }
+                        fetchAndDisplayReviews(bookIsbn);
+                    } catch (e) { console.error(e); }
                 });
 
+                // 2. 답글 토글
                 const replyToggleBtn = reviewItem.querySelector('.reply-toggle-btn');
                 const replySection = reviewItem.querySelector('.reply-section');
                 replyToggleBtn.addEventListener('click', () => {
-                    if (replySection.style.display === 'none') {
-                        replySection.style.display = 'block';
-                    } else {
-                        replySection.style.display = 'none';
-                    }
+                    replySection.style.display = (replySection.style.display === 'none') ? 'block' : 'none';
                 });
 
+                // 3. 답글 등록
                 const replyInput = reviewItem.querySelector('.reply-input');
                 const replySubmitBtn = reviewItem.querySelector('.reply-submit-btn');
-                
                 replySubmitBtn.addEventListener('click', async () => {
-                    if (!auth.currentUser) { alert('로그인이 필요합니다.'); return; }
+                    const curUser = auth.currentUser;
+                    if (!curUser) { alert('로그인이 필요합니다.'); return; }
                     const content = replyInput.value.trim();
                     if (!content) return;
 
                     try {
-                        const user = auth.currentUser;
-                        const nickname = user.displayName || user.email.split('@')[0];
-
+                        const nickname = curUser.displayName || curUser.email.split('@')[0];
                         await fetch(`${serverUrl}/api/review-reply`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                reviewId: reviewId, 
-                                userId: user.email,
-                                nickname: nickname,
-                                content: content
-                            })
+                            body: JSON.stringify({ reviewId, userId: curUser.email, nickname, content })
                         });
                         alert('답글이 등록되었습니다.');
-                        fetchAndDisplayReviews(bookIsbn); 
-                    } catch (e) { 
-                        console.error(e); 
-                        alert('답글 등록 실패');
-                    }
+                        fetchAndDisplayReviews(bookIsbn);
+                    } catch (e) { console.error(e); alert('등록 실패'); }
+                });
+                
+                // 4. [신규] 답글 수정/삭제 버튼
+                reviewItem.querySelectorAll('.reply-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if(!confirm('답글을 삭제하시겠습니까?')) return;
+                        const replyId = e.target.dataset.rid;
+                        try {
+                            await fetch(`${serverUrl}/api/reply-delete?reviewId=${reviewId}&replyId=${replyId}&userId=${auth.currentUser.email}`, {
+                                method: 'DELETE'
+                            });
+                            alert('삭제되었습니다.');
+                            fetchAndDisplayReviews(bookIsbn);
+                        } catch(err) { console.error(err); alert('삭제 실패'); }
+                    });
+                });
+
+                reviewItem.querySelectorAll('.reply-edit-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const replyId = e.target.dataset.rid;
+                        const newContent = prompt('답글을 수정해주세요:');
+                        if(newContent === null || newContent.trim() === '') return;
+                        
+                        try {
+                            await fetch(`${serverUrl}/api/reply-edit`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    reviewId, replyId, 
+                                    userId: auth.currentUser.email, 
+                                    content: newContent 
+                                })
+                            });
+                            alert('수정되었습니다.');
+                            fetchAndDisplayReviews(bookIsbn);
+                        } catch(err) { console.error(err); alert('수정 실패'); }
+                    });
                 });
             });
 
         } catch (e) {
-            console.error("리뷰 목록 가져오기 실패:", e);
-            userReviewsContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다.</p>';
+            console.error("리뷰 목록 오류:", e);
         }
     }
 

@@ -750,6 +750,60 @@ app.post('/api/review-reply', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
+// [신규] 답글 수정 API
+// ------------------------------------------------------------------
+app.put('/api/reply-edit', async (req, res) => {
+    const { reviewId, replyId, userId, content } = req.body;
+    
+    if (!reviewId || !replyId || !userId || !content) {
+        return res.status(400).json({ error: '필수 정보 누락' });
+    }
+
+    try {
+        const replyRef = db.collection('reviews').doc(reviewId).collection('replies').doc(replyId);
+        const doc = await replyRef.get();
+        
+        if (!doc.exists) return res.status(404).json({ error: '답글을 찾을 수 없습니다.' });
+        if (doc.data().userId !== userId) return res.status(403).json({ error: '수정 권한이 없습니다.' });
+        
+        await replyRef.update({ 
+            content: content,
+            timestamp: FieldValue.serverTimestamp() // 수정 시간 업데이트
+        });
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('답글 수정 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
+    }
+});
+
+// ------------------------------------------------------------------
+// [신규] 답글 삭제 API
+// ------------------------------------------------------------------
+app.delete('/api/reply-delete', async (req, res) => {
+    const { reviewId, replyId, userId } = req.query;
+    
+    if (!reviewId || !replyId || !userId) {
+        return res.status(400).json({ error: '필수 정보 누락' });
+    }
+
+    try {
+        const replyRef = db.collection('reviews').doc(reviewId).collection('replies').doc(replyId);
+        const doc = await replyRef.get();
+        
+        if (!doc.exists) return res.status(404).json({ error: '답글을 찾을 수 없습니다.' });
+        if (doc.data().userId !== userId) return res.status(403).json({ error: '삭제 권한이 없습니다.' });
+        
+        await replyRef.delete();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('답글 삭제 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
+    }
+});
+
+// ------------------------------------------------------------------
 // [서버 시작]
 // ------------------------------------------------------------------
 app.listen(port, () => {

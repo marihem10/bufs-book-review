@@ -1567,3 +1567,23 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     font-size: 12px;
     cursor: pointer;
 }
+
+/* 답글 수정/삭제 버튼 스타일 */
+.reply-item {
+    display: flex;
+    justify-content: space-between; /* 내용과 버튼 양 끝 배치 */
+    align-items: center;
+}
+.reply-btn-group button {
+    font-size: 11px;
+    padding: 2px 6px;
+    margin-left: 5px;
+    background: #eee;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    color: #555;
+}
+.reply-btn-group button:hover {
+    background: #ddd;
+}
