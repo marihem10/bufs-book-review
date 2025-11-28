@@ -10,39 +10,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet"> <!-- 폰트 이름, 폰트 두께 -->
     </head>
 <body>
-    <script src="firebase-init.js" type="module"></script>
-    
-    <header>
-        <div class="header-container">
-            <a href="index.html" class="logo-link">
-                <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
-                <span class="logo-text">부산외대 북리뷰</span>
-            </a>
-            <nav class="nav-bar">
-                <a href="auth.html" class="main-nav-item">LOGIN</a>
-                <a href="mypage.html" class="main-nav-item">MYPAGE</a>
-            </nav>
-        </div>
-    </header>
+    <div id="app-container">
+        <script src="firebase-init.js" type="module"></script>
+        
+        <header>
+            <div class="header-container">
+                <a href="index.html" class="logo-link">
+                    <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
+                    <span class="logo-text">부산외대 북리뷰</span>
+                </a>
+                <nav class="nav-bar">
+                    <a href="auth.html" class="main-nav-item">LOGIN</a>
+                    <a href="mypage.html" class="main-nav-item">MYPAGE</a>
+                </nav>
+            </div>
+        </header>
 
-    <main class="main-content">
-        <h1 class="main-title">MY PAGE</h1>
-        <div class="mypage-wrapper">
-            <p id="userStatus">로그인이 필요합니다.</p>
-            
-            <div id="reviewList">
-                <p>로딩 중...</p>
+        <main class="main-content">
+            <h1 class="main-title">MY PAGE</h1>
+            <div class="mypage-wrapper">
+                <p id="userStatus">로그인이 필요합니다.</p>
+                
+                <div id="reviewList">
+                    <p>로딩 중...</p>
+                </div>
+                <div classs="account-management">
+                    <hr style="border-top: 1px solid rgba(255, 255, 255, 0.3); margin: 25px 0;">
+                    <button id="nicknameChangeBtn" class="account-btn">닉네임 변경</button>
+                    <button id="passwordResetBtn" class="account-btn">비밀번호 변경</button>
+                    <button id="deleteAccountBtn" class="account-btn danger">계정 삭제</button>
+                </div>
             </div>
-            <div classs="account-management">
-                <hr style="border-top: 1px solid rgba(255, 255, 255, 0.3); margin: 25px 0;">
-                <button id="nicknameChangeBtn" class="account-btn">닉네임 변경</button>
-                <button id="passwordResetBtn" class="account-btn">비밀번호 변경</button>
-                <button id="deleteAccountBtn" class="account-btn danger">계정 삭제</button>
-            </div>
-        </div>
-    </main>
-    
-    <script src="mypage.js" type="module"></script>
-    <script src="index-auth.js" type="module"></script> 
+        </main>
+        
+        <script src="mypage.js" type="module"></script>
+        <script src="index-auth.js" type="module"></script>
+    </div>
 </body>
 </html>

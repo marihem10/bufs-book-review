@@ -68,13 +68,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     if (scrollDownBtn) { 
         window.addEventListener('scroll', () => {
-            // window.scrollY는 사용자가 수직으로 얼마나 스크롤했는지 픽셀(px)로 알려줍니다.
-            if (window.scrollY > 100) { 
-                // 100px 이상 스크롤했으면 버튼 숨기기
-                scrollDownBtn.classList.add('hidden');
-            } else {
-                // 다시 맨 위로 올라오면 버튼 표시
-                scrollDownBtn.classList.remove('hidden');
+            const appContainer = document.getElementById('app-container'); // [신규] 컨테이너 선택
+
+            if (scrollDownBtn && appContainer) { // window 대신 appContainer 사용
+                appContainer.addEventListener('scroll', () => { // [수정] 이벤트 대상을 변경
+                    if (appContainer.scrollTop > 100) { // [수정] window.scrollY -> appContainer.scrollTop
+                        scrollDownBtn.classList.add('hidden');
+                    } else {
+                        scrollDownBtn.classList.remove('hidden');
+                    }
+                });
             }
         });
     }

@@ -10,46 +10,48 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet"> <!-- 폰트 이름, 폰트 두께 -->
 </head>
 <body>
-    <script src="firebase-init.js" type="module"></script>
-    
-    <header>
-        <div class="header-container">
-            <a href="index.html" class="logo-link">
-                <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
-                <span class="logo-text">부산외대 북리뷰</span>
-            </a>
-            <nav class="nav-bar">
-                <a href="auth.html" class="main-nav-item">LOGIN</a> 
-                <a href="mypage.html" class="main-nav-item">MYPAGE</a>
-            </nav>
-        </div>
-    </header>
+    <div id="app-container">
+        <script src="firebase-init.js" type="module"></script>
+        
+        <header>
+            <div class="header-container">
+                <a href="index.html" class="logo-link">
+                    <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
+                    <span class="logo-text">부산외대 북리뷰</span>
+                </a>
+                <nav class="nav-bar">
+                    <a href="auth.html" class="main-nav-item">LOGIN</a> 
+                    <a href="mypage.html" class="main-nav-item">MYPAGE</a>
+                </nav>
+            </div>
+        </header>
 
-    <main class="main-content-search-page">
-    <h1 class="main-title">검색 결과</h1>
-        <div class="search-container">
-            <input type="text" placeholder="검색어 입력" class="search-input">
-            <button class="search-button">🔍</button>
-        </div>
-
-        <div class="sort-options">
-            <button class="sort-btn" data-sort="sim">정확도순</button>
-            <button class="sort-btn" data-sort="date">최신순</button>
-        </div>
-
-        <section class="search-results-section">
-            <div class="search-results-container">
-                </div>
-        </section>
-
-        <div class="pagination" id="pagination-container">
+        <main class="main-content-search-page">
+        <h1 class="main-title">검색 결과</h1>
+            <div class="search-container">
+                <input type="text" placeholder="검색어 입력" class="search-input">
+                <button class="search-button">🔍</button>
             </div>
 
-    </main>
+            <div class="sort-options">
+                <button class="sort-btn" data-sort="sim">정확도순</button>
+                <button class="sort-btn" data-sort="date">최신순</button>
+            </div>
 
-    <script src="book-detail.js" type="module"></script> 
-    <script src="search-results.js"></script>
-    <script src="index-auth.js" type="module"></script>
-    <script src="script.js" type="module"></script>
+            <section class="search-results-section">
+                <div class="search-results-container">
+                    </div>
+            </section>
+
+            <div class="pagination" id="pagination-container">
+                </div>
+
+        </main>
+
+        <script src="book-detail.js" type="module"></script> 
+        <script src="search-results.js"></script>
+        <script src="index-auth.js" type="module"></script>
+        <script src="script.js" type="module"></script>
+    </div>
 </body>
 </html>

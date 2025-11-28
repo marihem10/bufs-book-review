@@ -1,40 +1,48 @@
 * {
-    box-sizing: border-box; /* 패딩 때문에 너비가 늘어나는 것 방지 */
+    box-sizing: border-box;
 }
 
 html, body {
-    max-width: 100%;
-    overflow-x: hidden; /* [핵심] 가로 스크롤 강제 숨김 */
-}
-
-body {
-    font-family: 'Nanum Myeongjo', sans-serif; 
-    color: #333;
     margin: 0;
     padding: 0;
-    /* [수정] body 자체에는 배경색만 지정 */
-    background-color: #f4f4f4; 
-    min-height: 100vh;
-    /* 모바일 브라우저 높이 대응 */
-    min-height: -webkit-fill-available; 
-    position: relative;
-}
-
-/* [신규 추가] 배경 이미지를 위한 가상 요소 (흔들림 방지) */
-body::before {
-    content: "";
-    position: fixed; /* 화면에 딱 고정 */
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
+    
+    /* [핵심] 브라우저 전체 스크롤은 막아서 배경 고정 (주소창 흔들림 방지) */
+    overflow: hidden; 
+    
+    background-color: transparent;
+    font-family: 'Nanum Myeongjo', sans-serif; 
+}
+
+/* 배경 이미지 고정 (가상 요소) */
+body::before {
+    content: "";
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%;
     z-index: -1; /* 내용보다 뒤에 */
     
-    background-image: url('images/mainimg.png');
+    background-image: url('images/mainimg.png'); 
     background-size: cover; 
-    background-repeat: no-repeat;
     background-position: center bottom;
+    background-repeat: no-repeat;
+    background-color: #f4f4f4; 
 }
+
+/* [핵심] 실제 내용물이 들어가는 컨테이너 */
+#app-container {
+    width: 100%;
+    height: 100%;
+    
+    /* [중요] 여기가 스크롤 되는 부분입니다 */
+    overflow-y: auto; 
+    overflow-x: hidden; /* 가로 스크롤 방지 */
+    
+    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+    position: relative;
+    z-index: 1; 
+}
+
 
 header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     width: 100%;

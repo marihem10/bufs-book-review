@@ -10,43 +10,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <script src="firebase-init.js" type="module"></script>
+    <div id="app-container">
+        <script src="firebase-init.js" type="module"></script>
 
-        <div class="top-nav-bar">
-            <button id="backButton" class="nav-button">← back</button>
-        <div class="user-controls">
-            <a href="mypage.html" class="nav-item-detail">MYPAGE</a>
-        </div>
-    </div>
-
-    <main class="main-content-detail-page">
-        <div class="detail-wrapper"> 
-            
-            <div id="bookDetail" class="book-info-section">
-                <h2>로딩 중...</h2>
+            <div class="top-nav-bar">
+                <button id="backButton" class="nav-button">← back</button>
+            <div class="user-controls">
+                <a href="mypage.html" class="nav-item-detail">MYPAGE</a>
             </div>
+        </div>
 
-            <div class="review-section">
-                <h2>리뷰 작성하기</h2>
-                <div id="reviewForm">
-                    <div class="rating-stars">
-                        <span class="star" data-rating="1">★</span>
-                        <span class="star" data-rating="2">★</span>
-                        <span class="star" data-rating="3">★</span>
-                        <span class="star" data-rating="4">★</span>
-                        <span class="star" data-rating="5">★</span>
-                    </div>
-                    <textarea id="reviewText" placeholder="여기에 감상평을 작성해주세요." required></textarea>
-                    <button id="submitReviewBtn">리뷰 등록</button>
-                </div>
+        <main class="main-content-detail-page">
+            <div class="detail-wrapper"> 
                 
-                <h2>사용자 리뷰</h2>
-                <div id="userReviews">
+                <div id="bookDetail" class="book-info-section">
+                    <h2>로딩 중...</h2>
+                </div>
+
+                <div class="review-section">
+                    <h2>리뷰 작성하기</h2>
+                    <div id="reviewForm">
+                        <div class="rating-stars">
+                            <span class="star" data-rating="1">★</span>
+                            <span class="star" data-rating="2">★</span>
+                            <span class="star" data-rating="3">★</span>
+                            <span class="star" data-rating="4">★</span>
+                            <span class="star" data-rating="5">★</span>
+                        </div>
+                        <textarea id="reviewText" placeholder="여기에 감상평을 작성해주세요." required></textarea>
+                        <button id="submitReviewBtn">리뷰 등록</button>
                     </div>
+                    
+                    <h2>사용자 리뷰</h2>
+                    <div id="userReviews">
+                        </div>
+                </div>
             </div>
-        </div>
-    </main>
-    
-    <script src="book-detail.js" type="module"></script>
-    <script src="index-auth.js" type="module"></script> 
+        </main>
+        
+        <script src="book-detail.js" type="module"></script>
+        <script src="index-auth.js" type="module"></script>
+    </div>
 </body>

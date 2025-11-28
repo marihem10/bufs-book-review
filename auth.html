@@ -9,33 +9,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <script src="firebase-init.js" type="module"></script>
-    
-    <main class="main-content">
-        <h1 class="main-title">로그인</h1>
+    <div id="app-container">
+        <script src="firebase-init.js" type="module"></script>
+        
+        <main class="main-content">
+            <h1 class="main-title">로그인</h1>
 
-        <div class="auth-wrapper">
-            <div class="tab-buttons">
-                <button id="tabLogin" class="active">로그인</button>
-                <button id="tabSignup">회원가입</button>
-            </div>
+            <div class="auth-wrapper">
+                <div class="tab-buttons">
+                    <button id="tabLogin" class="active">로그인</button>
+                    <button id="tabSignup">회원가입</button>
+                </div>
 
-            <div id="formLogin" class="auth-form active">
-                <input type="email" id="loginEmail" placeholder="아이디 (이메일)" required>
-                <input type="password" id="loginPassword" placeholder="비밀번호" required>
-                <a href="#" id="forgotPasswordLink" class="forgot-password-link">비밀번호를 잊으셨나요?</a>
-                <button id="loginBtn">로그인</button>
-            </div>
+                <div id="formLogin" class="auth-form active">
+                    <input type="email" id="loginEmail" placeholder="아이디 (이메일)" required>
+                    <input type="password" id="loginPassword" placeholder="비밀번호" required>
+                    <a href="#" id="forgotPasswordLink" class="forgot-password-link">비밀번호를 잊으셨나요?</a>
+                    <button id="loginBtn">로그인</button>
+                </div>
 
-            <div id="formSignup" class="auth-form hidden">
-                <input type="email" id="signupEmail" placeholder="아이디 (이메일)" required>
-                <input type="password" id="signupPassword" placeholder="비밀번호 (6자리 이상)" required>
-                <input type="text" id="signupNickname" placeholder="닉네임 (2~10자)" required>
-                <button id="signupBtn">계정 생성</button>
+                <div id="formSignup" class="auth-form hidden">
+                    <input type="email" id="signupEmail" placeholder="아이디 (이메일)" required>
+                    <input type="password" id="signupPassword" placeholder="비밀번호 (6자리 이상)" required>
+                    <input type="text" id="signupNickname" placeholder="닉네임 (2~10자)" required>
+                    <button id="signupBtn">계정 생성</button>
+                </div>
             </div>
-        </div>
-    </main>
-    
-    <script src="auth.js" type="module"></script>
+        </main>
+        
+        <script src="auth.js" type="module"></script>
+    </div>
 </body>
 </html>

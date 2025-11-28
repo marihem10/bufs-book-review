@@ -10,47 +10,49 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet"> <!-- 폰트 이름, 폰트 두께 -->
 </head>
 <body>
-    <script src="firebase-init.js" type="module"></script> 
+    <div id="app-container">
+        <script src="firebase-init.js" type="module"></script> 
 
-    <header>
-        <div class="header-container">
-            <a href="index.html" class="logo-link">
-                <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
-                <span class="logo-text">부산외대 북리뷰</span>
-            </a>
-            <nav class="nav-bar">
-                <a href="auth.html" class="main-nav-item">LOGIN</a>
-                <a href="mypage.html" class="main-nav-item">MYPAGE</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div class="left-section">
-            <h1 class="main-title">지식을 나누는 우리들의 서재</h1>
-            <div class="search-container">
-                <input type="text" placeholder="검색어 입력" class="search-input">
-                <button class="search-button">🔍</button>
+        <header>
+            <div class="header-container">
+                <a href="index.html" class="logo-link">
+                    <img src="images/logo.png" alt="부산외대 북리뷰 로고" class="logo-image">
+                    <span class="logo-text">부산외대 북리뷰</span>
+                </a>
+                <nav class="nav-bar">
+                    <a href="auth.html" class="main-nav-item">LOGIN</a>
+                    <a href="mypage.html" class="main-nav-item">MYPAGE</a>
+                </nav>
             </div>
-        </div> <button class="scroll-btn down" id="scroll-down">∨</button>
-</main>
-    <section class="popular-books-section">
-            <h2 class="popular-books-title">인기 도서</h2>
+        </header>
 
-            <div class="popular-books-tabs">
-                <button class="popular-tab-btn active" data-tab="all">종합 인기</button>
-                <button class="popular-tab-btn" data-tab="month">이달의 인기</button>
-            </div>
+        <main class="main-content">
+            <div class="left-section">
+                <h1 class="main-title">지식을 나누는 우리들의 서재</h1>
+                <div class="search-container">
+                    <input type="text" placeholder="검색어 입력" class="search-input">
+                    <button class="search-button">🔍</button>
+                </div>
+            </div> <button class="scroll-btn down" id="scroll-down">∨</button>
+    </main>
+        <section class="popular-books-section">
+                <h2 class="popular-books-title">인기 도서</h2>
 
-            <button class="scroll-btn left" id="scroll-left">‹</button>
-
-            <div class="popular-books-container" id="popular-books-list">
+                <div class="popular-books-tabs">
+                    <button class="popular-tab-btn active" data-tab="all">종합 인기</button>
+                    <button class="popular-tab-btn" data-tab="month">이달의 인기</button>
                 </div>
 
-            <button class="scroll-btn right" id="scroll-right">›</button>
-    </section>
+                <button class="scroll-btn left" id="scroll-left">‹</button>
 
-    <script src="index-auth.js" type="module"></script>
-    <script src="script.js" type="module"></script>
+                <div class="popular-books-container" id="popular-books-list">
+                    </div>
+
+                <button class="scroll-btn right" id="scroll-right">›</button>
+        </section>
+
+        <script src="index-auth.js" type="module"></script>
+        <script src="script.js" type="module"></script>
+    </div>
 </body>
 </html>
