@@ -1485,3 +1485,85 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
         font-size: 14px;
         padding: 8px 12px;
     }
+
+    /* --------------------------------- */
+/* 리뷰 좋아요 및 답글 스타일 */
+/* --------------------------------- */
+
+.review-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.review-actions button {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.5); /* 테두리 반투명 흰색 */
+    padding: 5px 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 13px;
+    color: white; /* [핵심 수정] 글자색 흰색으로 변경 */
+    transition: all 0.2s;
+}
+
+.review-actions button:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* 호버 시 반투명 흰색 배경 */
+}
+
+/* 좋아요 눌렀을 때 (하트 빨강) */
+.like-btn.liked {
+    color: #e0245e; /* 트위터 하트색 */
+    border-color: #e0245e;
+    background-color: rgba(224, 36, 94, 0.1);
+}
+
+/* 답글 영역 */
+.reply-section {
+    margin-top: 10px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-left: 10px;
+    border-left: 3px solid #ddd;
+}
+
+.reply-item {
+    font-size: 13px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+.reply-date {
+    font-size: 11px;
+    color: #999;
+    margin-left: 5px;
+}
+.no-reply {
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+}
+
+/* 답글 입력 폼 */
+.reply-form {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+.reply-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 13px;
+}
+.reply-submit-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+}

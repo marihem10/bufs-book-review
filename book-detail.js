@@ -1,5 +1,5 @@
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, orderBy} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -53,49 +53,195 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // ----------------------------------------------------
-    // [C] 함수 정의: 리뷰 목록 
+    // [C] 함수 정의: 리뷰 목록 (답글 포함)
     // ----------------------------------------------------
     async function fetchAndDisplayReviews(bookIsbn) {
         userReviewsContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
         try {
             const reviewsQuery = query(collection(db, "reviews"), where("bookIsbn", "==", bookIsbn));
             const querySnapshot = await getDocs(reviewsQuery);
+            
             if (querySnapshot.empty) {
                 userReviewsContainer.innerHTML = '<p>아직 이 책에 대한 리뷰가 없습니다.</p>';
                 return;
             }
             userReviewsContainer.innerHTML = ''; 
 
-            querySnapshot.forEach((doc) => {
-                const review = doc.data();
+            const reviewPromises = querySnapshot.docs.map(async (docSnap) => {
+                const review = docSnap.data();
+                const reviewId = docSnap.id;
+                
+                // [수정] 답글 가져오기 (컬렉션 경로 명확하게 지정)
+                const repliesRef = collection(db, "reviews", reviewId, "replies");
+                
+                // [수정] orderBy 사용 시 에러가 난다면, 일단 정렬 없이 가져온 뒤 JS로 정렬하는 방법도 있습니다.
+                // 여기서는 orderBy를 그대로 쓰되, import가 잘 되었는지 확인이 중요합니다.
+                const qReplies = query(repliesRef, orderBy("timestamp", "asc")); 
+                
+                const repliesSnap = await getDocs(qReplies);
+                const replies = [];
+                repliesSnap.forEach(rDoc => replies.push(rDoc.data()));
+
+                return { id: reviewId, data: review, replies: replies };
+            });
+
+            const reviewsData = await Promise.all(reviewPromises);
+
+            reviewsData.forEach(({ id, data, replies }) => {
+                const review = data;
+                const reviewId = id;
                 
                 let date = '날짜 없음';
                 if (review.timestamp) {
-                    if (typeof review.timestamp.toDate === 'function') {
-                        date = review.timestamp.toDate().toLocaleDateString('ko-KR');
-                    } else {
-                        date = new Date(review.timestamp).toLocaleDateString('ko-KR');
-                    }
+                    const ts = review.timestamp.toDate ? review.timestamp.toDate() : new Date(review.timestamp);
+                    date = ts.toLocaleDateString('ko-KR');
                 }
                 
                 const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-                
                 const displayName = review.nickname || review.userId.split('@')[0];
 
-                const reviewElement = document.createElement('div');
-                reviewElement.classList.add('user-review-item');
+                const likes = review.likes || [];
+                const likeCount = likes.length;
+                const isLiked = auth.currentUser && likes.includes(auth.currentUser.email);
+                const heartIcon = isLiked ? '♥' : '♡'; 
+                const heartClass = isLiked ? 'liked' : '';
+
+                const reviewItem = document.createElement('div');
+                reviewItem.classList.add('user-review-item');
                 
-                reviewElement.innerHTML = `
-                    <p><strong>작성자:</strong> ${displayName} (${date})</p>
+                let html = `
+                    <div class="review-header">
+                        <strong>${displayName}</strong> <span class="review-date">(${date})</span>
+                    </div>
                     <p class="review-rating">${starsHtml}</p>
                     <p class="review-comment">${review.comment}</p>
+                    
+                    <div class="review-actions">
+                        <button class="like-btn ${heartClass}" data-id="${reviewId}">
+                            ${heartIcon} 좋아요 ${likeCount}
+                        </button>
+                        <button class="reply-toggle-btn">💬 답글 ${replies.length}</button>
+                    </div>
+                    
+                    <div class="reply-section" style="display: none;">
+                        <div class="reply-list">
+                `;
+
+                if (replies.length > 0) {
+                    replies.forEach(reply => {
+                        // [수정] 답글 날짜 처리 안전하게
+                        let rDate = '';
+                        if (reply.timestamp) {
+                             const rTs = reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp);
+                             rDate = rTs.toLocaleDateString();
+                        }
+                        html += `
+                            <div class="reply-item">
+                                <b>└ ${reply.nickname}</b>: ${reply.content} <span class="reply-date">${rDate}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += `<p class="no-reply">아직 답글이 없습니다.</p>`;
+                }
+
+                html += `
+                        </div>
+                        <div class="reply-form">
+                            <input type="text" class="reply-input" placeholder="답글을 입력하세요...">
+                            <button class="reply-submit-btn" data-id="${reviewId}">등록</button>
+                        </div>
+                    </div>
                     <hr>
                 `;
-                userReviewsContainer.appendChild(reviewElement);
+                
+                reviewItem.innerHTML = html;
+                userReviewsContainer.appendChild(reviewItem);
+
+                // 1. 좋아요 버튼
+                const likeBtn = reviewItem.querySelector('.like-btn');
+                likeBtn.addEventListener('click', async () => {
+                    // [핵심 수정] window.auth를 통해 최신 로그인 상태 확인
+                    const currentUser = window.auth.currentUser;
+                    
+                    if (!currentUser) { 
+                        alert('로그인이 필요합니다.'); return; 
+                    }
+                    
+                    // 본인 리뷰인지 확인
+                    if (review.userId === currentUser.email || review.uid === currentUser.uid) {
+                        alert('본인의 리뷰에는 좋아요를 누를 수 없습니다.');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch(`${serverUrl}/api/review-like`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                reviewId: reviewId, 
+                                userId: currentUser.email 
+                            })
+                        });
+                        
+                        if (!response.ok) throw new Error('서버 응답 오류');
+                        
+                        const result = await response.json();
+                        
+                        // [핵심 수정] 전체 새로고침 대신 버튼 숫자만 업데이트 (속도 향상)
+                        likeBtn.innerHTML = `${result.likes.includes(currentUser.email) ? '♥' : '♡'} 좋아요 ${result.likes.length}`;
+                        likeBtn.classList.toggle('liked');
+
+                    } catch (e) { 
+                        console.error(e); 
+                        alert('좋아요 처리 실패');
+                    }
+                });
+
+                const replyToggleBtn = reviewItem.querySelector('.reply-toggle-btn');
+                const replySection = reviewItem.querySelector('.reply-section');
+                replyToggleBtn.addEventListener('click', () => {
+                    if (replySection.style.display === 'none') {
+                        replySection.style.display = 'block';
+                    } else {
+                        replySection.style.display = 'none';
+                    }
+                });
+
+                const replyInput = reviewItem.querySelector('.reply-input');
+                const replySubmitBtn = reviewItem.querySelector('.reply-submit-btn');
+                
+                replySubmitBtn.addEventListener('click', async () => {
+                    if (!auth.currentUser) { alert('로그인이 필요합니다.'); return; }
+                    const content = replyInput.value.trim();
+                    if (!content) return;
+
+                    try {
+                        const user = auth.currentUser;
+                        const nickname = user.displayName || user.email.split('@')[0];
+
+                        await fetch(`${serverUrl}/api/review-reply`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                reviewId: reviewId, 
+                                userId: user.email,
+                                nickname: nickname,
+                                content: content
+                            })
+                        });
+                        alert('답글이 등록되었습니다.');
+                        fetchAndDisplayReviews(bookIsbn); 
+                    } catch (e) { 
+                        console.error(e); 
+                        alert('답글 등록 실패');
+                    }
+                });
             });
+
         } catch (e) {
             console.error("리뷰 목록 가져오기 실패:", e);
-            userReviewsContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다. (DB 연결 오류)</p>';
+            userReviewsContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다.</p>';
         }
     }
 

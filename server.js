@@ -690,6 +690,66 @@ app.get('/api/popular-books-monthly', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
+// [신규] 리뷰 좋아요 토글 (Toggle Like)
+// ------------------------------------------------------------------
+app.post('/api/review-like', async (req, res) => {
+    const { reviewId, userId } = req.body;
+    if (!reviewId || !userId) return res.status(400).json({ error: '정보 부족' });
+
+    try {
+        const reviewRef = db.collection('reviews').doc(reviewId);
+        const doc = await reviewRef.get();
+        
+        if (!doc.exists) return res.status(404).json({ error: '리뷰 없음' });
+        
+        const data = doc.data();
+        const likes = data.likes || []; // 기존 좋아요 배열 (없으면 빈 배열)
+        
+        let newLikes;
+        if (likes.includes(userId)) {
+            // 이미 좋아요 누름 -> 취소 (배열에서 제거)
+            newLikes = likes.filter(id => id !== userId);
+        } else {
+            // 안 누름 -> 추가 (배열에 추가)
+            newLikes = [...likes, userId];
+        }
+        
+        await reviewRef.update({ likes: newLikes });
+        res.json({ success: true, likes: newLikes });
+
+    } catch (error) {
+        console.error('좋아요 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
+    }
+});
+
+// ------------------------------------------------------------------
+// [신규] 리뷰 답글 등록 (Add Reply)
+// ------------------------------------------------------------------
+app.post('/api/review-reply', async (req, res) => {
+    const { reviewId, userId, nickname, content } = req.body;
+    if (!reviewId || !userId || !content) return res.status(400).json({ error: '정보 부족' });
+
+    try {
+        // 리뷰 문서 아래에 'replies'라는 서브 컬렉션을 만들어 저장
+        const replyRef = db.collection('reviews').doc(reviewId).collection('replies');
+        
+        await replyRef.add({
+            userId,
+            nickname: nickname || '익명',
+            content,
+            timestamp: FieldValue.serverTimestamp()
+        });
+        
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('답글 등록 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
+    }
+});
+
+// ------------------------------------------------------------------
 // [서버 시작]
 // ------------------------------------------------------------------
 app.listen(port, () => {
