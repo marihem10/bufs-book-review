@@ -1,7 +1,13 @@
+// 1. 필요한 모듈을 맨 위에서 한 번만 불러옵니다.
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
 
+const express = require('express');
+const axios = require('axios');
+const cors = require('cors');
+
+// 2. 서비스 계정 설정
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
 if (!firebaseServiceAccountJson) {
@@ -14,24 +20,23 @@ try {
     const cleanJsonString = firebaseServiceAccountJson.replace(/(\r\n|\n|\r)/gm, "").trim(); 
     serviceAccount = JSON.parse(cleanJsonString);
 } catch (e) {
-    console.error("Firebase Service Account JSON 파싱 오류. JSON 형식을 확인하세요:", e);
+    console.error("JSON 파싱 오류:", e);
     process.exit(1);
 }
 
-let firebaseApp; // 앱 변수 선언
+// 3. 앱 초기화 (변수명 firebaseApp 사용)
+let firebaseApp; 
 try {
     firebaseApp = initializeApp({
-      credential: cert(serviceAccount)
+    credential: cert(serviceAccount)
     });
-
 } catch (e) {
-    console.error("Firebase Admin SDK 초기화 실패 (키 오류 가능성):", e.message);
+    console.error("Firebase 초기화 실패:", e.message);
     process.exit(1);
 }
 
 const db = getFirestore(firebaseApp); 
 const adminAuth = getAuth(firebaseApp);
-
 
 const express = require('express');
 const axios = require('axios');
