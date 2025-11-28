@@ -28,7 +28,7 @@ try {
 let firebaseApp; 
 try {
     firebaseApp = initializeApp({
-    credential: cert(serviceAccount)
+      credential: cert(serviceAccount)
     });
 } catch (e) {
     console.error("Firebase 초기화 실패:", e.message);
@@ -37,8 +37,6 @@ try {
 
 const db = getFirestore(firebaseApp); 
 const adminAuth = getAuth(firebaseApp);
-
-const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const app = express();
