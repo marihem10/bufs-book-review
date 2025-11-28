@@ -1,3 +1,12 @@
+* {
+    box-sizing: border-box; /* 패딩 때문에 너비가 늘어나는 것 방지 */
+}
+
+html, body {
+    max-width: 100%;
+    overflow-x: hidden; /* [핵심] 가로 스크롤 강제 숨김 */
+}
+
 body {
     font-family: 'Nanum Myeongjo', sans-serif; /* 폰트 변경 */
     background-color: #f4f4f4;
@@ -1130,17 +1139,17 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
 
 @media (max-width: 768px) {
 
-    /* 1. 헤더 (로고와 메뉴) - [수정] 간격 넓힘 */
+    /* 1. 헤더 (로고와 메뉴) */
     .header-container {
         flex-direction: row; 
-        justify-content: center; /* 중앙 정렬 유지 */
-        
-        /* [핵심 수정] 너무 붙지 않게 간격을 20px -> 60px로 넓힘 */
+        justify-content: center; 
         gap: 60px; 
-        
         align-items: center;
-        padding: 10px 5px; 
-        min-height: 50px;  
+        
+        /* [수정] 패딩과 최소 높이를 늘려서 공간 확보 */
+        padding: 15px 5px; 
+        min-height: 70px;  
+        
         flex-wrap: nowrap; 
     }
 
@@ -1150,7 +1159,6 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
         display: flex;
         align-items: center;
     }
-
     .logo-image {
         height: 28px; 
         margin-right: 5px; 
@@ -1160,7 +1168,6 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
         white-space: nowrap; 
     }
 
-    /* 메뉴 링크 스타일 */
     .nav-bar {
         display: flex;
         flex-shrink: 0; 
@@ -1176,29 +1183,35 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
         margin-right: 0; 
     }
 
-    /* 2. [수정] 메인 페이지 & 공통 여백 축소 */
+    /* 2. 메인 페이지 */
     .main-title {
         font-size: 28px; 
         margin-top: 0;
-        margin-bottom: 20px; /* 제목 아래 여백 추가 */
+        margin-bottom: 20px;
     }
     .search-container {
         width: 90%; 
     }
-    
     .main-content:has(.left-section) {
         justify-content: flex-start;
-        padding-top: 150px; /* [수정] 메인 페이지 상단 여백 축소 (200 -> 150) */
+        padding-top: 200px; 
         min-height: calc(100vh - 60px); 
     }
     
-    /* [신규] 마이페이지/상세페이지 등 다른 페이지의 상단 여백도 축소 */
-    .main-content:has(.mypage-wrapper),
-    .main-content-detail-page {
-        padding-top: 20px; /* [수정] 헤더와의 간격을 20px로 확 줄임 */
+    /* 3. 인기 도서 섹션 */
+    .popular-books-title {
+        font-size: 18px; /* [수정] 제목 22px -> 18px로 축소 */
+        margin-bottom: 15px;
     }
     
-    /* 3. [핵심 수정] 인기 도서 섹션 - 가로 스크롤 복원 & 수직 중앙 정렬 */
+    /* [신규 추가] 탭 버튼 글자 크기 축소 */
+    .popular-tab-btn {
+        font-size: 13px; /* [수정] 18px -> 13px로 대폭 축소 */
+        padding: 6px 15px; /* 패딩도 줄임 */
+    }
+    .popular-books-tabs {
+        margin-bottom: 15px; /* 탭 아래 간격 줄임 */
+    }
     .popular-books-section {
         background-color: #ffffff; 
         color: #333; 
@@ -1214,7 +1227,7 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     }
 
     .popular-books-title {
-        font-size: 24px;
+        font-size: 18px;
         margin-bottom: 20px;
     }
     
@@ -1281,144 +1294,159 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
         margin-top: 15px;
     }
 
-    /* 4. 검색 결과 페이지 */
+    /* 4. 검색 결과 */
     .search-results-section {
-        width: 90%; 
-        margin: 0 auto; 
-        box-sizing: border-box; 
+        width: 90%; margin: 0 auto; box-sizing: border-box; 
     }
-
     .search-results-container {
-        gap: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 0 10px;
+        gap: 10px; display: flex; flex-wrap: wrap; justify-content: center; padding: 0 10px;
     }
     .search-result-item {
-        width: calc(50% - 6px); 
-        max-width: none; 
-        padding: 10px; 
-        box-sizing: border-box;
-        margin: 0; 
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        width: calc(50% - 6px); max-width: none; padding: 10px; 
+        box-sizing: border-box; margin: 0; 
+        display: flex; flex-direction: column; justify-content: space-between;
     }
     .search-result-item img {
-        height: auto; 
-        max-height: 200px; 
-        width: 100%; 
-        object-fit: contain; 
-        background-color: #f0f0f0; 
+        height: auto; max-height: 200px; width: 100%; object-fit: contain; background-color: #f0f0f0; 
     }
     .search-result-item h3 {
-        font-size: 14px; 
-        margin: 8px 0 4px 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        font-size: 14px; margin: 8px 0 4px 0;
     }
 
-    /* 5. [수정] 상세 페이지 (book-detail.html) - 가로 배치로 변경 */
+    /* 5. [수정] 상세 페이지 (리뷰 글자 축소 포함) */
     .book-info-section {
-        flex-direction: row; /* [핵심] 세로 -> 가로 배치 */
-        align-items: flex-start; /* 위쪽 정렬 */
-        gap: 15px; /* 이미지와 텍스트 사이 간격 */
-        text-align: left; /* 텍스트 왼쪽 정렬 */
-        padding-bottom: 20px;
+        flex-direction: row; align-items: flex-start; gap: 15px; text-align: left; padding-bottom: 20px;
     }
-    
     .detail-image {
-        width: 100px; /* [수정] 이미지 크기 적당히 줄임 */
-        flex-shrink: 0; /* 이미지 찌그러짐 방지 */
+        width: 100px; flex-shrink: 0;
     }
-    
     .detail-text {
-        text-align: left; /* [수정] 텍스트 왼쪽 정렬 */
-        width: auto; /* 너비 자동 */
-        flex-grow: 1; /* 남은 공간 차지 */
+        text-align: left; width: auto; flex-grow: 1;
     }
-    
     .detail-text h1 {
-        font-size: 18px; /* 제목 크기 조절 */
-        margin-top: 0;
-        line-height: 1.3;
+        font-size: 18px; margin-top: 0; line-height: 1.3;
     }
     .detail-text p {
-        font-size: 13px; /* 내용 글자 크기 조절 */
-        margin-bottom: 4px;
+        font-size: 13px; margin-bottom: 4px;
+    }
+    
+    /* [핵심 수정] 리뷰 섹션 제목 및 내용 글자 크기 축소 */
+    .review-section h2 {
+        font-size: 18px; /* [수정] 24px -> 16px (확 줄임) */
+        margin-top: 20px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    /* 리뷰 목록 내부 글자 */
+    .user-review-item p {
+        font-size: 13px; /* [수정] 본문 글자 13px */
+        line-height: 1.5;
+    }
+    .user-review-item .review-rating {
+        font-size: 14px; /* [수정] 별점 크기 축소 */
+    }
+    .user-review-item .review-date {
+        font-size: 11px; /* [수정] 날짜 크기 축소 */
     }
 
+
+    /* 마이페이지/상세페이지 상단 여백 */
+    .main-content:has(.mypage-wrapper),
+    .main-content-detail-page {
+        padding-top: 20px;
+    }
+
+    /* 마이페이지/상세페이지 상단 여백 */
+    .main-content:has(.mypage-wrapper),
+    .main-content-detail-page {
+        padding-top: 20px;
+    }
+
+    /* 6. 마이페이지 */
     .mypage-wrapper {
-        padding: 15px;
-        margin: 20px auto;
-        width: 95%; 
-        box-sizing: border-box;
+        padding: 15px; margin: 20px auto; width: 95%; box-sizing: border-box;
+    }
+    
+    /* [수정] 로그인 안내 문구 크기 줄임 */
+    #userStatus {
+        font-size: 16px !important; /* 18px -> 16px */
+        margin-bottom: 15px;
+    }
+    #userStatus a {
+        font-size: 14px; /* 링크 글자도 줄임 */
     }
 
-    /* [핵심 수정] 리뷰 아이템을 가로 배치로 변경 */
     .mypage-wrapper .user-review-item {
-        flex-direction: row; /* 세로(column) -> 가로(row) */
-        align-items: flex-start; /* 위쪽 기준 정렬 */
-        text-align: left; /* 텍스트 왼쪽 정렬 */
-        gap: 15px; /* 이미지와 내용 사이 간격 */
+        flex-direction: row; align-items: flex-start; text-align: left; gap: 15px; 
     }
-
-    /* [핵심 수정] 왼쪽 이미지 영역 여백 조정 */
     .review-left {
-        margin-bottom: 0; /* 아래 여백 제거 */
-        flex-shrink: 0; /* 이미지 영역 고정 */
+        margin-bottom: 0; flex-shrink: 0;
     }
-
-    /* [핵심 수정] 책 제목 왼쪽 정렬 */
     .review-book-title {
-        text-align: left; 
-        margin-top: 0;
-        font-size: 16px;
+        text-align: left; margin-top: 0; font-size: 15px;
     }
-
-    /* 이미지 크기 (모바일에 맞게 적당히) */
     .review-book-img {
-        width: 70px;  /* 너비 */
-        height: 100px; /* 높이 */
+        width: 70px; height: 100px; 
     }
 
     .auth-wrapper {
-        margin: 30px 15px;
-        padding: 20px;
+        margin: 30px 15px; padding: 20px;
     }
     
-    /* 4. [최종 수정] 계정 관리 버튼 - 한 줄 꽉 차게 (공간 확장) */
+    /* 7. [수정] 계정 관리 버튼 - 가로 꽉 채우기 */
     .account-management {
         display: flex;       
         flex-direction: row; 
-        flex-wrap: nowrap;   /* 한 줄 유지 */
-        width: auto;         /* 너비 자동 */
-        
-        /* [핵심] 음수 마진을 줘서 버튼 영역을 양옆으로 더 넓힘 */
+        flex-wrap: nowrap;   
+        width: auto;         
+        /* 음수 마진을 줘서 양옆으로 확장 */
         margin: 20px -10px 0 -10px; 
-        
-        gap: 5px;            /* 버튼 사이 간격 */
+        gap: 4px;            
     }
 
     .account-btn {
-        flex: 1;             /* 공간을 똑같이 나눠가짐 */
+        flex: 1;             
         width: auto;         
+        min-width: 0; /* 찌그러짐 허용 */
         margin: 0;
         padding: 12px 0;     
-        
-        /* [수정] 글자 크기를 다시 키움 (작아지지 않게) */
-        font-size: 13px;     
+        font-size: 12px;     
         white-space: nowrap; 
-        border-radius: 5px;  /* 버튼 둥글게 유지 */
-    }
-
-    /* (이전에 추가했던 개별 아이디 스타일 초기화) */
-    #deleteAccountBtn {
-        grid-column: auto;
-        flex-basis: auto;
+        border-radius: 5px;
     }
 }
+/* [신규] 리뷰 작성 폼 글자 크기 축소 */
+    .rating-stars {
+        font-size: 20px; /* 별 크기 축소 (24px -> 20px) */
+        margin-bottom: 5px;
+    }
+    
+    #reviewText {
+        font-size: 13px; /* 입력창 글자 크기 축소 */
+        padding: 8px;    /* 패딩 축소 */
+        min-height: 80px; /* 높이도 살짝 줄임 */
+    }
+    
+    #submitReviewBtn {
+        font-size: 13px; /* 버튼 글자 크기 축소 */
+        padding: 8px 15px;
+        width: 100%; /* 버튼 너비 꽉 차게 (선택사항) */
+    }
+
+    /* [신규] 상세 페이지 상단 네비게이션 바 수정 */
+    .top-nav-bar {
+        width: 95%; /* 화면 너비에 맞게 축소 */
+        padding: 15px 0; /* 상하 여백 */
+        margin: 0 auto; /* 중앙 정렬 */
+    }
+
+    /* 버튼 크기 및 글자 조정 */
+    .nav-button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    .user-controls .nav-item-detail {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
