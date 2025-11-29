@@ -1768,7 +1768,7 @@ a.nav-button {
     }
 
     .popular-tab-btn {
-        font-size: 11px !important;   /* 글자 크기: 13px -> 11px (확 줄임) */
+        font-size: 12px !important;   /* 글자 크기: 13px -> 11px (확 줄임) */
         padding: 6px 8px !important;  /* 내부 여백을 확 줄여서 버튼 크기 감소 */
         letter-spacing: -0.5px;       /* 자간을 좁혀서 공간 확보 */
         white-space: nowrap;          /* 글자 줄바꿈 방지 */
@@ -1969,16 +1969,6 @@ a.nav-button {
         gap: 4px;            
     }
 
-    .account-btn {
-        flex: 1;             
-        width: auto;         
-        min-width: 0; /* 찌그러짐 허용 */
-        margin: 0;
-        padding: 12px 0;     
-        font-size: 12px;     
-        white-space: nowrap; 
-        border-radius: 5px;
-    }
     /* 모바일에서 로그인 링크 글자 */
     #userStatus a {
         font-size: 14px !important; /* PC(16px)보다 더 작게 */
@@ -2020,8 +2010,39 @@ a.nav-button {
     /* 3. "아직 이 책에 대한 리뷰가 없습니다" 문구 축소 */
     #userReviews p {
         font-size: 13px !important;   /* 글자 크기 축소 */
-        color: #aaa !important;       /* 너무 눈에 띄지 않게 연한 회색으로 */
+        color: #ffffff !important;       /* 너무 눈에 띄지 않게 연한 회색으로 */
         margin-top: 15px !important;  /* 여백 조정 */
         padding: 10px 0 !important;
+    }
+    /* 1. 마이페이지 탭 중앙 정렬 */
+    .mypage-tabs {
+        justify-content: center !important; /* [핵심] 가운데 정렬 */
+        width: 100% !important;
+    }
+
+    /* 2. 하단 계정 관리 버튼 3개 (여백 확보 수정) */
+    .account-management {
+        display: flex !important;
+        width: 100% !important;
+        margin: 25px 0 0 0 !important;
+        
+        /* 버튼 사이 간격을 8px -> 4px로 줄여서 버튼 공간 확보 */
+        gap: 4px !important;           
+    }
+
+    .account-btn {
+        flex: 1 !important;            /* 1:1:1 비율 유지 */
+        min-width: 0 !important;       
+        margin: 0 !important;
+        
+        /* 위아래 8px, 양옆 10px 여백 추가 (글자 옆 공간 확보) */
+        padding: 8px 10px !important;    
+        
+        font-size: 13px !important;    
+        
+        /* 글자가 너무 길어도 줄바꿈 없이 ... 처리 (디자인 깨짐 방지) */
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 }
