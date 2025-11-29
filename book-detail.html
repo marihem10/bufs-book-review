@@ -14,7 +14,11 @@
         <script src="firebase-init.js" type="module"></script>
 
             <div class="top-nav-bar">
+            <div class="nav-left-group" style="display: flex; gap: 10px; align-items: center;">
                 <button id="backButton" class="nav-button">← back</button>
+                <a href="index.html" class="nav-button" style="text-decoration: none; text-align: center;">main</a>
+            </div>
+
             <div class="user-controls">
                 <a href="mypage.html" class="nav-item-detail">MYPAGE</a>
             </div>
@@ -42,6 +46,10 @@
                     </div>
                     
                     <h2>사용자 리뷰</h2>
+                    <div class="review-sort-options">
+                        <button id="sortLatestBtn" class="sort-btn active">최신순</button>
+                        <button id="sortPopularBtn" class="sort-btn">인기순</button>
+                    </div>
                     <div id="userReviews">
                         </div>
                 </div>

@@ -52,12 +52,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
+    // 현재 정렬 기준 (기본값: 최신순)
+    let currentSortType = 'latest'; 
+
     // ----------------------------------------------------
-    // [C] 함수 정의: 리뷰 목록 (답글 포함)
+    // [C] 함수 정의: 리뷰 목록
     // ----------------------------------------------------
     async function fetchAndDisplayReviews(bookIsbn) {
         userReviewsContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
         try {
+            // 1. 일단 모든 리뷰를 가져옵니다.
             const reviewsQuery = query(collection(db, "reviews"), where("bookIsbn", "==", bookIsbn));
             const querySnapshot = await getDocs(reviewsQuery);
             
@@ -67,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             userReviewsContainer.innerHTML = ''; 
 
+            // 2. 답글까지 포함해서 데이터 구성
             const reviewPromises = querySnapshot.docs.map(async (docSnap) => {
                 const review = docSnap.data();
                 const reviewId = docSnap.id;
@@ -75,7 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const qReplies = query(repliesRef, orderBy("timestamp", "asc")); 
                 const repliesSnap = await getDocs(qReplies);
                 
-                // [수정] 답글 ID도 같이 저장해야 수정/삭제 가능
                 const replies = [];
                 repliesSnap.forEach(rDoc => {
                     replies.push({ id: rDoc.id, ...rDoc.data() });
@@ -84,8 +88,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return { id: reviewId, data: review, replies: replies };
             });
 
-            const reviewsData = await Promise.all(reviewPromises);
+            let reviewsData = await Promise.all(reviewPromises);
 
+            // 3. 정렬 로직 적용
+            if (currentSortType === 'popular') {
+                // 인기순: 좋아요(likes 배열 길이)가 많은 순서
+                reviewsData.sort((a, b) => {
+                    const likesA = a.data.likes ? a.data.likes.length : 0;
+                    const likesB = b.data.likes ? b.data.likes.length : 0;
+                    return likesB - likesA; // 내림차순
+                });
+            } else {
+                // 최신순: timestamp 기준 내림차순
+                reviewsData.sort((a, b) => {
+                    const dateA = a.data.timestamp ? (a.data.timestamp.toDate ? a.data.timestamp.toDate() : new Date(a.data.timestamp)) : new Date(0);
+                    const dateB = b.data.timestamp ? (b.data.timestamp.toDate ? b.data.timestamp.toDate() : new Date(b.data.timestamp)) : new Date(0);
+                    return dateB - dateA; 
+                });
+            }
+
+            // 4. 화면에 렌더링 (기존 코드와 동일)
             reviewsData.forEach(({ id, data, replies }) => {
                 const review = data;
                 const reviewId = id;
@@ -93,12 +115,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let date = '날짜 없음';
                 if (review.timestamp) {
                     const ts = review.timestamp.toDate ? review.timestamp.toDate() : new Date(review.timestamp);
-                    date = ts.toLocaleString('ko-KR'); 
+                    date = ts.toLocaleString('ko-KR'); // 시분초 포함
                 }
                 
-                const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                // 별점 HTML (숫자 제거됨)
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (review.rating >= i) starsHtml += '<span class="star filled">★</span>';
+                    else if (review.rating >= i - 0.5) starsHtml += '<span class="star half-filled">★</span>';
+                    else starsHtml += '<span class="star">☆</span>';
+                }
+                
                 const displayName = review.nickname || review.userId.split('@')[0];
-
                 const likes = review.likes || [];
                 const likeCount = likes.length;
                 const currentUser = auth.currentUser;
@@ -134,8 +162,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const rTs = reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp);
                             rDate = rTs.toLocaleString('ko-KR');
                         }
-                        
-                        // [신규] 내 답글인지 확인
                         const isMyReply = currentUser && reply.userId === currentUser.email;
                         const replyButtons = isMyReply ? 
                             `<span class="reply-btn-group">
@@ -170,9 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reviewItem.innerHTML = html;
                 userReviewsContainer.appendChild(reviewItem);
 
-                // --- 이벤트 리스너 ---
-                
-                // 1. 좋아요
+                // --- 이벤트 리스너 (좋아요, 답글 등) ---
                 const likeBtn = reviewItem.querySelector('.like-btn');
                 likeBtn.addEventListener('click', async () => {
                     const curUser = auth.currentUser;
@@ -181,23 +205,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                         alert('본인의 리뷰에는 좋아요를 누를 수 없습니다.'); return;
                     }
                     try {
-                        await fetch(`${serverUrl}/api/review-like`, {
+                        const response = await fetch(`${serverUrl}/api/review-like`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reviewId: reviewId, userId: curUser.email })
                         });
-                        fetchAndDisplayReviews(bookIsbn);
+                        if (!response.ok) throw new Error('서버 응답 오류');
+                        const result = await response.json();
+                        
+                        likeBtn.innerHTML = `${result.likes.includes(curUser.email) ? '♥' : '♡'} 좋아요 ${result.likes.length}`;
+                        likeBtn.classList.toggle('liked');
                     } catch (e) { console.error(e); }
                 });
 
-                // 2. 답글 토글
                 const replyToggleBtn = reviewItem.querySelector('.reply-toggle-btn');
                 const replySection = reviewItem.querySelector('.reply-section');
                 replyToggleBtn.addEventListener('click', () => {
                     replySection.style.display = (replySection.style.display === 'none') ? 'block' : 'none';
                 });
 
-                // 3. 답글 등록
                 const replyInput = reviewItem.querySelector('.reply-input');
                 const replySubmitBtn = reviewItem.querySelector('.reply-submit-btn');
                 replySubmitBtn.addEventListener('click', async () => {
@@ -211,14 +237,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         await fetch(`${serverUrl}/api/review-reply`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ reviewId, userId: curUser.email, nickname, content })
+                            body: JSON.stringify({ reviewId: reviewId, userId: curUser.email, nickname, content })
                         });
                         alert('답글이 등록되었습니다.');
                         fetchAndDisplayReviews(bookIsbn);
                     } catch (e) { console.error(e); alert('등록 실패'); }
                 });
-                
-                // 4. [신규] 답글 수정/삭제 버튼
+
                 reviewItem.querySelectorAll('.reply-delete-btn').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         if(!confirm('답글을 삭제하시겠습니까?')) return;
@@ -238,16 +263,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const replyId = e.target.dataset.rid;
                         const newContent = prompt('답글을 수정해주세요:');
                         if(newContent === null || newContent.trim() === '') return;
-                        
                         try {
                             await fetch(`${serverUrl}/api/reply-edit`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ 
-                                    reviewId, replyId, 
-                                    userId: auth.currentUser.email, 
-                                    content: newContent 
-                                })
+                                body: JSON.stringify({ reviewId, replyId, userId: auth.currentUser.email, content: newContent })
                             });
                             alert('수정되었습니다.');
                             fetchAndDisplayReviews(bookIsbn);
@@ -257,8 +277,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
         } catch (e) {
-            console.error("리뷰 목록 오류:", e);
+            console.error("리뷰 목록 가져오기 실패:", e);
+            userReviewsContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다.</p>';
         }
+    }
+
+    // ----------------------------------------------------
+    // 정렬 버튼 이벤트 리스너
+    // ----------------------------------------------------
+    const sortLatestBtn = document.getElementById('sortLatestBtn');
+    const sortPopularBtn = document.getElementById('sortPopularBtn');
+
+    if (sortLatestBtn && sortPopularBtn) {
+        sortLatestBtn.addEventListener('click', () => {
+            if (currentSortType !== 'latest') {
+                currentSortType = 'latest';
+                sortLatestBtn.classList.add('active');
+                sortPopularBtn.classList.remove('active');
+                fetchAndDisplayReviews(isbn); // 목록 다시 그리기
+            }
+        });
+
+        sortPopularBtn.addEventListener('click', () => {
+            if (currentSortType !== 'popular') {
+                currentSortType = 'popular';
+                sortPopularBtn.classList.add('active');
+                sortLatestBtn.classList.remove('active');
+                fetchAndDisplayReviews(isbn); // 목록 다시 그리기
+            }
+        });
     }
 
 
