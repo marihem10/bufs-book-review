@@ -188,19 +188,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
+    // 특정 필드(readingCount, wishlistCount) 기준 랭킹 가져오기
+    // ----------------------------------------------------
+    async function fetchBooksByRank(field) {
+        if (!db) return;
+        popularBooksContainer.innerHTML = '<div class="loading-message"><div class="spinner-dark"></div><p>순위를 집계하고 있습니다.</p></div>';
+
+        const booksRef = collection(db, "books");
+        // 해당 필드가 0보다 큰 책만 가져와서, 내림차순 정렬
+        const q = query(
+            booksRef, 
+            where(field, ">", 0), 
+            orderBy(field, "desc"), 
+            limit(10)
+        );
+
+        try {
+            const querySnapshot = await getDocs(q);
+            let books = [];
+            querySnapshot.forEach((doc) => {
+                books.push(doc.data());
+            });
+            
+            if (books.length === 0) {
+                popularBooksContainer.innerHTML = '<p style="padding:50px;">아직 집계된 데이터가 없습니다.</p>';
+            } else {
+                renderPopularBooks(books);
+            }
+        } catch (e) {
+            console.error(`${field} 순위 가져오기 실패:`, e);
+            // 색인 오류 처리
+            if (e.code === 'failed-precondition') {
+                const msg = field === 'readingCount' ? '읽는 중' : '찜하기';
+                alert(`(관리자) '${msg}' 순위를 보려면 색인이 필요합니다. F12 콘솔의 링크를 클릭하세요.`);
+                console.log(e.message); // 여기에 링크 뜸
+            }
+            popularBooksContainer.innerHTML = '<p>목록을 불러올 수 없습니다.</p>';
+        }
+    }
+
+    // ----------------------------------------------------
     // 7. 탭 버튼 클릭 이벤트 리스너
     // ----------------------------------------------------
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // 1. 모든 버튼에서 'active' 클래스 제거
+            // 1. 스타일 변경
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            // 2. 클릭된 버튼에 'active' 클래스 추가
             button.classList.add('active');
             
-            // 3. 데이터 속성(data-tab)에 따라 적절한 함수 호출
-            if (button.dataset.tab === 'month') {
+            // 2. 탭에 따른 함수 호출
+            const tab = button.dataset.tab;
+            
+            if (tab === 'month') {
                 fetchPopularBooksMonthly();
+            } else if (tab === 'reading') {
+                // 읽는 중 순위 (readingCount 기준)
+                fetchBooksByRank('readingCount');
+            } else if (tab === 'wishlist') {
+                // 찜하기 순위 (wishlistCount 기준)
+                fetchBooksByRank('wishlistCount');
             } else {
+                // 기본: 종합 인기
                 fetchPopularBooksAllTime();
             }
         });
