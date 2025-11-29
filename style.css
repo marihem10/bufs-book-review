@@ -926,13 +926,12 @@ header { /*맨위에 로고랑 로그인 부분을 감싸는 부분*/
     top: 5px; /* 이미지 모서리에 딱 붙임 */
     left: 5px; 
     background-color: #000000; /* 진한 갈색 배경 (테마색) */
-    color: white; /* 흰색 글자 */
-    font-family: 'Arial', sans-serif; /* 가독성 좋은 고딕체 */
+    color: #ffffff !important; /* 글자색: 흰색 (강제 적용) */
+    z-index: 10;               /* 이미지가 덮지 않도록 순서 올림 */    font-family: 'Arial', sans-serif; /* 가독성 좋은 고딕체 */
     font-weight: 900; /* 아주 굵게 */
     font-size: 20px; /* 글자 크기 18px -> 20px로 확대 */
     padding: 5px 12px; /* 여백을 늘려서 뱃지 느낌 강화 */
     border-radius: 5px; /* 둥근 모서리 */
-    z-index: 1; 
     box-shadow: 2px 2px 5px rgba(0,0,0,0.3); /* 그림자 추가 */
 }
 

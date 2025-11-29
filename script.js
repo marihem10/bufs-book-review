@@ -64,56 +64,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // 5. 스크롤 시 '아래' 버튼 숨기기
+    // 스크롤 시 '아래' 버튼 숨기기
     // ----------------------------------------------------
-    if (scrollDownBtn) { 
-        window.addEventListener('scroll', () => {
-            const appContainer = document.getElementById('app-container'); // [신규] 컨테이너 선택
+    const appContainer = document.getElementById('app-container'); // 스크롤되는 진짜 박스
 
-            if (scrollDownBtn && appContainer) { // window 대신 appContainer 사용
-                appContainer.addEventListener('scroll', () => { // [수정] 이벤트 대상을 변경
-                    if (appContainer.scrollTop > 100) { // [수정] window.scrollY -> appContainer.scrollTop
-                        scrollDownBtn.classList.add('hidden');
-                    } else {
-                        scrollDownBtn.classList.remove('hidden');
-                    }
-                });
+    if (scrollDownBtn && appContainer) {
+        // window가 아니라 appContainer에 이벤트를 걸어야 합니다!
+        appContainer.addEventListener('scroll', () => {
+            // 스크롤 위치(scrollTop)가 100px 넘어가면 숨김 클래스 추가
+            if (appContainer.scrollTop > 100) {
+                scrollDownBtn.classList.add('hidden');
+            } else {
+                scrollDownBtn.classList.remove('hidden');
             }
         });
     }
 
     // ----------------------------------------------------
-    // 4. 인기 도서 목록을 화면에 그리는 *공통 함수*
+    // 인기 도서 목록 그리기
     // ----------------------------------------------------
     function renderPopularBooks(booksArray, type = 'default') {
-        popularBooksContainer.innerHTML = ''; // 기존 목록 비우기
+        popularBooksContainer.innerHTML = ''; // 목록 비우기
         
         if (!booksArray || booksArray.length === 0) {
             popularBooksContainer.innerHTML = '<p style="padding: 50px;">등록된 도서가 없습니다.</p>';
             return;
         }
 
+        let currentRank = 1; // 현재 표시할 등수
+        let actualCount = 1; // 실제 몇 번째 책인지 (다음 등수 계산용)
+
         booksArray.forEach((book, index) => {
             const bookItem = document.createElement('a');
             bookItem.classList.add('popular-book-item');
             bookItem.href = `book-detail.html?isbn=${book.isbn}`;
 
-            // 타입에 따라 보여줄 하단 텍스트 결정
+            // 공동 순위 계산 로직
+            if (index > 0) {
+                const prevBook = booksArray[index - 1];
+                let isTie = false;
+
+                // 탭 타입에 따라 비교 대상이 다름
+                if (type === 'reading') {
+                    // 읽는 중: 명수가 같으면 동점
+                    isTie = (book.readingCount || 0) === (prevBook.readingCount || 0);
+                } else if (type === 'wishlist') {
+                    // 담은 책: 명수가 같으면 동점
+                    isTie = (book.wishlistCount || 0) === (prevBook.wishlistCount || 0);
+                } else {
+                    // 종합/이달: 평점과 리뷰 수가 모두 같아야 동점
+                    isTie = (book.averageRating === prevBook.averageRating) && 
+                            (book.reviews === prevBook.reviews);
+                }
+
+                if (isTie) {
+                    // 동점이면 등수 유지 (예: 1등, 1등)
+                } else {
+                    // 다르면 실제 순서(actualCount)로 등수 갱신 (예: 1등, 1등, 3등)
+                    currentRank = actualCount;
+                }
+            }
+            actualCount++; // 실제 책 개수는 무조건 증가
+
+            // 하단 텍스트 설정 (기존 코드 유지)
             let bottomInfo = '';
             if (type === 'reading') {
-                // 읽는 중 탭일 때
                 bottomInfo = `<span style="color: #0abde3;"> ${book.readingCount || 0}명이 읽는 중</span>`;
             } else if (type === 'wishlist') {
-                // 찜하기 탭일 때
                 bottomInfo = `<span style="color: #20bf6b;"> ${book.wishlistCount || 0}명이 담아둠</span>`;
             } else {
-                // 기본 (종합/이달의 인기)
                 const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '0.0';
                 bottomInfo = `<span>★ ${averageRating} (${book.reviews || 0} 리뷰)</span>`;
             }
             
+            // HTML 생성 (rank 부분에 currentRank 사용)
             bookItem.innerHTML = `
-                <span class="popular-book-rank">${index + 1}</span>
+                <span class="popular-book-rank">${currentRank}</span>
                 <img src="${book.image || 'https://via.placeholder.com/160x230'}" alt="${book.title}">
                 <p>${book.title}</p>
                 ${bottomInfo}
@@ -164,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("종합 인기 도서 목록 가져오기 실패:", e);
             popularBooksContainer.innerHTML = '<p>인기 도서 목록을 불러올 수 없습니다.</p>';
             if (e.code === 'failed-precondition') {
-                 popularBooksContainer.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. 콘솔을 확인하세요.</p>';
+                popularBooksContainer.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. 콘솔을 확인하세요.</p>';
             }
         }
     } 
