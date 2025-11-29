@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sectionMyReviews = document.getElementById('sectionMyReviews');
     const sectionMyWishlist = document.getElementById('sectionMyWishlist');
     const wishlistContainer = document.getElementById('wishlistContainer');
+    const tabMyReading = document.getElementById('tabMyReading');
+    const sectionMyReading = document.getElementById('sectionMyReading');
+    const readingContainer = document.getElementById('readingContainer');
 
     // 페이지네이션 관련 변수
     let allReviewsData = []; // 가져온 모든 리뷰를 저장할 곳
@@ -546,11 +549,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
-
     // ----------------------------------------------------
-    // 찜 목록
+    // 탭
     // ----------------------------------------------------
-
         // 탭 전환 이벤트 리스너 추가
     tabMyReviews.addEventListener('click', () => {
         tabMyReviews.classList.add('active');
@@ -562,6 +563,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // 읽는 중 탭 클릭 이벤트
+    tabMyReading.addEventListener('click', () => {
+        // 탭 활성화 스타일
+        tabMyReading.classList.add('active');
+        tabMyReviews.classList.remove('active');
+        tabMyWishlist.classList.remove('active');
+        
+        // 섹션 표시
+        sectionMyReading.style.display = 'grid'; // grid로 표시
+        sectionMyReviews.style.display = 'none';
+        sectionMyWishlist.style.display = 'none';
+
+        if (currentNickname) {
+            userStatusElement.textContent = `${currentNickname} 님이 읽고 있는 책입니다.`;
+        }
+        
+        fetchMyReading(); // 목록 가져오기 함수 호출
+    });
+
+    // ----------------------------------------------------
+    // 마이페이지 문구
+    // ----------------------------------------------------
     tabMyWishlist.addEventListener('click', () => {
         tabMyWishlist.classList.add('active');
         tabMyReviews.classList.remove('active');
@@ -576,7 +599,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchMyWishlist(); 
     });
 
-    // [C] 찜 목록 불러오기 함수 정의
+    // ----------------------------------------------------
+    // 찜 목록
+    // ----------------------------------------------------
+
+    // 찜 목록 불러오기 함수 정의
 async function fetchMyWishlist() {
     if (!auth.currentUser) return;
     
@@ -630,4 +657,56 @@ async function fetchMyWishlist() {
         wishlistContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
     }
 }
+    // ----------------------------------------------------
+    // 읽는중 목록
+    // ----------------------------------------------------
+    // 목록 가져오기 함수
+    async function fetchMyReading() {
+        if (!auth.currentUser) return;
+        readingContainer.innerHTML = '<p>불러오는 중...</p>';
+        
+        try {
+            const res = await fetch(`${serverUrl}/api/reading/my?userId=${auth.currentUser.email}`);
+            const books = await res.json();
+
+            if (books.length === 0) {
+                readingContainer.innerHTML = '<p>읽고 있는 책이 없습니다.</p>';
+                return;
+            }
+            readingContainer.innerHTML = ''; 
+            
+            books.forEach(book => {
+                const card = document.createElement('div');
+                card.classList.add('wish-card');
+                card.innerHTML = `
+                    <a href="book-detail.html?isbn=${book.isbn}">
+                        <img src="${book.image}" alt="${book.title}">
+                    </a>
+                    <div class="wish-info">
+                        <p class="wish-title">${book.title}</p>
+                        <p class="wish-author">${book.author}</p>
+                        <button class="reading-remove-btn" data-isbn="${book.isbn}">삭제</button>
+                    </div>
+                `;
+                readingContainer.appendChild(card);
+            });
+            
+            // 삭제 이벤트 연결
+            document.querySelectorAll('.reading-remove-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(!confirm('목록에서 삭제할까요?')) return;
+                    await fetch(`${serverUrl}/api/reading/toggle`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: auth.currentUser.email, isbn: e.target.dataset.isbn })
+                    });
+                    fetchMyReading(); // 새로고침
+                });
+            });
+
+        } catch (e) {
+            console.error(e);
+            readingContainer.innerHTML = '<p>오류 발생</p>';
+        }
+    }
 });

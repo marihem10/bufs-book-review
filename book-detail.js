@@ -360,15 +360,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <hr style="border-top: 1px solid rgba(255, 255, 255, 0.3); margin: 15px 0;">
                 <p><strong>평균 별점:</strong> <span class="average-rating-stars">${starsHtml}</span> (${ratingDisplay}/5.0)</p>
                 <p><strong>총 리뷰 수:</strong> ${totalReviews}개</p>
-                <button id="wishlistBtn" class="wishlist-btn">
-                    <span class="icon-area">읽고 싶어요
+                <div style="display: flex; gap: 10px;">
+                    <button id="readingBtn" class="reading-btn">읽는 중</button>
+                    <button id="wishlistBtn" class="wishlist-btn">읽고 싶어요</button>
+                </div>
                 </button>
             </div>
         `;
-        setupWishlistFunctioncr(book); 
+        setupWishlistFunctioncr(book); // 읽고 싶어요 기능 연결
+        setupReadingFunction(book); // 읽는 중 기능 연결
         await fetchAndDisplayReviews(isbn); 
     } else {
-         bookDetailContainer.innerHTML = '<h2>책 상세 정보를 불러올 수 없습니다.</h2>';
+        bookDetailContainer.innerHTML = '<h2>책 상세 정보를 불러올 수 없습니다.</h2>';
     }
 
     ratingStars.forEach(star => {
@@ -551,4 +554,62 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
+    
+    // ----------------------------------------------------
+    // 읽는중 버튼 기능 설정 함수
+    // ----------------------------------------------------
+    function setupReadingFunction(currentBook) {
+    const readingBtn = document.getElementById('readingBtn');
+    if (!readingBtn) return;
+
+    // 1. 상태 확인
+    if (auth.currentUser) checkReadingStatus();
+
+    // 2. 클릭 이벤트
+    readingBtn.addEventListener('click', async () => {
+        if (!auth.currentUser) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+        readingBtn.disabled = true;
+        try {
+            const response = await fetch(`${serverUrl}/api/reading/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: auth.currentUser.email,
+                    isbn: currentBook.isbn,
+                    title: currentBook.title,
+                    author: currentBook.author,
+                    image: currentBook.image
+                })
+            });
+            const result = await response.json();
+            updateReadingUI(result.isReading);
+        } catch (e) {
+            console.error(e);
+            alert('오류 발생');
+        } finally {
+            readingBtn.disabled = false;
+        }
+    });
+
+    async function checkReadingStatus() {
+        try {
+            const res = await fetch(`${serverUrl}/api/reading/check?userId=${auth.currentUser.email}&isbn=${currentBook.isbn}`);
+            const data = await res.json();
+            updateReadingUI(data.isReading);
+        } catch(e) {}
+    }
+
+    function updateReadingUI(isReading) {
+        if (isReading) {
+            readingBtn.classList.add('active');
+            readingBtn.innerHTML = `읽는 중...`; 
+        } else {
+            readingBtn.classList.remove('active');
+            readingBtn.innerHTML = `읽는 중`; 
+        }
+    }
+}
 });

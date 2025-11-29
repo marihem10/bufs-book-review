@@ -916,6 +916,77 @@ app.get('/api/wishlist/my', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
+// 읽는 중 토글
+// ------------------------------------------------------------------
+app.post('/api/reading/toggle', async (req, res) => {
+    const { userId, isbn, title, image, author } = req.body;
+    if (!userId || !isbn) return res.status(400).json({ error: '정보 부족' });
+
+    try {
+        const readingRef = db.collection('readings'); // 컬렉션 이름: readings
+        const snapshot = await readingRef
+            .where('userId', '==', userId)
+            .where('isbn', '==', isbn)
+            .get();
+
+        if (!snapshot.empty) {
+            snapshot.forEach(doc => doc.ref.delete());
+            return res.json({ isReading: false, message: '독서 상태가 취소되었습니다.' });
+        } else {
+            await readingRef.add({
+                userId,
+                isbn,
+                title: title || '제목 없음',
+                image: image || '',
+                author: author || '',
+                timestamp: FieldValue.serverTimestamp()
+            });
+            return res.json({ isReading: true, message: '읽는 중인 책으로 등록했습니다!' });
+        }
+    } catch (error) {
+        console.error('읽는 중 토글 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
+    }
+});
+
+// 읽는 중 여부 확인
+app.get('/api/reading/check', async (req, res) => {
+    const { userId, isbn } = req.query;
+    if (!userId || !isbn) return res.json({ isReading: false });
+
+    try {
+        const snapshot = await db.collection('readings')
+            .where('userId', '==', userId)
+            .where('isbn', '==', isbn)
+            .get();
+        res.json({ isReading: !snapshot.empty });
+    } catch (error) {
+        res.json({ isReading: false });
+    }
+});
+
+// 내 읽는 중 목록 가져오기
+app.get('/api/reading/my', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'User ID 누락' });
+
+    try {
+        const snapshot = await db.collection('readings')
+            .where('userId', '==', userId)
+            .orderBy('timestamp', 'desc')
+            .get();
+
+        if (snapshot.empty) return res.json([]);
+        const books = [];
+        snapshot.forEach(doc => books.push(doc.data()));
+        res.json(books);
+    } catch (error) {
+        console.error('읽는 중 목록 로딩 오류:', error);
+        res.json([]); 
+    }
+});
+
+// ------------------------------------------------------------------
 // [서버 시작]
 // ------------------------------------------------------------------
 app.listen(port, () => {

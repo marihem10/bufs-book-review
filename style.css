@@ -1652,6 +1652,48 @@ a.nav-button {
     color: #d00;
 }
 
+/* 읽는 중 버튼 스타일 (하늘색) */
+.reading-btn {
+    font-family: 'Nanum Myeongjo', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    
+    background-color: transparent;
+    border: 2px solid #0abde3; /* 하늘색 테두리 */
+    color: #0abde3;           /* 하늘색 글자 */
+    
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-right: 8px; /* 옆 버튼과 간격 */
+    transition: all 0.3s;
+}
+
+.reading-btn:hover {
+    background-color: rgba(10, 189, 227, 0.1);
+    transform: scale(1.05);
+}
+
+/* 활성화 상태 (배경 채움) */
+.reading-btn.active {
+    background-color: #0abde3; 
+    color: white;
+    box-shadow: 0 4px 10px rgba(10, 189, 227, 0.4);
+}
+
+/* 📱 모바일 전용 크기 조정 */
+@media (max-width: 768px) {
+    .reading-btn {
+        font-size: 12px !important;
+        padding: 5px 10px !important;
+        margin-top: 8px !important;
+        border-width: 1px !important;
+    }
+}
+
 /* ========================================= */
 /* 📱 모바일 최적화 (Max Width: 768px)       */
 /* ========================================= */
