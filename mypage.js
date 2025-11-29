@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentPage = 1;     // 현재 페이지
     const itemsPerPage = 5;  // 한 페이지당 보여줄 리뷰 수
 
+    let currentNickname = ''; // 닉네임 저장용 변수
+
     function showButtonLoading(button, text = '로딩중...') {
         button.disabled = true;
         button.dataset.originalHtml = button.innerHTML; 
@@ -37,7 +39,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             const displayName = user.displayName || user.email.split('@')[0];
-            userStatusElement.textContent = `${displayName} 님의 리뷰 목록입니다.`;
+            currentNickname = displayName; // 변수에 닉네임 저장
+            userStatusElement.textContent = `${displayName} 님의 리뷰 목록입니다.`; // 기본 문구
             fetchUserReviews(user.uid, db);
             
             // [신규] 알림 불러오기 함수 호출
@@ -554,6 +557,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         tabMyWishlist.classList.remove('active');
         sectionMyReviews.style.display = 'block';
         sectionMyWishlist.style.display = 'none';
+        if (currentNickname) {
+        userStatusElement.textContent = `${currentNickname} 님의 리뷰 목록입니다.`;
+        }
     });
 
     tabMyWishlist.addEventListener('click', () => {
@@ -561,6 +567,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         tabMyReviews.classList.remove('active');
         sectionMyReviews.style.display = 'none';
         sectionMyWishlist.style.display = 'block';
+        // 문구를 '읽고 싶은 책'으로 변경
+        if (currentNickname) {
+            userStatusElement.textContent = `${currentNickname} 님이 읽고 싶은 책들입니다.`;
+        }
         
     // 찜 목록 불러오기 함수 호출
     fetchMyWishlist(); 
