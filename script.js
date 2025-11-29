@@ -85,11 +85,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     // 4. 인기 도서 목록을 화면에 그리는 *공통 함수*
     // ----------------------------------------------------
-    function renderPopularBooks(booksArray) {
+    function renderPopularBooks(booksArray, type = 'default') {
         popularBooksContainer.innerHTML = ''; // 기존 목록 비우기
         
         if (!booksArray || booksArray.length === 0) {
-            popularBooksContainer.innerHTML = '<p>아직 등록된 인기 도서가 없습니다.</p>';
+            popularBooksContainer.innerHTML = '<p style="padding: 50px;">등록된 도서가 없습니다.</p>';
             return;
         }
 
@@ -98,13 +98,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             bookItem.classList.add('popular-book-item');
             bookItem.href = `book-detail.html?isbn=${book.isbn}`;
 
-            const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '0.0';
+            // 타입에 따라 보여줄 하단 텍스트 결정
+            let bottomInfo = '';
+            if (type === 'reading') {
+                // 읽는 중 탭일 때
+                bottomInfo = `<span style="color: #0abde3;"> ${book.readingCount || 0}명이 읽는 중</span>`;
+            } else if (type === 'wishlist') {
+                // 찜하기 탭일 때
+                bottomInfo = `<span style="color: #20bf6b;"> ${book.wishlistCount || 0}명이 담아둠</span>`;
+            } else {
+                // 기본 (종합/이달의 인기)
+                const averageRating = book.averageRating ? book.averageRating.toFixed(1) : '0.0';
+                bottomInfo = `<span>★ ${averageRating} (${book.reviews || 0} 리뷰)</span>`;
+            }
             
             bookItem.innerHTML = `
                 <span class="popular-book-rank">${index + 1}</span>
                 <img src="${book.image || 'https://via.placeholder.com/160x230'}" alt="${book.title}">
                 <p>${book.title}</p>
-                <span>★ ${averageRating} (${book.reviews || 0} 리뷰)</span>
+                ${bottomInfo}
             `;
             
             popularBooksContainer.appendChild(bookItem);
@@ -195,7 +207,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         popularBooksContainer.innerHTML = '<div class="loading-message"><div class="spinner-dark"></div><p>순위를 집계하고 있습니다.</p></div>';
 
         const booksRef = collection(db, "books");
-        // 해당 필드가 0보다 큰 책만 가져와서, 내림차순 정렬
         const q = query(
             booksRef, 
             where(field, ">", 0), 
@@ -213,15 +224,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (books.length === 0) {
                 popularBooksContainer.innerHTML = '<p style="padding:50px;">아직 집계된 데이터가 없습니다.</p>';
             } else {
-                renderPopularBooks(books);
+                // field에 따라 타입 결정해서 전달 ('reading' 또는 'wishlist')
+                const displayType = (field === 'readingCount') ? 'reading' : 'wishlist';
+                renderPopularBooks(books, displayType);
             }
         } catch (e) {
             console.error(`${field} 순위 가져오기 실패:`, e);
-            // 색인 오류 처리
             if (e.code === 'failed-precondition') {
                 const msg = field === 'readingCount' ? '읽는 중' : '찜하기';
-                alert(`(관리자) '${msg}' 순위를 보려면 색인이 필요합니다. F12 콘솔의 링크를 클릭하세요.`);
-                console.log(e.message); // 여기에 링크 뜸
+                alert(`(관리자) '${msg}' 순위 색인이 필요합니다. 콘솔 링크를 클릭하세요.`);
+                console.log(e.message);
             }
             popularBooksContainer.innerHTML = '<p>목록을 불러올 수 없습니다.</p>';
         }
