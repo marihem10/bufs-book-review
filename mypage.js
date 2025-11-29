@@ -660,13 +660,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             wishlistPagination.innerHTML = '';
             return;
         }
+        
+        const itemsCount = getGridPerPage(); 
 
         const startIndex = (page - 1) * itemsCount;
         const endIndex = startIndex + itemsCount;
         const currentItems = wishlistData.slice(startIndex, endIndex);
         
-        const itemsCount = getGridPerPage(); 
-
         currentItems.forEach(book => {
             const card = document.createElement('div');
             card.classList.add('wish-card');
