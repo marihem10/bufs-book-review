@@ -833,7 +833,87 @@ app.delete('/api/reply-delete', async (req, res) => {
     }
 });
 
+// ------------------------------------------------------------------
+// 찜하기(Wishlist) 토글 (추가/삭제)
+// ------------------------------------------------------------------
+app.post('/api/wishlist/toggle', async (req, res) => {
+    const { userId, isbn, title, image, author } = req.body;
+    if (!userId || !isbn) return res.status(400).json({ error: '정보 부족' });
 
+    try {
+        const wishlistRef = db.collection('wishlists');
+        // 이미 찜했는지 확인 (userId와 isbn으로 복합 쿼리)
+        const snapshot = await wishlistRef
+            .where('userId', '==', userId)
+            .where('isbn', '==', isbn)
+            .get();
+
+        if (!snapshot.empty) {
+            // 이미 존재하면 -> 삭제 (찜 취소)
+            snapshot.forEach(doc => doc.ref.delete());
+            return res.json({ isWished: false, message: '찜하기가 취소되었습니다.' });
+        } else {
+            // 없으면 -> 추가 (찜하기)
+            await wishlistRef.add({
+                userId,
+                isbn,
+                title: title || '제목 없음',
+                image: image || '',
+                author: author || '',
+                timestamp: FieldValue.serverTimestamp()
+            });
+            return res.json({ isWished: true, message: '책을 찜했습니다!' });
+        }
+    } catch (error) {
+        console.error('찜하기 토글 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
+    }
+});
+
+// ------------------------------------------------------------------
+// 특정 책 찜 여부 확인 (상세페이지용)
+// ------------------------------------------------------------------
+app.get('/api/wishlist/check', async (req, res) => {
+    const { userId, isbn } = req.query;
+    if (!userId || !isbn) return res.json({ isWished: false });
+
+    try {
+        const snapshot = await db.collection('wishlists')
+            .where('userId', '==', userId)
+            .where('isbn', '==', isbn)
+            .get();
+        
+        res.json({ isWished: !snapshot.empty });
+    } catch (error) {
+        console.error('찜 여부 확인 오류:', error);
+        res.json({ isWished: false });
+    }
+});
+
+// ------------------------------------------------------------------
+// 내 찜 목록 가져오기 (마이페이지용)
+// ------------------------------------------------------------------
+app.get('/api/wishlist/my', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'User ID 누락' });
+
+    try {
+        const snapshot = await db.collection('wishlists')
+            .where('userId', '==', userId)
+            .orderBy('timestamp', 'desc')
+            .get();
+
+        if (snapshot.empty) return res.json([]);
+
+        const books = [];
+        snapshot.forEach(doc => books.push(doc.data()));
+        res.json(books);
+    } catch (error) {
+        console.error('찜 목록 로딩 오류:', error);
+        // 색인 오류가 날 경우를 대비해 빈 배열 반환
+        res.json([]); 
+    }
+});
 
 // ------------------------------------------------------------------
 // [서버 시작]

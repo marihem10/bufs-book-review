@@ -14,7 +14,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userReviewsContainer = document.getElementById('userReviews');
     let selectedRating = 0;
     const serverUrl = 'https://bufs-book-review.onrender.com';
+    const wishlistBtn = document.getElementById('wishlistBtn');
 
+    // 함수 정의: 찜 상태 확인 및 버튼 업데이트
+    async function checkWishStatus(isbn) {
+        if (!auth.currentUser) return;
+        try {
+            const res = await fetch(`${serverUrl}/api/wishlist/check?userId=${auth.currentUser.email}&isbn=${isbn}`);
+            const data = await res.json();
+            updateWishlistButton(data.isWished);
+        } catch(e) { console.error(e); }
+    }
+
+    function updateWishlistButton(isWished) {
+    if (isWished) {
+        wishlistBtn.classList.add('active');
+        wishlistBtn.innerHTML = `<span class="icon-area">🔖</span> 서재에 담김`;
+    } else {
+        wishlistBtn.classList.remove('active');
+        wishlistBtn.innerHTML = `<span class="icon-area">🔖</span> 읽고 싶어요`;
+    }
+}
     function showButtonLoading(button) {
         button.disabled = true;
         button.dataset.originalHtml = button.innerHTML;
@@ -40,8 +60,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch(`${serverUrl}/api/book-detail?isbn=${isbn}`);
             const book = await response.json();
             if (book.error) {
-                 bookDetailContainer.innerHTML = `<h2>${book.error}</h2>`;
-                 return null;
+                bookDetailContainer.innerHTML = `<h2>${book.error}</h2>`;
+                return null;
             }
             return book;
         } catch (error) {
@@ -56,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentSortType = 'latest'; 
 
     // ----------------------------------------------------
-    // [C] 함수 정의: 리뷰 목록
+    // 함수 정의: 리뷰 목록
     // ----------------------------------------------------
     async function fetchAndDisplayReviews(bookIsbn) {
         userReviewsContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
@@ -310,7 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // ----------------------------------------------------
-    // [D] 메인 실행 및 초기 로드
+    // 메인 실행 및 초기 로드
     // ----------------------------------------------------
     const book = await fetchBookDetails(isbn);
     if (book) {
@@ -340,8 +360,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <hr style="border-top: 1px solid rgba(255, 255, 255, 0.3); margin: 15px 0;">
                 <p><strong>평균 별점:</strong> <span class="average-rating-stars">${starsHtml}</span> (${ratingDisplay}/5.0)</p>
                 <p><strong>총 리뷰 수:</strong> ${totalReviews}개</p>
+                <button id="wishlistBtn" class="wishlist-btn">
+                    <span class="icon-area">읽고 싶어요
+                </button>
             </div>
         `;
+        setupWishlistFunctioncr(book); 
         await fetchAndDisplayReviews(isbn); 
     } else {
          bookDetailContainer.innerHTML = '<h2>책 상세 정보를 불러올 수 없습니다.</h2>';
@@ -361,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // [E-2] 리뷰 "등록" 버튼
+    // 리뷰 "등록" 버튼
     // ----------------------------------------------------
     submitReviewBtn.addEventListener('click', async () => {
         if (!auth.currentUser) {
@@ -461,3 +485,70 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+    // ----------------------------------------------------
+    // 찜하기 버튼 기능 설정 함수
+    // ----------------------------------------------------
+    function setupWishlistFunctioncr(currentBook) {
+        const wishlistBtn = document.getElementById('wishlistBtn');
+        if (!wishlistBtn) return;
+
+        // 1. 현재 찜 상태 확인 (로그인 했다면)
+        if (auth.currentUser) {
+            checkWishStatus();
+        }
+
+        // 2. 버튼 클릭 이벤트
+        wishlistBtn.addEventListener('click', async () => {
+            if (!auth.currentUser) {
+                alert('로그인이 필요한 기능입니다.');
+                return;
+            }
+
+            wishlistBtn.disabled = true; // 중복 클릭 방지
+
+            try {
+                // 서버에 저장/삭제 요청
+                const response = await fetch(`${serverUrl}/api/wishlist/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: auth.currentUser.email,
+                        isbn: currentBook.isbn,
+                        title: currentBook.title,
+                        author: currentBook.author,
+                        image: currentBook.image
+                    })
+                });
+                
+                const result = await response.json();
+                updateWishlistButtonUI(result.isWished); // 화면 업데이트
+
+            } catch (e) {
+                console.error("찜하기 오류:", e);
+                alert('오류가 발생했습니다.');
+            } finally {
+                wishlistBtn.disabled = false;
+            }
+        });
+
+        // 내부 함수: 서버에서 찜 상태 확인
+        async function checkWishStatus() {
+            try {
+                const res = await fetch(`${serverUrl}/api/wishlist/check?userId=${auth.currentUser.email}&isbn=${currentBook.isbn}`);
+                const data = await res.json();
+                updateWishlistButtonUI(data.isWished);
+            } catch(e) { console.error(e); }
+        }
+
+        // 내부 함수: 버튼 모양 바꾸기 (초록색 책갈피)
+        function updateWishlistButtonUI(isWished) {
+            if (isWished) {
+                wishlistBtn.classList.add('active');
+                wishlistBtn.innerHTML = `<span class="icon-area">서재에 담김`; // 문구 변경
+            } else {
+                wishlistBtn.classList.remove('active');
+                wishlistBtn.innerHTML = `<span class="icon-area">읽고 싶어요`; // 문구 변경
+            }
+        }
+    }

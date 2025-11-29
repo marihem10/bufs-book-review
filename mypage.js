@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reviewListContainer = document.getElementById('reviewList');
     const userStatusElement = document.getElementById('userStatus');
     const paginationContainer = document.getElementById('myPagePagination'); // 페이지네이션 요소
+    const tabMyReviews = document.getElementById('tabMyReviews');
+    const tabMyWishlist = document.getElementById('tabMyWishlist');
+    const sectionMyReviews = document.getElementById('sectionMyReviews');
+    const sectionMyWishlist = document.getElementById('sectionMyWishlist');
+    const wishlistContainer = document.getElementById('wishlistContainer');
 
     // 페이지네이션 관련 변수
     let allReviewsData = []; // 가져온 모든 리뷰를 저장할 곳
@@ -476,8 +481,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
 });
 
-// ----------------------------------------------------
-    // [신규] 알림 불러오기 및 삭제 함수
+    // ----------------------------------------------------
+    // 알림 불러오기 및 삭제 함수
     // ----------------------------------------------------
     async function fetchNotifications(userUid) {
         const notiSection = document.getElementById('notificationSection');
@@ -540,3 +545,80 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
+
+    // ----------------------------------------------------
+    // 찜 목록
+    // ----------------------------------------------------
+
+        // 탭 전환 이벤트 리스너 추가
+    tabMyReviews.addEventListener('click', () => {
+        tabMyReviews.classList.add('active');
+        tabMyWishlist.classList.remove('active');
+        sectionMyReviews.style.display = 'block';
+        sectionMyWishlist.style.display = 'none';
+    });
+
+    tabMyWishlist.addEventListener('click', () => {
+        tabMyWishlist.classList.add('active');
+        tabMyReviews.classList.remove('active');
+        sectionMyReviews.style.display = 'none';
+        sectionMyWishlist.style.display = 'block';
+        
+    // 찜 목록 불러오기 함수 호출
+    fetchMyWishlist(); 
+    });
+
+    // [C] 찜 목록 불러오기 함수 정의
+async function fetchMyWishlist() {
+    if (!auth.currentUser) return;
+    
+    wishlistContainer.innerHTML = '<p>불러오는 중...</p>';
+    
+    try {
+        const res = await fetch(`${serverUrl}/api/wishlist/my?userId=${auth.currentUser.email}`);
+        const books = await res.json();
+
+        if (books.length === 0) {
+            wishlistContainer.innerHTML = '<p>아직 찜한 책이 없습니다.</p>';
+            return;
+        }
+
+        wishlistContainer.innerHTML = ''; // 비우기
+        
+        books.forEach(book => {
+            const card = document.createElement('div');
+            card.classList.add('wish-card');
+            card.innerHTML = `
+                <a href="book-detail.html?isbn=${book.isbn}">
+                    <img src="${book.image}" alt="${book.title}">
+                </a>
+                <div class="wish-info">
+                    <p class="wish-title">${book.title}</p>
+                    <p class="wish-author">${book.author}</p>
+                    <button class="wish-remove-btn" data-isbn="${book.isbn}">삭제</button>
+                </div>
+            `;
+            wishlistContainer.appendChild(card);
+        });
+
+        // 삭제 버튼 이벤트
+        document.querySelectorAll('.wish-remove-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if(!confirm('찜 목록에서 삭제할까요?')) return;
+                const isbn = e.target.dataset.isbn;
+                // 토글 API 재사용 (이미 있으면 삭제되므로)
+                await fetch(`${serverUrl}/api/wishlist/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: auth.currentUser.email, isbn: isbn })
+                });
+                // 목록 다시 로드
+                fetchMyWishlist();
+            });
+        });
+
+    } catch (e) {
+        console.error(e);
+        wishlistContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
+    }
+}
