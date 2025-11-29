@@ -661,8 +661,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const startIndex = (page - 1) * GRID_PER_PAGE;
-        const endIndex = startIndex + GRID_PER_PAGE;
+        const startIndex = (page - 1) * itemsCount;
+        const endIndex = startIndex + itemsCount;
         const currentItems = wishlistData.slice(startIndex, endIndex);
         
         const itemsCount = getGridPerPage(); 
@@ -737,8 +737,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const itemsCount = getGridPerPage(); 
 
         // 데이터 자르기 (12개씩)
-        const startIndex = (page - 1) * GRID_PER_PAGE;
-        const endIndex = startIndex + GRID_PER_PAGE;
+        const startIndex = (page - 1) * itemsCount;
+        const endIndex = startIndex + itemsCount;
         const currentItems = readingData.slice(startIndex, endIndex);
 
         // 카드 생성
