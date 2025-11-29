@@ -16,11 +16,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabMyReading = document.getElementById('tabMyReading');
     const sectionMyReading = document.getElementById('sectionMyReading');
     const readingContainer = document.getElementById('readingContainer');
+    const reviewPagination = document.getElementById('reviewPagination');
+    const readingPagination = document.getElementById('readingPagination');
+    const wishlistPagination = document.getElementById('wishlistPagination');
 
     // 페이지네이션 관련 변수
     let allReviewsData = []; // 가져온 모든 리뷰를 저장할 곳
     let currentPage = 1;     // 현재 페이지
     const itemsPerPage = 5;  // 한 페이지당 보여줄 리뷰 수
+    // 데이터 저장용 변수들 (각각 따로 관리)
+    let reviewsData = [];
+    let readingData = [];
+    let wishlistData = [];
+    // 현재 페이지 상태 (각각 따로 관리)
+    let reviewsPage = 1;
+    let readingPage = 1;
+    let wishlistPage = 1;
+    // 한 페이지당 보여줄 개수
+    const REVIEWS_PER_PAGE = 5;  // 리뷰는 5개씩
+    // 화면 너비가 768px 이하(모바일)면 6개, 아니면 12개 반환
+    function getGridPerPage() {
+        return window.innerWidth <= 768 ? 6 : 12;
+    }
 
     let currentNickname = ''; // 닉네임 저장용 변수
 
@@ -89,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return { review, reviewId, bookTitle, bookImage };
             });
 
-            // [핵심 변경] 전역 변수에 데이터를 저장하고, 1페이지를 그립니다.
+            // 전역 변수에 데이터를 저장하고, 1페이지를 그립니다.
             allReviewsData = await Promise.all(reviewsWithTitles);
             
             currentPage = 1; // 페이지 초기화
@@ -102,17 +119,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // [신규 함수] 특정 페이지의 리뷰만 화면에 그리기
+    // 내 리뷰 화면 그리기 (공통 페이지네이션 적용)
     // ----------------------------------------------------
     function renderPage(page) {
+        reviewsPage = page; // 현재 페이지 변수 업데이트
         reviewListContainer.innerHTML = ''; // 목록 비우기
 
-        // 1. 현재 페이지에 보여줄 데이터 슬라이싱
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
+        // 데이터가 없을 때 처리
+        if (allReviewsData.length === 0) {
+            reviewListContainer.innerHTML = '<p>작성하신 리뷰가 없습니다.</p>';
+            reviewPagination.innerHTML = ''; // 버튼도 비움
+            return;
+        }
+
+        // 1. 데이터 자르기 (5개씩)
+        const startIndex = (page - 1) * REVIEWS_PER_PAGE;
+        const endIndex = startIndex + REVIEWS_PER_PAGE;
         const currentItems = allReviewsData.slice(startIndex, endIndex);
 
-        // 2. 리뷰 아이템 HTML 생성
+        // 2. 리뷰 아이템 그리기
         currentItems.forEach((data) => {
             const { review, reviewId, bookTitle, bookImage } = data;
             
@@ -128,8 +153,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const reviewElement = document.createElement('div');
             reviewElement.classList.add('user-review-item');
-            
-            // 데이터 속성 설정 (수정/삭제용)
             reviewElement.dataset.reviewId = reviewId;
             reviewElement.dataset.bookIsbn = review.bookIsbn;      
             reviewElement.dataset.currentRating = review.rating; 
@@ -157,61 +180,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             reviewListContainer.appendChild(reviewElement);
         });
 
-        // 3. 버튼 이벤트 다시 연결 (새로 그려졌으므로)
+        // 3. 버튼 이벤트 다시 연결
         attachEventListeners(); 
 
-        // 4. 페이지네이션 버튼 업데이트
-        renderPagination();
-    }
-
-    // ----------------------------------------------------
-    // [신규 함수] 페이지네이션 버튼 그리기
-    // ----------------------------------------------------
-    function renderPagination() {
-        paginationContainer.innerHTML = '';
-        const totalPages = Math.ceil(allReviewsData.length / itemsPerPage);
-
-        if (totalPages <= 1) return; // 1페이지뿐이면 버튼 숨김
-
-        // (1) 이전 버튼
-        if (currentPage > 1) {
-            const prevBtn = document.createElement('button');
-            prevBtn.textContent = '«';
-            prevBtn.className = 'page-btn';
-            prevBtn.onclick = () => {
-                currentPage--;
-                renderPage(currentPage);
-            };
-            paginationContainer.appendChild(prevBtn);
-        }
-
-        // (2) 숫자 버튼
-        for (let i = 1; i <= totalPages; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-            btn.onclick = () => {
-                currentPage = i;
-                renderPage(currentPage);
-            };
-            paginationContainer.appendChild(btn);
-        }
-
-        // (3) 다음 버튼
-        if (currentPage < totalPages) {
-            const nextBtn = document.createElement('button');
-            nextBtn.textContent = '»';
-            nextBtn.className = 'page-btn';
-            nextBtn.onclick = () => {
-                currentPage++;
-                renderPage(currentPage);
-            };
-            paginationContainer.appendChild(nextBtn);
-        }
+        // 4. [핵심] 페이지네이션 버튼 생성 (이제 reviewPagination 안에 그려집니다!)
+        renderPaginationUI(allReviewsData.length, REVIEWS_PER_PAGE, page, reviewPagination, renderPage);
     }
     
-    
-    // 3. 수정/삭제 버튼 (로딩 적용)
+    // ----------------------------------------------------
+    // 수정/삭제 버튼
+    // ----------------------------------------------------
     function attachEventListeners() {
         // [수정] 버튼
         document.querySelectorAll('.edit-btn').forEach(btn => {
@@ -412,6 +390,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 hideButtonLoading(deleteAccountBtn);
             }
         });
+    }
+
+    // ----------------------------------------------------
+    // 페이지네이션 버튼 그리기 함수
+    // ----------------------------------------------------
+    function renderPaginationUI(totalItems, itemsPerPage, currentPage, targetContainer, renderFunction) {
+        targetContainer.innerHTML = '';
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        if (totalPages <= 1) return; // 1페이지뿐이면 버튼 숨김
+
+        // (1) 이전 버튼
+        if (currentPage > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '«';
+            prevBtn.className = 'page-btn';
+            prevBtn.onclick = () => renderFunction(currentPage - 1);
+            targetContainer.appendChild(prevBtn);
+        }
+
+        // (2) 숫자 버튼
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            btn.onclick = () => renderFunction(i);
+            targetContainer.appendChild(btn);
+        }
+
+        // (3) 다음 버튼
+        if (currentPage < totalPages) {
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = '»';
+            nextBtn.className = 'page-btn';
+            nextBtn.onclick = () => renderFunction(currentPage + 1);
+            targetContainer.appendChild(nextBtn);
+        }
     }
     
     // ----------------------------------------------------
@@ -614,24 +629,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 찜 목록
     // ----------------------------------------------------
 
-    // 찜 목록 불러오기 함수 정의
-async function fetchMyWishlist() {
-    if (!auth.currentUser) return;
-    
-    wishlistContainer.innerHTML = '<p>불러오는 중...</p>';
-    
-    try {
-        const res = await fetch(`${serverUrl}/api/wishlist/my?userId=${auth.currentUser.email}`);
-        const books = await res.json();
+    // [읽고 싶어요] 데이터 가져오기
+    async function fetchMyWishlist() {
+        if (!auth.currentUser) return;
+        wishlistContainer.innerHTML = '<p>불러오는 중...</p>';
+        
+        try {
+            const res = await fetch(`${serverUrl}/api/wishlist/my?userId=${auth.currentUser.email}`);
+            const books = await res.json();
 
-        if (books.length === 0) {
+            // 데이터 저장
+            wishlistData = books;
+            
+            // 1페이지 그리기
+            renderWishlistPage(1);
+
+        } catch (e) {
+            console.error(e);
+            wishlistContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
+        }
+    }
+
+    // [읽고 싶어요] 화면 그리기
+    function renderWishlistPage(page) {
+        wishlistPage = page;
+        wishlistContainer.innerHTML = '';
+
+        if (wishlistData.length === 0) {
             wishlistContainer.innerHTML = '<p>아직 찜한 책이 없습니다.</p>';
+            wishlistPagination.innerHTML = '';
             return;
         }
 
-        wishlistContainer.innerHTML = ''; // 비우기
+        const startIndex = (page - 1) * GRID_PER_PAGE;
+        const endIndex = startIndex + GRID_PER_PAGE;
+        const currentItems = wishlistData.slice(startIndex, endIndex);
         
-        books.forEach(book => {
+        const itemsCount = getGridPerPage(); 
+
+        currentItems.forEach(book => {
             const card = document.createElement('div');
             card.classList.add('wish-card');
             card.innerHTML = `
@@ -647,31 +683,25 @@ async function fetchMyWishlist() {
             wishlistContainer.appendChild(card);
         });
 
-        // 삭제 버튼 이벤트
         document.querySelectorAll('.wish-remove-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if(!confirm('찜 목록에서 삭제할까요?')) return;
-                const isbn = e.target.dataset.isbn;
-                // 토글 API 재사용 (이미 있으면 삭제되므로)
                 await fetch(`${serverUrl}/api/wishlist/toggle`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: auth.currentUser.email, isbn: isbn })
+                    body: JSON.stringify({ userId: auth.currentUser.email, isbn: e.target.dataset.isbn })
                 });
-                // 목록 다시 로드
                 fetchMyWishlist();
             });
         });
 
-    } catch (e) {
-        console.error(e);
-        wishlistContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
+        // 페이지네이션 버튼 생성
+        renderPaginationUI(wishlistData.length, itemsCount, page, wishlistPagination, renderWishlistPage);
     }
-}
     // ----------------------------------------------------
     // 읽는중 목록
     // ----------------------------------------------------
-    // 목록 가져오기 함수
+    // [읽는 중] 데이터 가져오기
     async function fetchMyReading() {
         if (!auth.currentUser) return;
         readingContainer.innerHTML = '<p>불러오는 중...</p>';
@@ -680,44 +710,80 @@ async function fetchMyWishlist() {
             const res = await fetch(`${serverUrl}/api/reading/my?userId=${auth.currentUser.email}`);
             const books = await res.json();
 
-            if (books.length === 0) {
-                readingContainer.innerHTML = '<p>읽고 있는 책이 없습니다.</p>';
-                return;
-            }
-            readingContainer.innerHTML = ''; 
+            // 데이터 전역 변수에 저장
+            readingData = books;
             
-            books.forEach(book => {
-                const card = document.createElement('div');
-                card.classList.add('wish-card');
-                card.innerHTML = `
-                    <a href="book-detail.html?isbn=${book.isbn}">
-                        <img src="${book.image}" alt="${book.title}">
-                    </a>
-                    <div class="wish-info">
-                        <p class="wish-title">${book.title}</p>
-                        <p class="wish-author">${book.author}</p>
-                        <button class="reading-remove-btn" data-isbn="${book.isbn}">삭제</button>
-                    </div>
-                `;
-                readingContainer.appendChild(card);
-            });
-            
-            // 삭제 이벤트 연결
-            document.querySelectorAll('.reading-remove-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if(!confirm('목록에서 삭제할까요?')) return;
-                    await fetch(`${serverUrl}/api/reading/toggle`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: auth.currentUser.email, isbn: e.target.dataset.isbn })
-                    });
-                    fetchMyReading(); // 새로고침
-                });
-            });
+            // 1페이지 그리기 호출
+            renderReadingPage(1); 
 
         } catch (e) {
             console.error(e);
-            readingContainer.innerHTML = '<p>오류 발생</p>';
+            readingContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
         }
     }
+
+    // [읽는 중] 화면 그리기 (페이지네이션 적용)
+    function renderReadingPage(page) {
+        readingPage = page; // 현재 페이지 업데이트
+        readingContainer.innerHTML = '';
+
+        if (readingData.length === 0) {
+            readingContainer.innerHTML = '<p>읽고 있는 책이 없습니다.</p>';
+            readingPagination.innerHTML = '';
+            return;
+        }
+
+        // 함수를 호출해서 현재 화면에 맞는 개수 가져오기
+        const itemsCount = getGridPerPage(); 
+
+        // 데이터 자르기 (12개씩)
+        const startIndex = (page - 1) * GRID_PER_PAGE;
+        const endIndex = startIndex + GRID_PER_PAGE;
+        const currentItems = readingData.slice(startIndex, endIndex);
+
+        // 카드 생성
+        currentItems.forEach(book => {
+            const card = document.createElement('div');
+            card.classList.add('wish-card');
+            card.innerHTML = `
+                <a href="book-detail.html?isbn=${book.isbn}">
+                    <img src="${book.image}" alt="${book.title}">
+                </a>
+                <div class="wish-info">
+                    <p class="wish-title">${book.title}</p>
+                    <p class="wish-author">${book.author}</p>
+                    <button class="reading-remove-btn" data-isbn="${book.isbn}">삭제</button>
+                </div>
+            `;
+            readingContainer.appendChild(card);
+        });
+
+        // 삭제 이벤트 연결
+        document.querySelectorAll('.reading-remove-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if(!confirm('목록에서 삭제할까요?')) return;
+                await fetch(`${serverUrl}/api/reading/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: auth.currentUser.email, isbn: e.target.dataset.isbn })
+                });
+                fetchMyReading(); // 데이터 다시 로드
+            });
+        });
+
+        // 페이지네이션 버튼 생성 호출
+        renderPaginationUI(readingData.length, itemsCount, page, readingPagination, renderReadingPage);
+    }
+
+    // ----------------------------------------------------
+    // 화면 크기가 바뀔 때마다 페이지네이션 다시 계산
+    // ----------------------------------------------------
+    window.addEventListener('resize', () => {
+        // 현재 보고 있는 탭에 맞춰서 다시 그리기
+        if (tabMyReading.classList.contains('active')) {
+            renderReadingPage(1); // 1페이지로 리셋하면서 다시 그림
+        } else if (tabMyWishlist.classList.contains('active')) {
+            renderWishlistPage(1);
+        }
+    });
 });
