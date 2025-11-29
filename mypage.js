@@ -708,8 +708,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             const res = await fetch(`${serverUrl}/api/reading/my?userId=${auth.currentUser.email}`);
-            const books = await res.json();
+            
+            // [▼ 수정] 바로 json() 하지 말고, 텍스트로 먼저 받아서 찍어봅시다.
+            const responseText = await res.text(); 
+            console.log("서버가 보낸 진짜 내용:", responseText); 
 
+            // 내용이 HTML(에러페이지)이면 여기서 멈춤
+            if (responseText.startsWith('<')) {
+                console.error("서버가 데이터 대신 HTML 에러 페이지를 보냈습니다. (서버 업데이트 안됨)");
+                readingContainer.innerHTML = '<p>서버 연결 오류 (404)</p>';
+                return;
+            }
+
+            const books = JSON.parse(responseText); // HTML이 아니면 JSON으로 변환
+
+            // ... (아래는 기존 코드 유지) ...
             // 데이터 전역 변수에 저장
             readingData = books;
             
@@ -717,8 +730,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderReadingPage(1); 
 
         } catch (e) {
-            console.error(e);
-            readingContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
+            console.error("상세 에러 내용:", e);
+            readingContainer.innerHTML = '<p>오류 발생</p>';
         }
     }
 
