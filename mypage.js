@@ -552,51 +552,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     // 탭
     // ----------------------------------------------------
-        // 탭 전환 이벤트 리스너 추가
+    // 1. [내 리뷰] 탭 클릭 시
     tabMyReviews.addEventListener('click', () => {
+        // 1. 스타일 활성화/비활성화
         tabMyReviews.classList.add('active');
-        tabMyWishlist.classList.remove('active');
+        tabMyReading.classList.remove('active');   // [추가됨] 읽는 중 끄기
+        tabMyWishlist.classList.remove('active');  // 읽고 싶어요 끄기
+
+        // 2. 섹션 보이기/숨기기
         sectionMyReviews.style.display = 'block';
+        sectionMyReading.style.display = 'none';   // [추가됨] 읽는 중 숨기기
         sectionMyWishlist.style.display = 'none';
+
+        // 3. 멘트 변경
         if (currentNickname) {
-        userStatusElement.textContent = `${currentNickname} 님의 리뷰 목록입니다.`;
+            userStatusElement.textContent = `${currentNickname} 님의 리뷰 목록입니다.`;
         }
     });
 
-    // 읽는 중 탭 클릭 이벤트
+    // 2. [읽는 중] 탭 클릭 시
     tabMyReading.addEventListener('click', () => {
-        // 탭 활성화 스타일
+        // 1. 스타일 활성화/비활성화
         tabMyReading.classList.add('active');
-        tabMyReviews.classList.remove('active');
-        tabMyWishlist.classList.remove('active');
+        tabMyReviews.classList.remove('active');   // 내 리뷰 끄기
+        tabMyWishlist.classList.remove('active');  // 읽고 싶어요 끄기
         
-        // 섹션 표시
-        sectionMyReading.style.display = 'grid'; // grid로 표시
+        // 2. 섹션 보이기/숨기기
+        sectionMyReading.style.display = 'grid';   
         sectionMyReviews.style.display = 'none';
         sectionMyWishlist.style.display = 'none';
 
+        // 3. 멘트 변경
         if (currentNickname) {
             userStatusElement.textContent = `${currentNickname} 님이 읽고 있는 책입니다.`;
         }
         
-        fetchMyReading(); // 목록 가져오기 함수 호출
+        fetchMyReading(); // 데이터 가져오기
     });
 
-    // ----------------------------------------------------
-    // 마이페이지 문구
-    // ----------------------------------------------------
+    // 3. [읽고 싶어요] 탭 클릭 시
     tabMyWishlist.addEventListener('click', () => {
+        // 1. 스타일 활성화/비활성화
         tabMyWishlist.classList.add('active');
-        tabMyReviews.classList.remove('active');
+        tabMyReviews.classList.remove('active');   // 내 리뷰 끄기
+        tabMyReading.classList.remove('active');   // [추가됨] 읽는 중 끄기
+
+        // 2. 섹션 보이기/숨기기
+        sectionMyWishlist.style.display = 'grid';  // 책장 모양(grid)으로 보이기
         sectionMyReviews.style.display = 'none';
-        sectionMyWishlist.style.display = 'block';
-        // 문구를 '읽고 싶은 책'으로 변경
+        sectionMyReading.style.display = 'none';   // [추가됨] 읽는 중 숨기기
+        
+        // 3. 멘트 변경
         if (currentNickname) {
             userStatusElement.textContent = `${currentNickname} 님이 읽고 싶은 책들입니다.`;
         }
         
-    // 찜 목록 불러오기 함수 호출
-    fetchMyWishlist(); 
+        fetchMyWishlist(); // 데이터 가져오기
     });
 
     // ----------------------------------------------------
