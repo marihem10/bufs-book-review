@@ -215,23 +215,20 @@ app.get('/api/my-reviews', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 리뷰 삭제
+// [API 11] 리뷰 삭제 (+ 답글까지 함께 삭제)
 // ------------------------------------------------------------------
 app.delete('/api/review-delete', async (req, res) => { 
-        
-    // 1. URL 쿼리 파라미터에서 정보 추출
     const { reviewId, bookIsbn } = req.query;
     const deletedRating = parseInt(req.query.deletedRating);
 
-    // 2. 데이터 유효성 검사
     if (!reviewId || !bookIsbn || isNaN(deletedRating)) {
-        return res.status(400).json({ error: '필수 삭제 정보(reviewId, bookIsbn, rating)가 누락되었습니다.' });
+        return res.status(400).json({ error: '정보 부족' });
     }
 
-    console.log(`[리뷰 삭제 요청] reviewId: ${reviewId}, bookIsbn: ${bookIsbn}, rating: ${deletedRating}`);
+    console.log(`[리뷰 삭제 요청] reviewId: ${reviewId}`);
 
     try {
-        // 1단계: books 컬렉션 통계 업데이트
+        // 1. 책 통계 업데이트 (기존 로직)
         const bookRef = db.collection('books').doc(bookIsbn);
         const bookDoc = await bookRef.get();
 
@@ -244,30 +241,31 @@ app.delete('/api/review-delete', async (req, res) => {
                 const newReviews = currentReviews - 1;
                 const newRatingSum = currentRatingSum - deletedRating;
                 const newAverageRating = (newReviews > 0) ? (newRatingSum / newReviews) : 0;
-                
-                console.log(`[리뷰 삭제 - 1단계] ${bookIsbn} 통계 업데이트 중...`);
-                await bookRef.update({
-                    reviews: newReviews,
-                    ratingSum: newRatingSum,
-                    averageRating: newAverageRating
-                });
-            } else {
-                console.log(`[리뷰 삭제 - 1단계] ${bookIsbn} 리뷰가 0이라 통계 업데이트 스킵.`);
+                await bookRef.update({ reviews: newReviews, ratingSum: newRatingSum, averageRating: newAverageRating });
             }
-        } else {
-            console.warn(`[리뷰 삭제 - 1단계 경고] ${bookIsbn} 책 통계 문서를 찾을 수 없습니다.`);
         }
 
-        // 2단계: reviews 컬렉션에서 해당 리뷰 문서 삭제
-        console.log(`[리뷰 삭제 - 2단계] ${reviewId} 리뷰 삭제 중...`);
-        await db.collection('reviews').doc(reviewId).delete();
+        // 2. [신규 추가] 해당 리뷰에 달린 '답글(replies)' 모두 삭제
+        const repliesRef = db.collection('reviews').doc(reviewId).collection('replies');
+        const repliesSnapshot = await repliesRef.get();
 
-        console.log(`[리뷰 삭제 성공] ${reviewId} 처리 완료.`);
-        res.status(200).json({ message: '리뷰 삭제 및 통계 업데이트가 성공적으로 완료되었습니다.' });
+        if (!repliesSnapshot.empty) {
+            const batch = db.batch(); // 일괄 처리를 위해 배치 생성
+            repliesSnapshot.forEach(doc => {
+                batch.delete(doc.ref); // 답글 문서 삭제 명령 추가
+            });
+            await batch.commit(); // 실행
+            console.log(`[리뷰 삭제] 연관된 답글 ${repliesSnapshot.size}개 삭제 완료`);
+        }
+
+        // 3. 리뷰 본문 삭제
+        await db.collection('reviews').doc(reviewId).delete();
+        
+        res.status(200).json({ message: '리뷰와 답글이 모두 삭제되었습니다.' });
 
     } catch (error) {
-        console.error('서버 측 리뷰 삭제 오류:', error.message);
-        res.status(500).json({ error: '서버 오류로 인해 리뷰 삭제에 실패했습니다.', details: error.message });
+        console.error('리뷰 삭제 오류:', error);
+        res.status(500).json({ error: '서버 오류' });
     }
 });
 
@@ -834,6 +832,8 @@ app.delete('/api/reply-delete', async (req, res) => {
         res.status(500).json({ error: '서버 오류' });
     }
 });
+
+
 
 // ------------------------------------------------------------------
 // [서버 시작]
