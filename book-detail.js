@@ -484,7 +484,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             hideButtonLoading(submitReviewBtn); 
         }
     });
-});
 
     // ----------------------------------------------------
     // 찜하기 버튼 기능 설정 함수
@@ -552,3 +551,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
+});

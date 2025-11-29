@@ -479,8 +479,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-});
-
     // ----------------------------------------------------
     // 알림 불러오기 및 삭제 함수
     // ----------------------------------------------------
@@ -622,3 +620,4 @@ async function fetchMyWishlist() {
         wishlistContainer.innerHTML = '<p>목록을 불러오지 못했습니다.</p>';
     }
 }
+});
