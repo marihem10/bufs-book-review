@@ -1638,7 +1638,7 @@ a.nav-button {
     color: #666;
     margin-bottom: 5px;
 }
-.wish-remove-btn {
+.wish-remove-btn, .reading-remove-btn {
     background-color: #d1d1d1;
     border: none;
     padding: 3px 8px;
@@ -1647,7 +1647,7 @@ a.nav-button {
     cursor: pointer;
     color: #555;
 }
-.wish-remove-btn:hover {
+.wish-remove-btn:hover, .reading-remove-btn:hover {
     background-color: #ffcccc;
     color: #d00;
 }
@@ -1692,6 +1692,13 @@ a.nav-button {
         margin-top: 8px !important;
         border-width: 1px !important;
     }
+}
+
+/* 페이지네이션 버튼이 없을 때는 아예 안 보이게 처리 (빈 공간 삭제) */
+.pagination:empty {
+    display: none;
+    margin: 0;
+    padding: 0;
 }
 
 /* ========================================= */
