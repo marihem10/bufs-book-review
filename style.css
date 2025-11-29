@@ -1814,3 +1814,8 @@ a.nav-button {
 .nav-button:hover {
     background-color: rgba(255, 255, 255, 0.4);
 }
+
+#myPagePagination {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

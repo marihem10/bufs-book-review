@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const serverUrl = 'https://bufs-book-review.onrender.com'; 
     const reviewListContainer = document.getElementById('reviewList');
     const userStatusElement = document.getElementById('userStatus');
+    const paginationContainer = document.getElementById('myPagePagination'); // 페이지네이션 요소
+
+    // 페이지네이션 관련 변수
+    let allReviewsData = []; // 가져온 모든 리뷰를 저장할 곳
+    let currentPage = 1;     // 현재 페이지
+    const itemsPerPage = 5;  // 한 페이지당 보여줄 리뷰 수
 
     function showButtonLoading(button, text = '로딩중...') {
         button.disabled = true;
@@ -38,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // 2. 리뷰 가져오기
+    // 2. 리뷰 데이터 가져오기 (수정됨: 그리기 로직 분리)
     // ----------------------------------------------------
     async function fetchUserReviews(userUid) { 
         reviewListContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
@@ -53,80 +59,143 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (querySnapshot.empty) {
                 reviewListContainer.innerHTML = '<p>작성하신 리뷰가 없습니다.</p>';
+                paginationContainer.innerHTML = ''; // 페이지네이션도 비움
                 return;
             }
 
+            // 데이터를 먼저 다 가공해서 배열에 담습니다.
             const reviewsWithTitles = querySnapshot.docs.map(async (doc_snapshot) => {
                 const review = doc_snapshot.data();
                 const reviewId = doc_snapshot.id;
                 
-                // 책 상세 정보 가져오기
+                // 책 정보 가져오기
                 const response = await fetch(`${serverUrl}/api/book-detail?isbn=${review.bookIsbn}`);
                 const bookDetail = await response.json();
                 
                 const bookTitle = bookDetail.title || '책 제목을 찾을 수 없음';
-                // [신규] 이미지 정보 가져오기 (없으면 기본 이미지)
                 const bookImage = bookDetail.image || 'https://via.placeholder.com/120x170?text=No+Image';
 
                 return { review, reviewId, bookTitle, bookImage };
             });
 
-            const finalReviews = await Promise.all(reviewsWithTitles);
+            // [핵심 변경] 전역 변수에 데이터를 저장하고, 1페이지를 그립니다.
+            allReviewsData = await Promise.all(reviewsWithTitles);
             
-            reviewListContainer.innerHTML = ''; 
+            currentPage = 1; // 페이지 초기화
+            renderPage(currentPage); // 1페이지 그리기 함수 호출
 
-            finalReviews.forEach((data) => {
-                const { review, reviewId, bookTitle, bookImage } = data;
-                
-                let date = '날짜 없음';
-                if (review.timestamp) {
-                    if (typeof review.timestamp.toDate === 'function') { 
-                        date = review.timestamp.toDate().toLocaleString('ko-KR');
-                    } else { 
-                        date = new Date(review.timestamp).toLocaleString('ko-KR');
-                    }
-                }
-                
-                const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-
-                const reviewElement = document.createElement('div');
-                reviewElement.classList.add('user-review-item');
-                
-                reviewElement.dataset.reviewId = reviewId;
-                reviewElement.dataset.bookIsbn = review.bookIsbn;      
-                reviewElement.dataset.currentRating = review.rating; 
-                reviewElement.dataset.originalComment = review.comment;
-
-                // [핵심 수정] Flexbox 구조로 변경 (이미지 왼쪽, 텍스트 오른쪽)
-                reviewElement.innerHTML = `
-                    <div class="review-left">
-                        <a href="book-detail.html?isbn=${review.bookIsbn}">
-                            <img src="${bookImage}" alt="${bookTitle}" class="review-book-img">
-                        </a>
-                    </div>
-                    <div class="review-right">
-                        <a href="book-detail.html?isbn=${review.bookIsbn}" class="book-title-link">
-                            <h3 class="review-book-title">${bookTitle}</h3>
-                        </a>
-                        <p class="review-date">${date}</p>
-                        <p class="review-rating">${starsHtml}</p>
-                        <p class="review-comment">${review.comment}</p>
-                        <div class="review-buttons">
-                            <button class="edit-btn">수정</button>
-                            <button class="delete-btn">삭제</button>
-                        </div>
-                    </div>
-                `;
-                reviewListContainer.appendChild(reviewElement);
-            });
-
-            attachEventListeners(); 
         } catch (e) {
-            reviewListContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다.</p>';
             console.error("리뷰 목록 가져오기 실패:", e);
-            if (e.code === 'failed-precondition') {
-                 reviewListContainer.innerHTML = '<p>(관리자) Firebase 색인이 필요합니다. F12 콘솔을 확인하세요.</p>';
+            reviewListContainer.innerHTML = '<p>리뷰 목록을 불러오는 데 실패했습니다.</p>';
+        }
+    }
+
+    // ----------------------------------------------------
+    // [신규 함수] 특정 페이지의 리뷰만 화면에 그리기
+    // ----------------------------------------------------
+    function renderPage(page) {
+        reviewListContainer.innerHTML = ''; // 목록 비우기
+
+        // 1. 현재 페이지에 보여줄 데이터 슬라이싱
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const currentItems = allReviewsData.slice(startIndex, endIndex);
+
+        // 2. 리뷰 아이템 HTML 생성
+        currentItems.forEach((data) => {
+            const { review, reviewId, bookTitle, bookImage } = data;
+            
+            let date = '날짜 없음';
+            if (review.timestamp) {
+                if (typeof review.timestamp.toDate === 'function') { 
+                    date = review.timestamp.toDate().toLocaleString('ko-KR');
+                } else { 
+                    date = new Date(review.timestamp).toLocaleString('ko-KR');
+                }
             }
+            const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
+            const reviewElement = document.createElement('div');
+            reviewElement.classList.add('user-review-item');
+            
+            // 데이터 속성 설정 (수정/삭제용)
+            reviewElement.dataset.reviewId = reviewId;
+            reviewElement.dataset.bookIsbn = review.bookIsbn;      
+            reviewElement.dataset.currentRating = review.rating; 
+            reviewElement.dataset.originalComment = review.comment;
+
+            reviewElement.innerHTML = `
+                <div class="review-left">
+                    <a href="book-detail.html?isbn=${review.bookIsbn}">
+                        <img src="${bookImage}" alt="${bookTitle}" class="review-book-img">
+                    </a>
+                </div>
+                <div class="review-right">
+                    <a href="book-detail.html?isbn=${review.bookIsbn}" class="book-title-link">
+                        <h3 class="review-book-title">${bookTitle}</h3>
+                    </a>
+                    <p class="review-date">${date}</p>
+                    <p class="review-rating">${starsHtml}</p>
+                    <p class="review-comment">${review.comment}</p>
+                    <div class="review-buttons">
+                        <button class="edit-btn">수정</button>
+                        <button class="delete-btn">삭제</button>
+                    </div>
+                </div>
+            `;
+            reviewListContainer.appendChild(reviewElement);
+        });
+
+        // 3. 버튼 이벤트 다시 연결 (새로 그려졌으므로)
+        attachEventListeners(); 
+
+        // 4. 페이지네이션 버튼 업데이트
+        renderPagination();
+    }
+
+    // ----------------------------------------------------
+    // [신규 함수] 페이지네이션 버튼 그리기
+    // ----------------------------------------------------
+    function renderPagination() {
+        paginationContainer.innerHTML = '';
+        const totalPages = Math.ceil(allReviewsData.length / itemsPerPage);
+
+        if (totalPages <= 1) return; // 1페이지뿐이면 버튼 숨김
+
+        // (1) 이전 버튼
+        if (currentPage > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '«';
+            prevBtn.className = 'page-btn';
+            prevBtn.onclick = () => {
+                currentPage--;
+                renderPage(currentPage);
+            };
+            paginationContainer.appendChild(prevBtn);
+        }
+
+        // (2) 숫자 버튼
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            btn.onclick = () => {
+                currentPage = i;
+                renderPage(currentPage);
+            };
+            paginationContainer.appendChild(btn);
+        }
+
+        // (3) 다음 버튼
+        if (currentPage < totalPages) {
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = '»';
+            nextBtn.className = 'page-btn';
+            nextBtn.onclick = () => {
+                currentPage++;
+                renderPage(currentPage);
+            };
+            paginationContainer.appendChild(nextBtn);
         }
     }
     
