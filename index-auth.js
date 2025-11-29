@@ -1,5 +1,3 @@
-// index-auth.js (최종 안정화 버전)
-
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -944,7 +944,49 @@ app.get('/api/wishlist/my', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [수정됨] 읽는 중(Reading) 토글 (+ 카운트 기능 추가)
+// 읽는 중 여부 확인
+// ------------------------------------------------------------------
+app.get('/api/reading/check', async (req, res) => {
+    const { userId, isbn } = req.query;
+    if (!userId || !isbn) return res.json({ isReading: false });
+
+    try {
+        const snapshot = await db.collection('readings')
+            .where('userId', '==', userId)
+            .where('isbn', '==', isbn)
+            .get();
+        res.json({ isReading: !snapshot.empty });
+    } catch (error) {
+        res.json({ isReading: false });
+    }
+});
+
+// ------------------------------------------------------------------
+// 내 읽는 중 목록 가져오기
+// ------------------------------------------------------------------
+app.get('/api/reading/my', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'User ID 누락' });
+
+    try {
+        const snapshot = await db.collection('readings')
+            .where('userId', '==', userId)
+            .orderBy('timestamp', 'desc')
+            .get();
+
+        if (snapshot.empty) return res.json([]);
+        
+        const books = [];
+        snapshot.forEach(doc => books.push(doc.data()));
+        res.json(books);
+    } catch (error) {
+        console.error('읽는 중 목록 로딩 오류:', error);
+        res.json([]); 
+    }
+});
+
+// ------------------------------------------------------------------
+// 읽는 중(Reading) 토글 (+ 카운트 기능 추가)
 // ------------------------------------------------------------------
 app.post('/api/reading/toggle', async (req, res) => {
     const { userId, isbn, title, image, author } = req.body;
