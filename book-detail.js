@@ -57,11 +57,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     async function fetchBookDetails(isbn) {
         try {
+            // 1. 네이버 API 정보 가져오기 (기존 코드)
             const response = await fetch(`${serverUrl}/api/book-detail?isbn=${isbn}`);
-            const book = await response.json();
+            let book = await response.json();
+
             if (book.error) {
                 bookDetailContainer.innerHTML = `<h2>${book.error}</h2>`;
                 return null;
+            }
+             // 2. 우리 DB(Firestore)에서 카운트 정보 가져오기
+            const bookDocRef = doc(db, "books", isbn);
+            const bookSnap = await getDoc(bookDocRef);
+            
+            if (bookSnap.exists()) {
+                const dbData = bookSnap.data();
+                // 네이버 정보에 우리 DB 정보(카운트) 덮어씌우기
+                book = { 
+                    ...book, 
+                    readingCount: dbData.readingCount || 0,
+                    wishlistCount: dbData.wishlistCount || 0 
+                };
             }
             return book;
         } catch (error) {
@@ -361,10 +376,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>평균 별점:</strong> <span class="average-rating-stars">${starsHtml}</span> (${ratingDisplay}/5.0)</p>
                 <p><strong>총 리뷰 수:</strong> ${totalReviews}개</p>
                 <div style="display: flex; gap: 10px;">
-                    <button id="readingBtn" class="reading-btn">읽는 중</button>
-                    <button id="wishlistBtn" class="wishlist-btn">읽고 싶어요</button>
+                    <button id="readingBtn" class="reading-btn">
+                        읽는 중 <span id="readingCount">(${book.readingCount || 0})</span>
+                    </button>
+                    <button id="wishlistBtn" class="wishlist-btn">
+                        읽고 싶어요 <span id="wishlistCount">(${book.wishlistCount || 0})</span>
+                    </button>
                 </div>
-                </button>
             </div>
         `;
         setupWishlistFunctioncr(book); // 읽고 싶어요 기능 연결
@@ -525,6 +543,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 const result = await response.json();
                 updateWishlistButtonUI(result.isWished); // 화면 업데이트
+                document.getElementById('wishlistCount').textContent = `(${result.newCount})`; 
 
             } catch (e) {
                 console.error("찜하기 오류:", e);
@@ -543,14 +562,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch(e) { console.error(e); }
         }
 
-        // 내부 함수: 버튼 모양 바꾸기 (초록색 책갈피)
+        // 내부 함수
         function updateWishlistButtonUI(isWished) {
+        const countSpan = document.getElementById('wishlistCount'); // 기존 숫자 유지
+        const countText = countSpan ? countSpan.textContent : '(0)';
+        
             if (isWished) {
                 wishlistBtn.classList.add('active');
-                wishlistBtn.innerHTML = `<span class="icon-area">서재에 담김`; // 문구 변경
+                wishlistBtn.innerHTML = `서재에 담김 <span id="wishlistCount">${countText}</span>`;
             } else {
                 wishlistBtn.classList.remove('active');
-                wishlistBtn.innerHTML = `<span class="icon-area">읽고 싶어요`; // 문구 변경
+                wishlistBtn.innerHTML = `읽고 싶어요 <span id="wishlistCount">${countText}</span>`;
             }
         }
     }
@@ -586,6 +608,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const result = await response.json();
             updateReadingUI(result.isReading);
+            document.getElementById('readingCount').textContent = `(${result.newCount})`;
         } catch (e) {
             console.error(e);
             alert('오류 발생');
@@ -602,13 +625,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch(e) {}
     }
 
+    // 내부 함수
     function updateReadingUI(isReading) {
+        const countSpan = document.getElementById('readingCount');
+        const countText = countSpan ? countSpan.textContent : '(0)';
+
         if (isReading) {
             readingBtn.classList.add('active');
-            readingBtn.innerHTML = `읽는 중...`; 
+            readingBtn.innerHTML = `읽는 중... <span id="readingCount">${countText}</span>`;
         } else {
             readingBtn.classList.remove('active');
-            readingBtn.innerHTML = `읽는 중`; 
+            readingBtn.innerHTML = `읽는 중 <span id="readingCount">${countText}</span>`;
         }
     }
 }

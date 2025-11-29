@@ -834,7 +834,7 @@ app.delete('/api/reply-delete', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 찜하기(Wishlist) 토글 (추가/삭제)
+// 찜하기 토글
 // ------------------------------------------------------------------
 app.post('/api/wishlist/toggle', async (req, res) => {
     const { userId, isbn, title, image, author } = req.body;
@@ -842,33 +842,61 @@ app.post('/api/wishlist/toggle', async (req, res) => {
 
     try {
         const wishlistRef = db.collection('wishlists');
-        // 이미 찜했는지 확인 (userId와 isbn으로 복합 쿼리)
+        const bookRef = db.collection('books').doc(isbn); // 책 정보 문서
+
         const snapshot = await wishlistRef
             .where('userId', '==', userId)
             .where('isbn', '==', isbn)
             .get();
 
+        const batch = db.batch(); // 일괄 처리 (안전하게)
+
+        let isWished = false;
+        let message = '';
+        let change = 0; // 숫자 변화량
+
         if (!snapshot.empty) {
-            // 이미 존재하면 -> 삭제 (찜 취소)
-            snapshot.forEach(doc => doc.ref.delete());
-            return res.json({ isWished: false, message: '찜하기가 취소되었습니다.' });
+            // [취소] 찜 삭제 및 카운트 -1
+            snapshot.forEach(doc => batch.delete(doc.ref));
+            isWished = false;
+            message = '찜하기가 취소되었습니다.';
+            change = -1;
         } else {
-            // 없으면 -> 추가 (찜하기)
-            await wishlistRef.add({
-                userId,
-                isbn,
-                title: title || '제목 없음',
-                image: image || '',
-                author: author || '',
+            // [추가] 찜 추가 및 카운트 +1
+            // 1. 책 문서가 없을 수도 있으니 먼저 안전하게 생성/업데이트
+            await bookRef.set({
+                isbn, title: title || '', image: image || '', author: author || ''
+            }, { merge: true });
+
+            const newDocRef = wishlistRef.doc();
+            batch.set(newDocRef, {
+                userId, isbn, title, image, author,
                 timestamp: FieldValue.serverTimestamp()
             });
-            return res.json({ isWished: true, message: '책을 찜했습니다!' });
+            isWished = true;
+            message = '책을 찜했습니다!';
+            change = 1;
         }
+
+        // 책 문서의 wishlistCount 필드 업데이트
+        batch.update(bookRef, {
+            wishlistCount: FieldValue.increment(change)
+        });
+
+        await batch.commit(); // 저장 실행
+
+        // 최신 카운트 값을 가져와서 반환 (화면 업데이트용)
+        const updatedBookDoc = await bookRef.get();
+        const newCount = updatedBookDoc.data().wishlistCount || 0;
+
+        return res.json({ isWished, message, newCount });
+
     } catch (error) {
         console.error('찜하기 토글 오류:', error);
         res.status(500).json({ error: '서버 오류' });
     }
 });
+
 
 // ------------------------------------------------------------------
 // 특정 책 찜 여부 확인 (상세페이지용)
@@ -916,73 +944,63 @@ app.get('/api/wishlist/my', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 읽는 중 토글
+// [수정됨] 읽는 중(Reading) 토글 (+ 카운트 기능 추가)
 // ------------------------------------------------------------------
 app.post('/api/reading/toggle', async (req, res) => {
     const { userId, isbn, title, image, author } = req.body;
     if (!userId || !isbn) return res.status(400).json({ error: '정보 부족' });
 
     try {
-        const readingRef = db.collection('readings'); // 컬렉션 이름: readings
+        const readingRef = db.collection('readings');
+        const bookRef = db.collection('books').doc(isbn);
+
         const snapshot = await readingRef
             .where('userId', '==', userId)
             .where('isbn', '==', isbn)
             .get();
 
+        const batch = db.batch();
+        let isReading = false;
+        let message = '';
+        let change = 0;
+
         if (!snapshot.empty) {
-            snapshot.forEach(doc => doc.ref.delete());
-            return res.json({ isReading: false, message: '독서 상태가 취소되었습니다.' });
+            // [취소]
+            snapshot.forEach(doc => batch.delete(doc.ref));
+            isReading = false;
+            message = '독서 상태가 취소되었습니다.';
+            change = -1;
         } else {
-            await readingRef.add({
-                userId,
-                isbn,
-                title: title || '제목 없음',
-                image: image || '',
-                author: author || '',
+            // [추가]
+            await bookRef.set({
+                isbn, title, image, author
+            }, { merge: true });
+
+            const newDocRef = readingRef.doc();
+            batch.set(newDocRef, {
+                userId, isbn, title, image, author,
                 timestamp: FieldValue.serverTimestamp()
             });
-            return res.json({ isReading: true, message: '읽는 중인 책으로 등록했습니다!' });
+            isReading = true;
+            message = '읽는 중인 책으로 등록했습니다!';
+            change = 1;
         }
+
+        // 책 문서의 readingCount 필드 업데이트
+        batch.update(bookRef, {
+            readingCount: FieldValue.increment(change)
+        });
+
+        await batch.commit();
+
+        const updatedBookDoc = await bookRef.get();
+        const newCount = updatedBookDoc.data().readingCount || 0;
+
+        return res.json({ isReading, message, newCount });
+
     } catch (error) {
         console.error('읽는 중 토글 오류:', error);
         res.status(500).json({ error: '서버 오류' });
-    }
-});
-
-// 읽는 중 여부 확인
-app.get('/api/reading/check', async (req, res) => {
-    const { userId, isbn } = req.query;
-    if (!userId || !isbn) return res.json({ isReading: false });
-
-    try {
-        const snapshot = await db.collection('readings')
-            .where('userId', '==', userId)
-            .where('isbn', '==', isbn)
-            .get();
-        res.json({ isReading: !snapshot.empty });
-    } catch (error) {
-        res.json({ isReading: false });
-    }
-});
-
-// 내 읽는 중 목록 가져오기
-app.get('/api/reading/my', async (req, res) => {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: 'User ID 누락' });
-
-    try {
-        const snapshot = await db.collection('readings')
-            .where('userId', '==', userId)
-            .orderBy('timestamp', 'desc')
-            .get();
-
-        if (snapshot.empty) return res.json([]);
-        const books = [];
-        snapshot.forEach(doc => books.push(doc.data()));
-        res.json(books);
-    } catch (error) {
-        console.error('읽는 중 목록 로딩 오류:', error);
-        res.json([]); 
     }
 });
 
