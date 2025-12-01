@@ -2102,4 +2102,26 @@ a.nav-button {
         border-width: 2px !important;
         margin: 0 auto 10px auto !important; /* 중앙 정렬 */
     }
+    /* 읽는 중 & 읽고 싶어요 컨테이너 안의 p 태그 */
+    #readingContainer p, 
+    #wishlistContainer p {
+        text-align: center !important;  /* 무조건 가운데 정렬 */
+        width: 100% !important;         /* 가로 꽉 채우기 */
+        margin: 30px auto !important;   /* 위아래 여백 */
+        display: block !important;      /* 블록 요소로 만들기 */
+        float: none !important;         /* 둥둥 떠다니지 않게 */
+    }
+    
+    /* 혹시 grid 때문에 꼬일 수 있으니 컨테이너도 잡아주기 */
+    #readingContainer > p, 
+    #wishlistContainer > p {
+    text-align: center !important;
+    width: 100% !important;
+    margin: 40px auto !important;
+    font-size: 14px !important;
+    color: #ffffff !important;
+    
+    /* 그리드 안에서도 혼자서 전체 칸을 다 쓰도록 설정 */
+    grid-column: 1 / -1 !important;
+    }
 }
