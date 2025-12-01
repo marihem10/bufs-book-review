@@ -1688,6 +1688,27 @@ a.nav-button {
     margin: 0;
     padding: 0;
 }
+#readingContainer p, 
+    #wishlistContainer p {
+        text-align: center !important;  /* 무조건 가운데 정렬 */
+        width: 100% !important;         /* 가로 꽉 채우기 */
+        margin: 30px auto !important;   /* 위아래 여백 */
+        display: block !important;      /* 블록 요소로 만들기 */
+        float: none !important;         /* 둥둥 떠다니지 않게 */
+    }
+    
+    /* 혹시 grid 때문에 꼬일 수 있으니 컨테이너도 잡아주기 */
+    #readingContainer > p, 
+    #wishlistContainer > p {
+    text-align: center !important;
+    width: 100% !important;
+    margin: 40px auto !important;
+    font-size: 18px !important;
+    color: #ffffff !important;
+    
+    /* 그리드 안에서도 혼자서 전체 칸을 다 쓰도록 설정 */
+    grid-column: 1 / -1 !important;
+    } 
 
 /* ========================================= */
 /* 📱 모바일 최적화 (Max Width: 768px)       */
