@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             userStatusElement.textContent = `${displayName} 님의 리뷰 목록입니다.`; // 기본 문구
             fetchUserReviews(user.uid, db);
             
-            // [신규] 알림 불러오기 함수 호출
+            // 알림 불러오기 함수 호출
             fetchNotifications(user.uid); 
         } else {
             userStatusElement.innerHTML = '로그인이 필요합니다. <a href="auth.html">로그인 페이지로 이동</a>';
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // 2. 리뷰 데이터 가져오기 (수정됨: 그리기 로직 분리)
+    // 2. 리뷰 데이터 가져오기
     // ----------------------------------------------------
     async function fetchUserReviews(userUid) { 
         reviewListContainer.innerHTML = '<h4>리뷰를 불러오는 중입니다...</h4>';
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // 데이터를 먼저 다 가공해서 배열에 담습니다.
+            // 데이터를 먼저 다 가공해서 배열에 담기
             const reviewsWithTitles = querySnapshot.docs.map(async (doc_snapshot) => {
                 const review = doc_snapshot.data();
                 const reviewId = doc_snapshot.id;
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return { review, reviewId, bookTitle, bookImage };
             });
 
-            // 전역 변수에 데이터를 저장하고, 1페이지를 그립니다.
+            // 전역 변수에 데이터를 저장하고, 1페이지를 그리기
             allReviewsData = await Promise.all(reviewsWithTitles);
             
             currentPage = 1; // 페이지 초기화
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // 내 리뷰 화면 그리기 (공통 페이지네이션 적용)
+    // 내 리뷰 화면 그리기
     // ----------------------------------------------------
     function renderPage(page) {
         reviewsPage = page; // 현재 페이지 변수 업데이트
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // 1. 데이터 자르기 (5개씩)
+        // 1. 데이터 자르기
         const startIndex = (page - 1) * REVIEWS_PER_PAGE;
         const endIndex = startIndex + REVIEWS_PER_PAGE;
         const currentItems = allReviewsData.slice(startIndex, endIndex);
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. 버튼 이벤트 다시 연결
         attachEventListeners(); 
 
-        // 4. [핵심] 페이지네이션 버튼 생성 (이제 reviewPagination 안에 그려집니다!)
+        // 4. 페이지네이션 버튼 생성 reviewPagination 안에 그려짐
         renderPaginationUI(allReviewsData.length, REVIEWS_PER_PAGE, page, reviewPagination, renderPage);
     }
     
@@ -709,7 +709,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch(`${serverUrl}/api/reading/my?userId=${auth.currentUser.email}`);
             
-            // [▼ 수정] 바로 json() 하지 말고, 텍스트로 먼저 받아서 찍어봅시다.
+            // 바로 json() 하지 말고, 텍스트로 먼저 받아서 찍기
             const responseText = await res.text(); 
             console.log("서버가 보낸 진짜 내용:", responseText); 
 
@@ -722,7 +722,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const books = JSON.parse(responseText); // HTML이 아니면 JSON으로 변환
 
-            // ... (아래는 기존 코드 유지) ...
             // 데이터 전역 변수에 저장
             readingData = books;
             
@@ -735,7 +734,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // [읽는 중] 화면 그리기 (페이지네이션 적용)
+    // [읽는 중] 화면 그리기
     function renderReadingPage(page) {
         readingPage = page; // 현재 페이지 업데이트
         readingContainer.innerHTML = '';
@@ -749,7 +748,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 함수를 호출해서 현재 화면에 맞는 개수 가져오기
         const itemsCount = getGridPerPage(); 
 
-        // 데이터 자르기 (12개씩)
+        // 데이터 자르기 12개씩
         const startIndex = (page - 1) * itemsCount;
         const endIndex = startIndex + itemsCount;
         const currentItems = readingData.slice(startIndex, endIndex);

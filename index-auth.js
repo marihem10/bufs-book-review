@@ -2,7 +2,7 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // window.auth가 HTML에서 초기화되어 있다고 가정합니다.
+    // window.auth가 HTML에서 초기화되어 있다고 가정
     const auth = window.auth; 
 
     if (!auth) {
@@ -11,12 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 인증 상태 감지 리스너
     onAuthStateChanged(auth, (user) => {
-        // [핵심]: 버튼 요소를 찾습니다.
+        // 버튼 요소를 찾기.
         const loginLink = document.querySelector('.nav-bar .main-nav-item');
         
         if (!loginLink) return; 
         
-        // 1. 기존 요소를 복제하여 이벤트 충돌을 방지하고 새 요소를 만듭니다.
+        // 1. 기존 요소를 복제하여 이벤트 충돌을 방지하고 새 요소를 만들기
         const oldLink = loginLink;
         const newLink = oldLink.cloneNode(true);
         oldLink.parentNode.replaceChild(newLink, oldLink); // 기존 요소 대체

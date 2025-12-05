@@ -1,10 +1,8 @@
-// firebase-init.js (새 파일)
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"; 
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"; 
 
-// 여러분의 Firebase 설정 정보
+// Firebase 설정 정보
 const firebaseConfig = {
             apiKey: "AIzaSyB3Aw-AhHXWbqfY_u0Sklf0fO0_VLBD_s0",
             authDomain: "authentication-c2cb0.firebaseapp.com",

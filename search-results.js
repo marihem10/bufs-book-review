@@ -66,10 +66,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchResultsContainer.innerHTML = '<p>검색 중입니다...</p>';
 
         try {
-            // [핵심] sort와 page 파라미터를 추가하여 서버에 요청
+            // sort와 page 파라미터를 추가하여 서버에 요청
             const response = await fetch(`${serverUrl}/api/search?query=${encodeURIComponent(queryText)}&sort=${currentSort}&page=${currentPage}`);
             
-            // [핵심] 서버로부터 { books, currentPage, totalPages } 객체를 받음
+            // 서버로부터 { books, currentPage, totalPages } 객체를 받음
             const data = await response.json(); 
 
             if (data.error) {
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 5. (헬퍼) 책 목록을 화면에 그리는 함수
+    // 5. 책 목록을 화면에 그리는 함수
     function displayResults(books) {
         searchResultsContainer.innerHTML = ''; // 기존 결과 비우기
         
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const bookItem = document.createElement('div');
                 bookItem.classList.add('search-result-item');
 
-                // 클릭 시 상세 페이지 이동 (기존 기능 유지)
+                // 클릭 시 상세 페이지 이동
                 bookItem.addEventListener('click', () => {
                     window.location.href = `book-detail.html?isbn=${book.isbn}`;
                 });
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 6. (헬퍼) 페이지네이션 버튼을 그리는 함수
+    // 6. 페이지네이션 버튼을 그리는 함수
     function displayPagination(page, totalPages) {
         paginationContainer.innerHTML = ''; // 기존 버튼 비우기
         
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let startPage = (currentGroup - 1) * groupSize + 1;
         let endPage = Math.min(startPage + groupSize - 1, totalPages);
 
-        // "이전" 버튼 (첫 그룹이 아닐 때)
+        // 이전 버튼 (첫 그룹이 아닐 때)
         if (currentGroup > 1) {
             paginationContainer.appendChild(createPageButton('« 이전', startPage - 1));
         }
@@ -145,13 +145,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             paginationContainer.appendChild(createPageButton(i, i, i === page));
         }
 
-        // "다음" 버튼 (마지막 그룹이 아닐 때)
+        // 다음 버튼 (마지막 그룹이 아닐 때)
         if (endPage < totalPages) {
             paginationContainer.appendChild(createPageButton('다음 »', endPage + 1));
         }
     }
 
-    // 7. (헬퍼) 페이지네이션 버튼 생성기
+    // 7. 페이지네이션 버튼 생성기
     function createPageButton(text, pageNum, isActive = false) {
         const button = document.createElement('button');
         button.textContent = text;

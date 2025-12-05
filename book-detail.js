@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateWishlistButton(isWished) {
     if (isWished) {
         wishlistBtn.classList.add('active');
-        wishlistBtn.innerHTML = `<span class="icon-area">🔖</span> 서재에 담김`;
+        wishlistBtn.innerHTML = `<span class="icon-area"></span> 서재에 담김`;
     } else {
         wishlistBtn.classList.remove('active');
-        wishlistBtn.innerHTML = `<span class="icon-area">🔖</span> 읽고 싶어요`;
+        wishlistBtn.innerHTML = `<span class="icon-area"></span> 읽고 싶어요`;
     }
 }
     function showButtonLoading(button) {
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     async function fetchBookDetails(isbn) {
         try {
-            // 1. 네이버 API 정보 가져오기 (기존 코드)
+            // 1. 네이버 API 정보 가져오기
             const response = await fetch(`${serverUrl}/api/book-detail?isbn=${isbn}`);
             let book = await response.json();
 
@@ -65,13 +65,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 bookDetailContainer.innerHTML = `<h2>${book.error}</h2>`;
                 return null;
             }
-             // 2. 우리 DB(Firestore)에서 카운트 정보 가져오기
+             // 2. Firestore에서 카운트 정보 가져오기
             const bookDocRef = doc(db, "books", isbn);
             const bookSnap = await getDoc(bookDocRef);
             
             if (bookSnap.exists()) {
                 const dbData = bookSnap.data();
-                // 네이버 정보에 우리 DB 정보(카운트) 덮어씌우기
+                // 네이버 정보에 DB 정보(카운트) 덮어씌우기
                 book = { 
                     ...book, 
                     readingCount: dbData.readingCount || 0,
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // 4. 화면에 렌더링 (기존 코드와 동일)
+            // 4. 화면에 렌더링
             reviewsData.forEach(({ id, data, replies }) => {
                 const review = data;
                 const reviewId = id;
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     date = ts.toLocaleString('ko-KR'); // 시분초 포함
                 }
                 
-                // 별점 HTML (숫자 제거됨)
+                // 별점 HTML
                 let starsHtml = '';
                 for (let i = 1; i <= 5; i++) {
                     if (review.rating >= i) starsHtml += '<span class="star filled">★</span>';
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reviewItem.innerHTML = html;
                 userReviewsContainer.appendChild(reviewItem);
 
-                // --- 이벤트 리스너 (좋아요, 답글 등) ---
+                // 이벤트 리스너 (좋아요, 답글 등)
                 const likeBtn = reviewItem.querySelector('.like-btn');
                 likeBtn.addEventListener('click', async () => {
                     const curUser = auth.currentUser;
@@ -449,9 +449,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const reviewData = {
                 bookIsbn: cleanIsbn, 
-                uid: uid,                   // <-- uid 저장
-                nickname: nickname,         // <-- 닉네임 저장
-                userId: user.email,         // (혹시 모르니 email도 'userId'로 저장)
+                uid: uid,                   // uid 저장
+                nickname: nickname,         // 닉네임 저장
+                userId: user.email,         // 혹시 모르니 email도 'userId'로 저장
                 rating: selectedRating,
                 comment: reviewTextarea.value.trim(),
                 timestamp: new Date()
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const wishlistBtn = document.getElementById('wishlistBtn');
         if (!wishlistBtn) return;
 
-        // 1. 현재 찜 상태 확인 (로그인 했다면)
+        // 1. 현재 찜 상태 확인
         if (auth.currentUser) {
             checkWishStatus();
         }

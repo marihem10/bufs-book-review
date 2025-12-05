@@ -1,7 +1,7 @@
 import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 // ----------------------------------------------------
-// [공용] Firebase 인스턴스를 기다리는 헬퍼 함수
+// Firebase 인스턴스를 기다리는 헬퍼 함수
 // ----------------------------------------------------
 async function initializeFirebaseInstances() {
     while (!window.auth || !window.db) {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabButtons = document.querySelectorAll('.popular-tab-btn');
     
     // ----------------------------------------------------
-    // 1. 검색 기능 이벤트 리스너
+    //  검색 기능 이벤트 리스너
     // ----------------------------------------------------
     const searchInput = document.querySelector('.search-input');
     const searchButton = document.querySelector('.search-button');
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchButton.addEventListener('click', handleSearch);
 
     // ----------------------------------------------------
-    // 2. 가로 스크롤 버튼 기능
+    //  가로 스크롤 버튼 기능
     // ----------------------------------------------------
     const scrollLeftBtn = document.getElementById('scroll-left');
     const scrollRightBtn = document.getElementById('scroll-right');
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // 3. 아래로 스크롤 버튼 기능
+    //  아래로 스크롤 버튼 기능
     // ----------------------------------------------------
     const scrollDownBtn = document.getElementById('scroll-down');
     const popularSection = document.querySelector('.popular-books-section');
@@ -64,14 +64,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // 스크롤 시 '아래' 버튼 숨기기
+    // 스크롤 시 아래 버튼 숨기기
     // ----------------------------------------------------
     const appContainer = document.getElementById('app-container'); // 스크롤되는 진짜 박스
 
     if (scrollDownBtn && appContainer) {
-        // window가 아니라 appContainer에 이벤트를 걸어야 합니다!
+        // window가 아니라 appContainer에 이벤트를 걸기
         appContainer.addEventListener('scroll', () => {
-            // 스크롤 위치(scrollTop)가 100px 넘어가면 숨김 클래스 추가
+            // 스크롤 위치가 100px 넘어가면 숨김 클래스 추가
             if (appContainer.scrollTop > 100) {
                 scrollDownBtn.classList.add('hidden');
             } else {
@@ -120,13 +120,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (isTie) {
                     // 동점이면 등수 유지 (예: 1등, 1등)
                 } else {
-                    // 다르면 실제 순서(actualCount)로 등수 갱신 (예: 1등, 1등, 3등)
+                    // 다르면 실제 순서로 등수 갱신 (예: 1등, 1등, 3등)
                     currentRank = actualCount;
                 }
             }
             actualCount++; // 실제 책 개수는 무조건 증가
 
-            // 하단 텍스트 설정 (기존 코드 유지)
+            // 하단 텍스트 설정
             let bottomInfo = '';
             if (type === 'reading') {
                 bottomInfo = `<span style="color: #0abde3;"> ${book.readingCount || 0}명이 읽는 중</span>`;
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 bottomInfo = `<span>★ ${averageRating} (${book.reviews || 0} 리뷰)</span>`;
             }
             
-            // HTML 생성 (rank 부분에 currentRank 사용)
+            // HTML 생성 rank 부분에 currentRank 사용
             bookItem.innerHTML = `
                 <span class="popular-book-rank">${currentRank}</span>
                 <img src="${book.image || 'https://via.placeholder.com/160x230'}" alt="${book.title}">
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // 5. '종합 인기' (All-Time) 데이터를 가져오는 함수
+    //  종합 인기 데이터를 가져오는 함수
     // ----------------------------------------------------
     async function fetchPopularBooksAllTime() {
         if (!db) {
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             where("reviews", ">", 0),
             orderBy("reviews", "desc"),
             orderBy("averageRating", "desc"), 
-            limit(20) // 20개 가져와서
+            limit(20)
         );
 
         try {
@@ -196,11 +196,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     } 
 
     // ----------------------------------------------------
-    // 6. '이달의 인기' (Monthly) 데이터를 가져오는 함수
+    //  이달의 인기 데이터를 가져오는 함수
     // ----------------------------------------------------
     async function fetchPopularBooksMonthly() {
         
-        // [핵심] 로딩 중에 안내 메시지와 스피너를 보여줍니다.
+        // 로딩 중에 안내 메시지와 스피너를 보여줍니다.
         popularBooksContainer.innerHTML = `
             <div class="loading-message">
                 <div class="spinner-dark"></div>
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // 7. 탭 버튼 클릭 이벤트 리스너
+    //  탭 버튼 클릭 이벤트 리스너
     // ----------------------------------------------------
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ----------------------------------------------------
-    // 8. 페이지 최초 로드 시 '종합 인기' 기본 호출
+    //  페이지 최초 로드 시 종합 인기 기본 호출
     // ----------------------------------------------------
     fetchPopularBooksAllTime();
 

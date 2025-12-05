@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (error.code === 'auth/invalid-email') {
                 alert('올바른 이메일 형식이 아닙니다.');
             } else if (error.code === 'failed-precondition') {
-                 alert('닉네임 중복 검사에 실패했습니다. (Firebase 색인이 필요합니다. F12 콘솔을 확인하세요.)');
+                alert('닉네임 중복 검사에 실패했습니다. (Firebase 색인이 필요합니다. F12 콘솔을 확인하세요.)');
             } else {
                 alert('회원가입에 실패했습니다: ' + error.message);
             }

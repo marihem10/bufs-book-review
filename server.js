@@ -1,4 +1,4 @@
-// 1. 모듈 가져오기 (한 번만 선언)
+// 1. 모듈 가져오기
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
@@ -215,7 +215,7 @@ app.get('/api/my-reviews', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// [API 11] 리뷰 삭제 (+ 답글까지 함께 삭제)
+// 리뷰 삭제
 // ------------------------------------------------------------------
 app.delete('/api/review-delete', async (req, res) => { 
     const { reviewId, bookIsbn } = req.query;
@@ -228,7 +228,7 @@ app.delete('/api/review-delete', async (req, res) => {
     console.log(`[리뷰 삭제 요청] reviewId: ${reviewId}`);
 
     try {
-        // 1. 책 통계 업데이트 (기존 로직)
+        // 1. 책 통계 업데이트
         const bookRef = db.collection('books').doc(bookIsbn);
         const bookDoc = await bookRef.get();
 
@@ -245,7 +245,7 @@ app.delete('/api/review-delete', async (req, res) => {
             }
         }
 
-        // 2. [신규 추가] 해당 리뷰에 달린 '답글(replies)' 모두 삭제
+        // 2. 해당 리뷰에 달린 답글 모두 삭제
         const repliesRef = db.collection('reviews').doc(reviewId).collection('replies');
         const repliesSnapshot = await repliesRef.get();
 
@@ -273,14 +273,13 @@ app.delete('/api/review-delete', async (req, res) => {
 // 마이페이지 리뷰 수정
 // ------------------------------------------------------------------
 app.put('/api/review-edit', async (req, res) => {
-    // 1. 클라이언트로부터 정보를 받습니다.
+    // 1. 클라이언트로부터 정보를 받기
     const { reviewId, bookIsbn, newComment } = req.body;
     
-    //newRating과 oldRating을 숫자로 변환하고 NaN 검사를 합니다.
-    const newRating = parseInt(req.body.newRating, 10);
+    //newRating과 oldRating을 숫자로 변환하고 NaN 검사
     const oldRating = parseInt(req.body.oldRating, 10);
 
-    // 데이터 유효성 검사 (NaN 검사 포함)
+    // 데이터 유효성 검사
     if (!reviewId || !bookIsbn || !newComment || isNaN(newRating) || isNaN(oldRating)) {
         const errors = [];
         if (!reviewId) errors.push('reviewId');
@@ -387,11 +386,11 @@ app.get('/api/book-detail', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 계정 삭제 (데이터 및 통계 포함)
+// 계정 삭제
 // ------------------------------------------------------------------
 app.delete('/api/delete-account', async (req, res) => {
     
-    // 1. 토큰 검증
+    // 토큰 검증
     const idToken = req.headers.authorization?.split('Bearer ')[1];
     if (!idToken) {
         return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
@@ -413,7 +412,7 @@ app.delete('/api/delete-account', async (req, res) => {
     try {
         const batch = db.batch(); // 리뷰/유저 삭제는 배치로 처리
 
-        // 3. (Firestore) 이 사용자가 쓴 모든 'reviews' 찾기
+        // Firestore 이 사용자가 쓴 모든 reviews 찾기
         const reviewsQuery = db.collection('reviews').where('uid', '==', uid);
         const snapshot = await reviewsQuery.get();
 
@@ -431,10 +430,10 @@ app.delete('/api/delete-account', async (req, res) => {
                 if (bookIsbn && !isNaN(rating)) {
                     // 통계 역산 준비
                     if (!bookStatsToUpdate.has(bookIsbn)) {
-                         bookStatsToUpdate.set(bookIsbn, { 
-                             reviewsToDecrement: 0, 
-                             ratingToDecrement: 0 
-                         });
+                        bookStatsToUpdate.set(bookIsbn, { 
+                            reviewsToDecrement: 0, 
+                            ratingToDecrement: 0 
+                        });
                     }
                     const bookStat = bookStatsToUpdate.get(bookIsbn);
                     bookStat.reviewsToDecrement += 1;
@@ -444,7 +443,7 @@ app.delete('/api/delete-account', async (req, res) => {
                 batch.delete(doc.ref);
             });
 
-            // 4. 책 통계 업데이트
+            // 책 통계 업데이트
             for (const [isbn, stat] of bookStatsToUpdate.entries()) {
                 const bookRef = db.collection('books').doc(isbn);
                 
@@ -459,7 +458,7 @@ app.delete('/api/delete-account', async (req, res) => {
 
                             const newReviews = Math.max(0, currentReviews - stat.reviewsToDecrement);
                             const newRatingSum = Math.max(0, currentRatingSum - stat.ratingToDecrement);
-                            // [수정] 평균 별점 재계산
+                            // 평균 별점 재계산
                             const newAverageRating = (newReviews > 0) ? (newRatingSum / newReviews) : 0;
 
                             console.log(`통계 업데이트 ${isbn}: ${newReviews}개, ${newAverageRating.toFixed(1)}점`);
@@ -477,7 +476,7 @@ app.delete('/api/delete-account', async (req, res) => {
                 }
             }
             
-            // 5. (Firestore) 리뷰 삭제 배치 실행
+            // Firestore 리뷰 삭제 배치 실행
             await batch.commit();
             console.log('모든 Firestore 리뷰 정리 완료.');
 
@@ -485,10 +484,10 @@ app.delete('/api/delete-account', async (req, res) => {
             console.log('삭제할 리뷰가 없습니다.');
         }
 
-        // 6. (Auth) Auth에서 사용자 계정 삭제
+        // Auth에서 사용자 계정 삭제
         await adminAuth.deleteUser(uid);
         
-        // 7. (Firestore) 'users' 컬렉션에서도 프로필 삭제
+        // Firestore users 컬렉션에서도 프로필 삭제
         await db.collection('users').doc(uid).delete();
         
         console.log(`[계정 삭제 성공] ${uid} 계정 및 데이터 삭제 완료.`);
@@ -501,11 +500,11 @@ app.delete('/api/delete-account', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 닉네임 변경 (Auth, Users, Reviews 모두 업데이트)
+// 닉네임 변경
 // ------------------------------------------------------------------
 app.put('/api/update-nickname', async (req, res) => {
     
-    // 1. 토큰 검증 (본인 확인)
+    // 1. 토큰 검증
     const idToken = req.headers.authorization?.split('Bearer ')[1];
     if (!idToken) {
         return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
@@ -521,7 +520,7 @@ app.put('/api/update-nickname', async (req, res) => {
     const { newNickname } = req.body;
     const newNicknameLower = newNickname.toLowerCase();
 
-    // 2. 닉네임 유효성 검사 (서버에서도)
+    // 2. 닉네임 유효성 검사
     if (!newNickname || newNickname.length < 2 || newNickname.length > 10) {
         return res.status(400).json({ error: '닉네임은 2자 이상 10자 이하여야 합니다.' });
     }
@@ -529,13 +528,13 @@ app.put('/api/update-nickname', async (req, res) => {
     console.log(`[닉네임 변경 시작] UID: ${uid}, 새 닉네임: ${newNickname}`);
 
     try {
-        // 3. [중복 검사] 'users' 컬렉션에서 새 닉네임(소문자)이 이미 있는지 확인
+        // 3. users 컬렉션에서 새 닉네임이 이미 있는지 확인
         const usersRef = db.collection('users');
         const q = usersRef.where('nickname_lowercase', '==', newNicknameLower);
         const snapshot = await q.get();
 
         if (!snapshot.empty) {
-            // 중복된 닉네임이 있지만, 그게 '나' 자신인지 확인
+            // 중복된 닉네임이 있지만, 그게 나 자신인지 확인
             let isMe = false;
             snapshot.forEach(doc => {
                 if (doc.id === uid) {
@@ -549,12 +548,12 @@ app.put('/api/update-nickname', async (req, res) => {
             }
         }
         
-        // 4. [Auth 업데이트] Firebase Auth 프로필의 displayName 변경
+        // 4. Firebase Auth 프로필의 displayName 변경
         await adminAuth.updateUser(uid, {
             displayName: newNickname
         });
 
-        // 5. [Firestore 업데이트] 'users'와 'reviews' 컬렉션을 일괄 업데이트
+        // 5. 'users'와 'reviews' 컬렉션을 일괄 업데이트
         const batch = db.batch();
         
         // 5-1. 'users' 컬렉션 업데이트
@@ -598,7 +597,7 @@ app.get('/api/popular-books-monthly', async (req, res) => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         
-        // 2. (Firestore) 'reviews' 컬렉션에서 이번 달 리뷰만 쿼리
+        // 2. Firestore 'reviews' 컬렉션에서 이번 달 리뷰만 쿼리
         const reviewsRef = db.collection('reviews');
         const q = reviewsRef.where('timestamp', '>=', startOfMonth);
         const snapshot = await q.get();
@@ -608,7 +607,7 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             return res.json([]);
         }
 
-        // 3. (서버) 리뷰를 책(isbn)별로 집계
+        // 3. 리뷰를 책(isbn)별로 집계
         const monthlyStats = new Map();
         snapshot.forEach(doc => {
             const review = doc.data();
@@ -625,7 +624,7 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             stat.ratingSum += rating;
         });
 
-        // 4. (서버) 집계된 데이터를 배열로 변환
+        // 4. 집계된 데이터를 배열로 변환
         let sortedStats = Array.from(monthlyStats.entries()).map(([isbn, data]) => ({
             isbn: isbn,
             reviewCount: data.reviewCount,
@@ -643,15 +642,15 @@ app.get('/api/popular-books-monthly', async (req, res) => {
             }
         });
 
-        // 6. (서버) 상위 10개만 추출
+        // 6. 상위 10개만 추출
         const top10Stats = sortedStats.slice(0, 10);
         const top10Isbns = top10Stats.map(stat => stat.isbn);
 
-        // 7. (Firestore) 상위 10개 책의 상세 정보 가져오기
+        // 7. Firestore 상위 10개 책의 상세 정보 가져오기
         const bookPromises = top10Isbns.map(isbn => db.collection('books').doc(isbn).get());
         const bookDocs = await Promise.all(bookPromises);
 
-        // 8. (서버) 최종 데이터 조합
+        // 8. 최종 데이터 조합
         const popularBooks = bookDocs
             .map((doc) => { 
                 if (!doc.exists) return null; 
@@ -662,15 +661,15 @@ app.get('/api/popular-books-monthly', async (req, res) => {
                 
                 return {
                     ...bookData, 
-                    reviews: stat.reviewCount, // '이달의' 리뷰 수
-                    averageRating: stat.averageRating // '이달의' 평균 별점
+                    reviews: stat.reviewCount, // 이달의 리뷰 수
+                    averageRating: stat.averageRating // 이달의 평균 별점
                 };
             })
             .filter(book => book !== null);
             
-        // 9. (서버) 최종 순서로 다시 정렬
+        // 9. 최종 순서로 다시 정렬
         popularBooks.sort((a, b) => {
-             if (b.averageRating !== a.averageRating) {
+            if (b.averageRating !== a.averageRating) {
                 return b.averageRating - a.averageRating;
             } else {
                 return b.reviews - a.reviews;
@@ -683,14 +682,14 @@ app.get('/api/popular-books-monthly', async (req, res) => {
     } catch (error) {
         console.error('이달의 인기 도서 목록 가져오기 실패 (서버 측):', error);
         if (error.code === 'failed-precondition') {
-             return res.status(500).json({ error: '데이터베이스 색인 오류가 발생했습니다. (reviews/timestamp)' });
+            return res.status(500).json({ error: '데이터베이스 색인 오류가 발생했습니다. (reviews/timestamp)' });
         }
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
 
 // ------------------------------------------------------------------
-// 리뷰 좋아요 토글 (Toggle Like)
+// 리뷰 좋아요 토글
 // ------------------------------------------------------------------
 app.post('/api/review-like', async (req, res) => {
     const { reviewId, userId } = req.body;
@@ -731,7 +730,7 @@ app.post('/api/review-reply', async (req, res) => {
     if (!reviewId || !userId || !content) return res.status(400).json({ error: '정보 부족' });
 
     try {
-        // 1. 답글 저장 (기존 로직)
+        // 1. 답글 저장
         const replyRef = db.collection('reviews').doc(reviewId).collection('replies');
         await replyRef.add({
             userId,
@@ -741,24 +740,24 @@ app.post('/api/review-reply', async (req, res) => {
         });
         
         // ---------------------------------------------------------
-        // 2. 알림(Notification) 생성 로직
+        // 2. 알림 생성 로직
         // ---------------------------------------------------------
         
-        // A. 리뷰 정보 가져오기 (작성자가 누군지 알아야 함)
+        // 리뷰 정보 가져오기 (작성자가 누군지 알아야 함)
         const reviewDoc = await db.collection('reviews').doc(reviewId).get();
         if (reviewDoc.exists) {
             const reviewData = reviewDoc.data();
             const authorUid = reviewData.uid; // 리뷰 쓴 사람 UID
             const authorEmail = reviewData.userId; // 리뷰 쓴 사람 이메일
             
-            // B. 본인이 본인 글에 쓴 게 아닐 때만 알림 보냄
+            // 본인이 본인 글에 쓴 게 아닐 때만 알림 보냄
             if (authorEmail !== userId && authorUid) {
                 
-                // C. 책 제목 가져오기 (알림 메시지용)
+                // 책 제목 가져오기 (알림 메시지용)
                 const bookDoc = await db.collection('books').doc(reviewData.bookIsbn).get();
                 const bookTitle = bookDoc.exists ? bookDoc.data().title : '책';
                 
-                // D. 'notifications' 컬렉션에 알림 저장
+                // notifications 컬렉션에 알림 저장
                 await db.collection('notifications').add({
                     targetUid: authorUid, // 알림 받을 사람
                     type: 'reply',
@@ -849,7 +848,7 @@ app.post('/api/wishlist/toggle', async (req, res) => {
             .where('isbn', '==', isbn)
             .get();
 
-        const batch = db.batch(); // 일괄 처리 (안전하게)
+        const batch = db.batch(); // 일괄 처리
 
         let isWished = false;
         let message = '';
@@ -862,7 +861,7 @@ app.post('/api/wishlist/toggle', async (req, res) => {
             message = '찜하기가 취소되었습니다.';
             change = -1;
         } else {
-            // [추가] 찜 추가 및 카운트 +1
+            // 찜 추가 및 카운트 +1
             // 1. 책 문서가 없을 수도 있으니 먼저 안전하게 생성/업데이트
             await bookRef.set({
                 isbn, title: title || '', image: image || '', author: author || ''
@@ -885,7 +884,7 @@ app.post('/api/wishlist/toggle', async (req, res) => {
 
         await batch.commit(); // 저장 실행
 
-        // 최신 카운트 값을 가져와서 반환 (화면 업데이트용)
+        // 최신 카운트 값을 가져와서 반환
         const updatedBookDoc = await bookRef.get();
         const newCount = updatedBookDoc.data().wishlistCount || 0;
 
@@ -986,7 +985,7 @@ app.get('/api/reading/my', async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 읽는 중(Reading) 토글 (+ 카운트 기능 추가)
+// 읽는 중 토글 
 // ------------------------------------------------------------------
 app.post('/api/reading/toggle', async (req, res) => {
     const { userId, isbn, title, image, author } = req.body;
@@ -1013,7 +1012,6 @@ app.post('/api/reading/toggle', async (req, res) => {
             message = '독서 상태가 취소되었습니다.';
             change = -1;
         } else {
-            // [추가]
             await bookRef.set({
                 isbn, title, image, author
             }, { merge: true });
