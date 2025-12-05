@@ -1710,6 +1710,13 @@ a.nav-button {
     grid-column: 1 / -1 !important;
     } 
 
+    /* 페이지네이션 버튼이 없어도, 검색 결과 페이지에서는 여백 유지 */
+    .search-results-section + .pagination:empty {
+        display: block !important; /* 다시 보이게 함 (내용은 없지만 자리는 차지하게) */
+        height: 50px !important;   /* 높이 50px 확보 (원하는 만큼 조절 가능) */
+        margin: 30px 0 !important; /* 위아래 여백 추가 */
+    }
+
 /* ========================================= */
 /* 📱 모바일 최적화 (Max Width: 768px)       */
 /* ========================================= */
@@ -2144,5 +2151,45 @@ a.nav-button {
     
     /* 그리드 안에서도 혼자서 전체 칸을 다 쓰도록 설정 */
     grid-column: 1 / -1 !important;
+
+    }
+    /* 1. 리뷰 텍스트 박스: 불필요한 공백 제거 */
+    .mypage-wrapper .user-review-item .review-right {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important; /* 사이 간격 0으로 만듦 */
+        padding: 0 !important;
+    }
+
+    /* 2. 날짜: 아주 작게 줄이고, 아래 여백 완전 제거 */
+    .mypage-wrapper .review-date {
+        font-size: 11px !important;
+        color: #aaa !important;
+        margin: 0 0 2px 0 !important; /* 아래로 2px만 띄움 */
+        line-height: 1 !important;
+        padding: 0 !important;
+    }
+
+    /* 3. 별점: 위아래 여백 제거 */
+    .mypage-wrapper .review-rating {
+        font-size: 13px !important;
+        margin: 0 0 5px 0 !important; /* 아래로 5px만 띄움 */
+        line-height: 1 !important;
+        padding: 0 !important;
+        height: auto !important;
+    }
+
+    /* 4. 내용: 위쪽 여백 제거 */
+    .mypage-wrapper .review-comment {
+        font-size: 13px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* 5. 제목: 아래 여백 최소화 */
+    .mypage-wrapper .review-book-title {
+        margin-bottom: 2px !important;
+        padding: 0 !important;
     }
 }
