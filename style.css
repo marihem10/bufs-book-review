@@ -1719,6 +1719,11 @@ a.nav-button {
         margin: 30px 0 !important; /* 위아래 여백 추가 */
     }
 
+    #readingCount, 
+    #wishlistCount {
+        display: none !important;
+    }
+
 /* ========================================= */
 /* 📱 모바일 최적화 (Max Width: 768px)       */
 /* ========================================= */
