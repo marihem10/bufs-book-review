@@ -274,7 +274,7 @@ app.delete('/api/review-delete', async (req, res) => {
 // ------------------------------------------------------------------
 app.put('/api/review-edit', async (req, res) => {
     // 1. 클라이언트로부터 정보를 받기
-    const { reviewId, bookIsbn, newComment } = req.body;
+    const { reviewId, bookIsbn, newComment, newRating } = req.body;
     
     //newRating과 oldRating을 숫자로 변환하고 NaN 검사
     const oldRating = parseInt(req.body.oldRating, 10);
