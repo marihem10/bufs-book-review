@@ -6,6 +6,13 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
+// 4. Express 앱 설정
+const app = express();
+const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use(cors()); 
+
+
 app.get('/', (req, res) => {
     res.status(200).send('Server is awake!');
 });
@@ -41,11 +48,6 @@ try {
 const db = getFirestore(firebaseApp); 
 const adminAuth = getAuth(firebaseApp);
 
-// 4. Express 앱 설정
-const app = express();
-const port = process.env.PORT || 3000;
-app.use(express.json());
-app.use(cors()); 
 
 // 5. 네이버 API 설정
 const clientId = process.env.NAVER_CLIENT_ID;
