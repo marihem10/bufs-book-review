@@ -6,6 +6,10 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
+app.get('/', (req, res) => {
+    res.status(200).send('Server is awake!');
+});
+
 // 2. 서비스 계정 설정
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
