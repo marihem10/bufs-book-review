@@ -6,19 +6,6 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
-app.get('/ping', async (req, res) => {
-    try {
-        // DB 연결 유지를 위해 가볍게 책 1권만 읽어보기
-        const booksRef = db.collection('books');
-        await booksRef.limit(1).get(); 
-        console.log('Ping received! Server & DB are awake.');
-        res.status(200).send('Pong! Server & DB are active.');
-    } catch (error) {
-        console.error('Ping error:', error);
-        // 에러가 나도 서버가 죽지 않게 200으로 응답
-        res.status(200).send('Server is awake (DB check failed)');
-    }
-});
 
 // 2. 서비스 계정 설정
 const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
@@ -56,6 +43,21 @@ const app = express();
 const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors()); 
+
+
+app.get('/ping', async (req, res) => {
+    try {
+        // DB 연결 유지를 위해 가볍게 책 1권만 읽어보기
+        const booksRef = db.collection('books');
+        await booksRef.limit(1).get(); 
+        console.log('Ping received! Server & DB are awake.');
+        res.status(200).send('Pong! Server & DB are active.');
+    } catch (error) {
+        console.error('Ping error:', error);
+        // 에러가 나도 서버가 죽지 않게 200으로 응답
+        res.status(200).send('Server is awake (DB check failed)');
+    }
+});
 
 // 5. 네이버 API 설정
 const clientId = process.env.NAVER_CLIENT_ID;
