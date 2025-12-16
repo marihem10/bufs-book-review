@@ -12,28 +12,32 @@ html, body {
     width: 100%;
     height: 100%;
     
-    /* [핵심] 브라우저 전체 스크롤은 막아서 배경 고정 (주소창 흔들림 방지) */
+    /* 브라우저 전체 스크롤은 막아서 배경 고정 (주소창 흔들림 방지) */
     overflow: hidden; 
     
     background-color: transparent;
     font-family: 'Nanum Myeongjo', sans-serif; 
 }
 
-/* 배경 이미지 고정 (가상 요소) */
 body::before {
     content: "";
     position: fixed; 
     top: 0; left: 0; width: 100%; height: 100%;
-    z-index: -1; /* 내용보다 뒤에 */
+    z-index: -1; 
     
-    background-image: url('images/mainimg.png'); 
+    /* 👇 여기가 핵심! 변수(--bg-url)가 있으면 그걸 쓰고, 없으면 기본 낮 이미지를 씀 */
+    background-image: var(--bg-url, url('images/mainimg.png')); 
+    
     background-size: cover; 
     background-position: center bottom;
     background-repeat: no-repeat;
     background-color: #f4f4f4; 
+    
+    /* 이미지가 바뀔 때 부드럽게 (여기다 넣어야 자연스러움) */
+    transition: background-image 0.5s ease-in-out;
 }
 
-/* [핵심] 실제 내용물이 들어가는 컨테이너 */
+/* 실제 내용물이 들어가는 컨테이너 */
 #app-container {
     width: 100%;
     height: 100%;
@@ -2160,5 +2164,5 @@ a.nav-button {
     grid-column: 1 / -1 !important;
 
     }
-    
 }
+
