@@ -5,9 +5,13 @@
         
         let imageUrl = '';
 
-        // 1. 아침 (06:00 ~ 10:59) 
-        if (hour >= 6 && hour < 17) {
+        // 1. 아침 (06:00 ~ 10:59) - JPG
+        if (hour >= 6 && hour < 11) {
             imageUrl = 'images/mainmorning.jpg';
+        } 
+        // 2. 낮 (11:00 ~ 16:59) - PNG
+        else if (hour >= 11 && hour < 17) {
+            imageUrl = 'images/maindaytime.jpg'; 
         } 
         // 3. 저녁 (17:00 ~ 20:59) 
         else if (hour >= 17 && hour < 21) {

@@ -44,6 +44,13 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors()); 
 
+// 1. HTML, CSS, JS 파일들이 있는 폴더를 쓰겠다고 선언
+app.use(express.static(__dirname));
+
+// 2. 메인 주소(/)로 들어오면 index.html 보여주기
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
 
 app.get('/ping', async (req, res) => {
     try {
