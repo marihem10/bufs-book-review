@@ -80,6 +80,19 @@ function extractIsbn13(isbnField) {
     return isbn13 || parts[parts.length - 1] || null;
 }
 
+// 카카오 thumbnail은 120x174로 강제 축소된 이미지라 화질이 안 좋음.
+// thumbnail URL의 fname= 파라미터에 원본 이미지 주소가 그대로 들어있어서 그걸 뽑아 씀.
+function getFullSizeCover(thumbnailUrl) {
+    if (!thumbnailUrl) return '';
+    try {
+        const url = new URL(thumbnailUrl);
+        const original = url.searchParams.get('fname');
+        return original || thumbnailUrl;
+    } catch (e) {
+        return thumbnailUrl;
+    }
+}
+
 
 // ------------------------------------------------------------------
 // 리뷰 등록
@@ -111,7 +124,7 @@ app.post('/api/review-submit', async (req, res) => {
                 author: (apiBook.authors && apiBook.authors.join(', ')) || '저자 없음',
                 publisher: apiBook.publisher || '출판사 없음',
                 isbn: bookIsbn,
-                image: apiBook.thumbnail || '',
+                image: getFullSizeCover(apiBook.thumbnail),
                 reviews: 0, 
                 ratingSum: 0 
             };
@@ -165,7 +178,7 @@ app.get('/api/search', async (req, res) => {
             author: (book.authors && book.authors.join(', ')) || '저자 없음',
             publisher: book.publisher || '출판사 없음',
             isbn: extractIsbn13(book.isbn) || Date.now().toString(),
-            image: book.thumbnail || ''
+            image: getFullSizeCover(book.thumbnail)
         }));
         res.json({ books: books, currentPage: pageNum, totalPages: totalPages, totalResults: totalResults });
     } catch (error) {
@@ -400,7 +413,7 @@ app.get('/api/book-detail', async (req, res) => {
             author: (book.authors && book.authors.join(', ')) || '저자 없음',
             publisher: book.publisher || '출판사 없음',
             isbn: extractIsbn13(book.isbn) || isbn,
-            image: book.thumbnail || 'https://via.placeholder.com/200x300'
+            image: getFullSizeCover(book.thumbnail) || 'https://via.placeholder.com/200x300'
         };
 
         res.json(bookDetail);
