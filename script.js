@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // HTML 생성 rank 부분에 currentRank 사용
             bookItem.innerHTML = `
                 <span class="popular-book-rank">${currentRank}</span>
-                <img src="${book.image || 'https://via.placeholder.com/160x230'}" alt="${book.title}">
+                <img src="${book.image || 'images/no-image.svg'}" alt="${book.title}" onerror="this.onerror=null;this.src='images/no-image.svg';">
                 <p>${book.title}</p>
                 ${bottomInfo}
             `;
@@ -297,4 +297,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
     fetchPopularBooksAllTime();
 
-}); 
+});

@@ -104,8 +104,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 const bookImage = document.createElement('img');
-                bookImage.src = book.image || 'https://via.placeholder.com/180x250';
+                bookImage.src = book.image || 'images/no-image.svg';
                 bookImage.alt = book.title;
+                bookImage.onerror = () => { bookImage.onerror = null; bookImage.src = 'images/no-image.svg'; };
 
                 const bookTitle = document.createElement('h3');
                 bookTitle.textContent = book.title;

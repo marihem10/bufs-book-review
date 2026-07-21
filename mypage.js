@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const bookDetail = await response.json();
                 
                 const bookTitle = bookDetail.title || '책 제목을 찾을 수 없음';
-                const bookImage = bookDetail.image || 'https://via.placeholder.com/120x170?text=No+Image';
+                const bookImage = bookDetail.image || 'images/no-image.svg';
 
                 return { review, reviewId, bookTitle, bookImage };
             });
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             reviewElement.innerHTML = `
                 <div class="review-left">
                     <a href="book-detail.html?isbn=${review.bookIsbn}">
-                        <img src="${bookImage}" alt="${bookTitle}" class="review-book-img">
+                        <img src="${bookImage}" alt="${bookTitle}" class="review-book-img" onerror="this.onerror=null;this.src='images/no-image.svg';">
                     </a>
                 </div>
                 <div class="review-right">
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.classList.add('wish-card');
             card.innerHTML = `
                 <a href="book-detail.html?isbn=${book.isbn}">
-                    <img src="${book.image}" alt="${book.title}">
+                    <img src="${book.image || 'images/no-image.svg'}" alt="${book.title}" onerror="this.onerror=null;this.src='images/no-image.svg';">
                 </a>
                 <div class="wish-info">
                     <p class="wish-title">${book.title}</p>
@@ -759,7 +759,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.classList.add('wish-card');
             card.innerHTML = `
                 <a href="book-detail.html?isbn=${book.isbn}">
-                    <img src="${book.image}" alt="${book.title}">
+                    <img src="${book.image || 'images/no-image.svg'}" alt="${book.title}" onerror="this.onerror=null;this.src='images/no-image.svg';">
                 </a>
                 <div class="wish-info">
                     <p class="wish-title">${book.title}</p>

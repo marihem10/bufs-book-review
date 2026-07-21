@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 290">
+  <rect width="200" height="290" fill="#3a3a3a"/>
+  <g stroke="#8a8a8a" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="60" y="95" width="80" height="60" rx="4"/>
+    <circle cx="78" cy="113" r="6"/>
+    <path d="M60 145 L85 118 L105 138 L125 112 L140 145" fill="none"/>
+  </g>
+  <text x="100" y="185" fill="#9a9a9a" font-size="15" font-family="'Nanum Myeongjo', serif" text-anchor="middle">이미지 없음</text>
+</svg>
