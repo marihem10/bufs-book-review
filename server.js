@@ -66,10 +66,19 @@ app.get('/ping', async (req, res) => {
     }
 });
 
-// 5. 네이버 API 설정
-const clientId = process.env.NAVER_CLIENT_ID;
-const clientSecret = process.env.NAVER_CLIENT_SECRET;
-const apiHost = 'https://openapi.naver.com/v1/search/book.json';
+// 5. 카카오 책 검색 API 설정
+// (2026-07-31부로 네이버 책 검색 API가 종료되어 카카오 API로 교체)
+const kakaoRestApiKey = process.env.KAKAO_REST_API_KEY;
+const apiHost = 'https://dapi.kakao.com/v3/search/book';
+
+// 카카오 API의 isbn 필드는 "ISBN10 ISBN13" 형태(공백 구분)로 오므로
+// 13자리 ISBN을 우선적으로 뽑아내는 헬퍼
+function extractIsbn13(isbnField) {
+    if (!isbnField) return null;
+    const parts = isbnField.split(' ').filter(Boolean);
+    const isbn13 = parts.find(p => p.length === 13);
+    return isbn13 || parts[parts.length - 1] || null;
+}
 
 
 // ------------------------------------------------------------------
@@ -89,20 +98,20 @@ app.post('/api/review-submit', async (req, res) => {
     if (!bookDoc.exists) {
         try {
             const apiResponse = await axios.get(apiHost, {
-                params: { d_isbn: bookIsbn, display: 1 },
-                headers: { 'X-Naver-Client-Id': clientId, 'X-Naver-Client-Secret': clientSecret }
+                params: { target: 'isbn', query: bookIsbn },
+                headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` }
             });
-            const items = apiResponse.data.items;
+            const items = apiResponse.data.documents;
             const apiBook = items && items.length > 0 ? items[0] : null;
-            if (!apiResponse.data.items || apiResponse.data.items.length === 0 || !apiBook) { 
-                throw new Error('네이버 API에서 유효한 책 정보를 찾을 수 없습니다.');
+            if (!items || items.length === 0 || !apiBook) { 
+                throw new Error('카카오 API에서 유효한 책 정보를 찾을 수 없습니다.');
             }
             bookData = { 
                 title: apiBook.title.replace(/<[^>]*>?/g, ''),
-                author: apiBook.author || '저자 없음',
+                author: (apiBook.authors && apiBook.authors.join(', ')) || '저자 없음',
                 publisher: apiBook.publisher || '출판사 없음',
                 isbn: bookIsbn,
-                image: apiBook.image || '',
+                image: apiBook.thumbnail || '',
                 reviews: 0, 
                 ratingSum: 0 
             };
@@ -142,26 +151,25 @@ app.get('/api/search', async (req, res) => {
     }
     const display = 12;
     const pageNum = parseInt(page) || 1;
-    const start = 1 + (pageNum - 1) * display;
-    const sortOption = sort === 'date' ? 'date' : 'sim';
+    // 카카오는 start offset이 아니라 page 번호를 그대로 받음
+    const sortOption = sort === 'date' ? 'latest' : 'accuracy';
     try {
         const response = await axios.get(apiHost, {
-            params: { query: query, display: display, start: start, sort: sortOption },
-            headers: { 'X-Naver-Client-Id': clientId, 'X-Naver-Client-Secret': clientSecret }
+            params: { query: query, size: display, page: pageNum, sort: sortOption },
+            headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` }
         });
-        const totalResults = response.data.total || 0;
-        const effectiveTotal = Math.min(totalResults, 1000); 
-        const totalPages = Math.ceil(effectiveTotal / display);
-        const books = response.data.items.map(book => ({
+        const totalResults = response.data.meta.pageable_count || 0;
+        const totalPages = Math.ceil(totalResults / display);
+        const books = response.data.documents.map(book => ({
             title: book.title.replace(/<[^>]*>?/g, ''),
-            author: book.author || '저자 없음',
+            author: (book.authors && book.authors.join(', ')) || '저자 없음',
             publisher: book.publisher || '출판사 없음',
-            isbn: book.isbn || Date.now().toString(),
-            image: book.image || ''
+            isbn: extractIsbn13(book.isbn) || Date.now().toString(),
+            image: book.thumbnail || ''
         }));
         res.json({ books: books, currentPage: pageNum, totalPages: totalPages, totalResults: totalResults });
     } catch (error) {
-        console.error(`API 호출 실패 (Query: ${query}, Start: ${start}, Sort: ${sortOption}):`, error.message);
+        console.error(`API 호출 실패 (Query: ${query}, Page: ${pageNum}, Sort: ${sortOption}):`, error.message);
         if (error.response && error.response.status === 400) {
             return res.status(400).json({ error: '잘못된 요청입니다. (검색 범위를 초과했을 수 있습니다)', details: error.response.data });
         }
@@ -373,31 +381,26 @@ app.get('/api/book-detail', async (req, res) => {
     try {
         const response = await axios.get(apiHost, {
             params: {
-                query: isbn,
-                display: 1
+                target: 'isbn',
+                query: isbn
             },
             headers: {
-                'X-Naver-Client-Id': clientId,
-                'X-Naver-Client-Secret': clientSecret
+                Authorization: `KakaoAK ${kakaoRestApiKey}`
             }
         });
 
-        if (!response.data.items || response.data.items.length === 0) {
+        if (!response.data.documents || response.data.documents.length === 0) {
             return res.status(404).json({ error: '해당 ISBN의 책을 찾을 수 없습니다.' });
         }
-        
-        const book = response.data.items.find(item => item.isbn === isbn);
 
-        if (!book) {
-            return res.status(404).json({ error: 'ISBN이 정확히 일치하는 책을 찾을 수 없습니다.' });
-        }
+        const book = response.data.documents[0];
 
         const bookDetail = {
             title: book.title.replace(/<[^>]*>?/g, ''),
-            author: book.author || '저자 없음',
+            author: (book.authors && book.authors.join(', ')) || '저자 없음',
             publisher: book.publisher || '출판사 없음',
-            isbn: book.isbn,
-            image: book.image || 'https://via.placeholder.com/200x300'
+            isbn: extractIsbn13(book.isbn) || isbn,
+            image: book.thumbnail || 'https://via.placeholder.com/200x300'
         };
 
         res.json(bookDetail);
