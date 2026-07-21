@@ -392,6 +392,23 @@ app.get('/api/book-detail', async (req, res) => {
     }
 
     try {
+        // 1. Firestore에 이미 저장된 책 정보가 있으면 카카오 API 호출 없이 바로 응답 (훨씬 빠름)
+        const bookRef = db.collection('books').doc(isbn);
+        const bookDoc = await bookRef.get();
+        if (bookDoc.exists) {
+            console.log(`[book-detail] ISBN ${isbn}: Firestore 캐시 히트 - 카카오 API 호출 안 함`);
+            const data = bookDoc.data();
+            return res.json({
+                title: data.title || '',
+                author: data.author || '저자 없음',
+                publisher: data.publisher || '출판사 없음',
+                isbn: data.isbn || isbn,
+                image: data.image || 'https://via.placeholder.com/200x300'
+            });
+        }
+
+        // 2. Firestore에 없는 책이면 카카오 API로 새로 조회
+        console.log(`[book-detail] ISBN ${isbn}: Firestore에 없음 - 카카오 API 호출함`);
         const response = await axios.get(apiHost, {
             params: {
                 target: 'isbn',
@@ -1088,4 +1105,5 @@ app.post('/api/reading/toggle', async (req, res) => {
 // ------------------------------------------------------------------
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+    console.log(`[버전 확인용] book-detail Firestore 캐시 체크 버전 배포됨`);
 });
