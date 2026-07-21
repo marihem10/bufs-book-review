@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const starsHtml = fullStars + emptyStars;
         bookDetailContainer.innerHTML = `
             <div class="detail-image-wrapper"> 
-                <img src="${book.image}" alt="${book.title}" class="detail-image"> 
+                <img src="${book.image || 'images/no-image.svg'}" alt="${book.title}" class="detail-image" onerror="this.onerror=null;this.src='images/no-image.svg';"> 
             </div>
             <div class="detail-text">
                 <h1>${book.title}</h1> 
