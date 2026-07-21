@@ -403,7 +403,7 @@ app.get('/api/book-detail', async (req, res) => {
                 author: data.author || '저자 없음',
                 publisher: data.publisher || '출판사 없음',
                 isbn: data.isbn || isbn,
-                image: data.image || 'https://via.placeholder.com/200x300'
+                image: data.image || ''
             });
         }
 
@@ -430,7 +430,7 @@ app.get('/api/book-detail', async (req, res) => {
             author: (book.authors && book.authors.join(', ')) || '저자 없음',
             publisher: book.publisher || '출판사 없음',
             isbn: extractIsbn13(book.isbn) || isbn,
-            image: getFullSizeCover(book.thumbnail) || 'https://via.placeholder.com/200x300'
+            image: getFullSizeCover(book.thumbnail)
         };
 
         res.json(bookDetail);
