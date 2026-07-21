@@ -73,6 +73,14 @@ const apiHost = 'https://dapi.kakao.com/v3/search/book';
 
 // 카카오 API의 isbn 필드는 "ISBN10 ISBN13" 형태(공백 구분)로 오므로
 // 13자리 ISBN을 우선적으로 뽑아내는 헬퍼
+// 예전에 Firestore에 저장돼버린 죽은 via.placeholder.com 주소를 걸러내는 헬퍼.
+// 이미 DB에 저장된 문서들은 서버 코드를 고쳐도 그대로 남아있어서, 읽어올 때마다 걸러줘야 함.
+function sanitizeImage(url) {
+    if (!url) return '';
+    if (url.includes('via.placeholder.com')) return '';
+    return url;
+}
+
 function extractIsbn13(isbnField) {
     if (!isbnField) return null;
     const parts = isbnField.split(' ').filter(Boolean);
@@ -207,7 +215,8 @@ app.get('/api/popular-books', async (req, res) => {
         }
         const popularBooks = [];
         querySnapshot.forEach((doc) => {
-            popularBooks.push(doc.data());
+            const data = doc.data();
+            popularBooks.push({ ...data, image: sanitizeImage(data.image) });
         });
         res.json(popularBooks);
     } catch (error) {
@@ -403,7 +412,7 @@ app.get('/api/book-detail', async (req, res) => {
                 author: data.author || '저자 없음',
                 publisher: data.publisher || '출판사 없음',
                 isbn: data.isbn || isbn,
-                image: data.image || ''
+                image: sanitizeImage(data.image)
             });
         }
 
@@ -717,6 +726,7 @@ app.get('/api/popular-books-monthly', async (req, res) => {
                 
                 return {
                     ...bookData, 
+                    image: sanitizeImage(bookData.image),
                     reviews: stat.reviewCount, // 이달의 리뷰 수
                     averageRating: stat.averageRating // 이달의 평균 별점
                 };
@@ -989,7 +999,10 @@ app.get('/api/wishlist/my', async (req, res) => {
         if (snapshot.empty) return res.json([]);
 
         const books = [];
-        snapshot.forEach(doc => books.push(doc.data()));
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            books.push({ ...data, image: sanitizeImage(data.image) });
+        });
         res.json(books);
     } catch (error) {
         console.error('찜 목록 로딩 오류:', error);
@@ -1032,7 +1045,10 @@ app.get('/api/reading/my', async (req, res) => {
         if (snapshot.empty) return res.json([]);
         
         const books = [];
-        snapshot.forEach(doc => books.push(doc.data()));
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            books.push({ ...data, image: sanitizeImage(data.image) });
+        });
         res.json(books);
     } catch (error) {
         console.error('읽는 중 목록 로딩 오류:', error);
